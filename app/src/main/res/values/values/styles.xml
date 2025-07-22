@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <resources>
+        <style name="TableRowStyle">
+            <item name="android:layout_marginBottom">7dp</item> <!-- Space below each row -->
+            <item name="android:padding">5dp</item>
+            <item name="android:background">@color/black</item>
+            <item name="borderRound">20dp</item>
+        </style>
+    </resources>

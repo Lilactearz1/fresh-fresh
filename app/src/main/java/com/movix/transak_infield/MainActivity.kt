@@ -1,0 +1,718 @@
+package com.movix.transak_infield
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
+
+
+import android.os.Bundle
+import android.os.Environment
+
+import android.view.View
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.movix.transak_infield.databinding.ActivityMainBinding
+import androidx.appcompat.app.*
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import com.itextpdf.io.font.FontProgramFactory
+import com.itextpdf.io.font.PdfEncodings
+import com.itextpdf.io.image.ImageDataFactory
+import com.itextpdf.io.source.ByteArrayOutputStream
+import com.itextpdf.kernel.colors.ColorConstants
+import com.itextpdf.kernel.colors.DeviceRgb
+import com.itextpdf.kernel.font.PdfFont
+import com.itextpdf.kernel.font.PdfFontFactory
+import com.itextpdf.kernel.font.PdfFontFactory.EmbeddingStrategy
+import com.itextpdf.kernel.geom.Line
+import com.itextpdf.kernel.geom.PageSize
+import com.itextpdf.kernel.geom.Rectangle
+
+import com.itextpdf.kernel.pdf.PdfWriter
+import com.itextpdf.kernel.pdf.PdfDocument
+import com.itextpdf.kernel.pdf.canvas.PdfCanvas
+import com.itextpdf.layout.Document
+import com.itextpdf.layout.borders.Border
+import com.itextpdf.layout.borders.SolidBorder
+import com.itextpdf.layout.element.Paragraph
+import com.itextpdf.layout.element.Table
+import com.itextpdf.layout.element.Cell
+import com.itextpdf.layout.element.Image
+import com.itextpdf.layout.properties.UnitValue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+import java.io.File
+import java.io.FileOutputStream
+
+
+open class MainActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityMainBinding
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+
+        setContentView(binding.root)  // Connects to activity_main.xml so check layout name to match activity
+
+
+        binding.btnInv001.setOnClickListener {
+
+            val fragment = InvoiceInfo()
+            supportFragmentManager.beginTransaction().replace(R.id.newEstimateLayout, fragment)
+                .addToBackStack(null).commit()
+        }
+
+        binding.btnTemplate.setOnClickListener {
+           // prevent double-tap
+            lifecycleScope.launch(Dispatchers.IO) {
+                estimatePdf()  // Run PDF logic in background
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "Download Success...", Toast.LENGTH_LONG)
+                        .show()
+                }
+            }
+        }
+
+
+
+        binding.btnclientInfo.setOnClickListener {
+
+            lifecycleScope.launch {
+                val clientFragment = clientinfoFragment()
+                supportFragmentManager.beginTransaction()
+//                replace from the id of the parent view(current view) to the next view
+                    .replace(R.id.newEstimateLayout, clientFragment).addToBackStack(null).commit()
+            }
+        }
+
+        val cardviewButton = binding.additemscardView
+
+        cardviewButton.setOnClickListener {
+            val productfrag = ProductsInfoFragment()
+            supportFragmentManager.beginTransaction()
+//                replace from the id of the parent view(current view) to the next view
+                .replace(R.id.newEstimateLayout, productfrag).addToBackStack(null).commit()
+
+        }
+
+        val addBtn_image = binding.addbuttonImage
+        addBtn_image.setOnClickListener {
+
+            val productsInfoFragment = ProductsInfoFragment()
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.newEstimateLayout, productsInfoFragment).addToBackStack(null).commit()
+
+        }
+
+
+        //call the method that show items into our recycler view
+        setupListintoRecycleview()
+
+        supportFragmentManager.addOnBackStackChangedListener {
+            val fragment = supportFragmentManager.findFragmentById(R.id.newEstimateLayout)
+
+            // Only refresh list when the visible fragment is null (i.e., back to main view)
+            if (fragment == null) {
+                setupListintoRecycleview()
+            }
+        }
+
+    }
+
+    fun getPdfFontFromAssets(context: Context): PdfFont {
+        val inputStream = context.assets.open("fonts/gerhana.ttf")
+        val fontBytes = inputStream.readBytes()
+        inputStream.close()
+
+        val fontProgram = FontProgramFactory.createFont(fontBytes, true)
+        return PdfFontFactory.createFont(
+            fontProgram, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED
+        )
+    }
+
+    fun latoRegularFont(context: Context): PdfFont {
+        val inputStream = context.assets.open("fonts/lato_regular.ttf")
+        val fontByte = inputStream.readBytes()
+//        create  the font program
+        val fontProgram = FontProgramFactory.createFont(fontByte, true)
+//        return gffont factory
+        val fontFact = PdfFontFactory.createFont(
+            fontProgram, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED
+        )
+        return fontFact
+    }
+
+    fun queensFont(context: Context): PdfFont {
+        val fonstStream = context.assets.open("fonts/queen.otf")
+        val inputStream = fonstStream.readBytes()
+        val fontProgram = FontProgramFactory.createFont(inputStream, true)
+        val quuenFont = PdfFontFactory.createFont(
+            fontProgram, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED
+        )
+        return quuenFont
+    }
+
+    fun latoBold(context: Context): PdfFont {
+        val fontstream = context.assets.open("fonts/latobold.ttf")
+        val inputStream = fontstream.readBytes()
+//        create a font program and parse input stream to it
+        val fontProgram = FontProgramFactory.createFont(inputStream, true)
+//        create a pdfontfactory
+        val latoboldFont = PdfFontFactory.createFont(
+            fontProgram, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED
+        )
+        return latoboldFont
+    }
+
+
+    private fun estimatePdf() {
+
+        try {
+
+            // File path in Downloads folder
+            val path =
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                    .toString()
+            val file = File(path, "itext7_sample.pdf")
+
+            // iText 7 writing
+            val writer = PdfWriter(file)
+            val pdfDocument = PdfDocument(writer)
+            pdfDocument.defaultPageSize = PageSize.A4
+            val document = Document(pdfDocument)
+            val pdfCanvas = PdfCanvas(pdfDocument.addNewPage())
+
+
+//
+
+
+//            create the fonts using the byte array
+
+
+//            set the fonts for use by getting the storage directory first
+
+//            val fontStream3 = this.assets.open("fonts/seguiemj.ttf")
+
+//create the font program factory
+
+
+//            parse fontprogam to create the font
+
+
+//            create the image path
+
+            val width = PageSize.A4.width
+            val height = PageSize.A4.height
+            // 1. Load image from drawable
+            val drawablepic = ContextCompat.getDrawable(this, R.drawable.backpdf)
+            val bitmap1 = (drawablepic as BitmapDrawable).bitmap
+
+            // 2. Convert Bitmap to ByteArray
+            val stream = ByteArrayOutputStream()
+            bitmap1.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            val imageBytes = stream.toByteArray()
+
+            // 3. Create ImageData from ByteArray   // Load image
+            val imageDatafromArr = ImageDataFactory.create(imageBytes)
+
+            // 4. Draw background image on canvas
+            pdfCanvas.addImageFittedIntoRectangle(
+                imageDatafromArr, Rectangle(0f, 0f, width, height), false
+            )
+            // draw horizontal line
+
+            pdfCanvas.setLineWidth(0.05f)
+
+            pdfCanvas.moveTo(50.00, 689.00)
+            pdfCanvas.lineTo(544.00, 689.00)
+            pdfCanvas.stroke().setStrokeColor(DeviceRgb(47, 59, 81))
+
+
+//       1. Define Table Headers:
+//            create columnwidth dimension
+            val latoRegular = latoRegularFont(this)
+            val queensFont = queensFont(this)
+            val gerhanaFont = getPdfFontFromAssets(this)
+            val latobold = latoBold(this)
+
+            val tablemargintop = 206f
+            val columnWidth = floatArrayOf(221.5f, 62.75f, 73.5f, 47f, 100f)
+
+            val table = Table(columnWidth)  //table having column widths
+                .setWidth(UnitValue.createPointValue(columnWidth.sum()))  // full width
+                .setBorderTop(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                .setBorderRight(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                .setBorderLeft(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                .setBorderBottom(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+
+                .setFontSize(12f).setFont(gerhanaFont).setFontColor(DeviceRgb(44, 45, 47))
+
+
+                .setMarginTop(tablemargintop)
+
+
+            val line1 = Line(22.5f, 704.5f, 544f, 704.5f)
+
+
+            // Add header cells
+            val headers = listOf("DESCRIPTION", "QUANTITY", "PRICE", "TAX", "AMOUNT")
+
+
+            headers.forEach {
+
+                table.addCell(
+                    Cell().setBorder(Border.NO_BORDER).add(
+                        Paragraph(it).setFont(latobold).setBold()
+                            .setFontColor(ColorConstants.WHITE)
+                    ).setBackgroundColor(DeviceRgb(62, 140, 202)) // blue header background
+
+                ).setBorder(Border.NO_BORDER)
+
+
+            }
+
+            headers.first()
+
+
+// Images to the page
+
+            val drawable = ContextCompat.getDrawable(this, R.drawable.infieldlogo) as BitmapDrawable
+            val bitmap = drawable.bitmap
+
+//     // Save bitmap to a temporary file
+            val imagefile = File(this.cacheDir, "infieldlogo.png")
+            val outputStream = FileOutputStream(imagefile)
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+            outputStream.flush()
+            outputStream.close()
+
+            // Use the file path in iText
+            val imageData = ImageDataFactory.create(imagefile.absolutePath)
+            val image = Image(imageData).scaleToFit(100f, 100f).setFixedPosition(15f, 767.8f, 350f)
+            document.add(image)
+
+//            3. Populate the Table with Rows
+            val items = DatabaseHandler(this).viewProduct()
+            items.forEach { item ->
+                //Loop through and calculate amount = price × quantity:
+                val amount = item.price * item.quantity
+                table.addCell(item.itemName.uppercase())
+                    .setBorderTop(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                    .setBorderRight(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                    .setBorderLeft(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                    .setBorderBottom(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+
+                table.addCell(item.quantity.toString()).setBorder(Border.NO_BORDER)
+                    .setBorderTop(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                    .setBorderRight(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                    .setBorderLeft(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                    .setBorderBottom(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+
+
+                table.addCell("${"%.2f".format(item.price)}").setBorder(Border.NO_BORDER)
+                    .setBorderTop(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                    .setBorderRight(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                    .setBorderLeft(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                    .setBorderBottom(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+
+
+                table.addCell(item.tax.toString())
+                    .setBorderTop(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                    .setBorderRight(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                    .setBorderLeft(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                    .setBorderBottom(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+
+
+                table.addCell("${"%.2f".format(amount)}")
+                    .setBorderTop(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                    .setBorderRight(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                    .setBorderLeft(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                    .setBorderBottom(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+
+//                table.setFont(fonts)
+
+
+            }
+// the header sections
+//            call the image of qr function to be used in the itext pdf
+            val docName ="CLIENT_iNFIELDER"
+            val qrImage= Templatepdf1().qrcodeGenerator(docName)
+            document.add(qrImage.setFixedPosition(1,425.21f,690f))
+
+            document.add(
+                Paragraph("INFIELD").setBold()
+                    .setFontColor(DeviceRgb(62, 140, 202)) // infiellt tee blue
+                    .setFontSize(18f).setFixedPosition(146f, 784.8f, 84f)
+            )
+            document.add(
+                Paragraph("ENGINEERING").setBold()
+                    .setFontColor(DeviceRgb(67, 105, 45)) // engineering jungle green
+                    .setFontSize(18f).setFixedPosition(223.1f, 784.8f, 134f)
+
+            )
+            document.add(
+                Paragraph("SERVICES LTD").setBold()
+                    .setFontColor(DeviceRgb(62, 140, 202)) // infield tee blue
+                    .setFontSize(19f).setFixedPosition(146f, 756.8f, 144f)
+            )
+            document.add(
+                Paragraph("P.O BOX 62700-19052").setFontColor(
+                    DeviceRgb(
+                        47,
+                        59,
+                        81
+                    )
+                ) // address dark blue
+                    .setFontSize(16f).setFixedPosition(146f, 737.3f, 184f).setFont(latoRegular)
+
+            )
+            document.add(
+                Paragraph("Meru Township").setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
+                    .setFontSize(16f).setFixedPosition(146f, 718.3f, 184f).setFont(latoRegular)
+            )
+
+            document.add(
+                Paragraph("0701243548").setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
+                    .setFontSize(16f).setFixedPosition(146f, 696.1f, 164f).setFont(latoRegular)
+
+            )
+
+            document.add(
+                Paragraph(
+                    "BILL TO: \n" + "name of client"
+                ).setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
+                    .setFontSize(12.5f)
+
+                    .setFont(latobold).setFixedPosition(35.7f, 650f, 164f)
+
+            )
+
+            document.add(
+                Paragraph("QUOTE NUMBER: ").setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
+                    .setFontSize(13f)
+
+                    .setFont(latobold).setFixedPosition(370.2F, 669f, 164f)
+
+
+            )
+            document.add(
+                Paragraph("QVTE:11111").setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
+                    .setFontSize(13f).setFont(queensFont).setFixedPosition(500.2F, 669f, 164f)
+
+
+            )
+
+            document.add(
+                Paragraph("CREATION DATE: ").setFontColor(
+                    DeviceRgb(
+                        47,
+                        59,
+                        81
+                    )
+                ) // address dark blue
+                    .setFontSize(13f)
+
+                    .setFont(latobold).setFixedPosition(370.2F, 653.1f, 164f)
+
+
+            )
+            document.add(
+                Paragraph("CR22/08/25 ").setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
+                    .setFontSize(13f).setFont(queensFont).setFixedPosition(500.2F, 653.1f, 164f)
+
+
+            )
+
+            document.add(
+                Paragraph("DUE DATE: ").setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
+                    .setFontSize(13f).setFont(latobold).setFixedPosition(370.2F, 635.1f, 164f)
+
+
+            )
+
+            document.add(
+                Paragraph("Ddet: ").setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
+                    .setFontSize(13f).setFont(queensFont).setFixedPosition(500.2F, 635.1f, 164f)
+            )
+
+            document.add(
+                Paragraph("ESTIMATE").setFontColor(DeviceRgb(156, 39, 176)) // address dark blue
+                    .setFontSize(30.5f).setFont(latobold).setFixedPosition(422.2f, 776.8f, 166f)
+            )
+
+            document.add(table)
+            val amountCell = Table(floatArrayOf(93f, 130f))
+            val amountTotal = mutableListOf("Subtotal", "0.0", "Vat", "0.0", "Total", "0.0")
+            val dbData = DatabaseHandler(this)
+            amountTotal.forEach {
+                val items = dbData.viewProduct()
+                for (ik in items) {
+                    ik.tax
+                    var total = ik.total
+                    ik.price
+                    total += total
+//we are debugging here FOR THE CALCULATION OF PRICES AND TOTALS
+                    amountTotal[1] = total.toString()
+                    amountTotal[3] = "120"
+                    amountTotal[5] = "120"
+
+                }
+
+                amountCell.addCell(
+                    Cell().add(Paragraph(it)).setHeight(18f).setFontSize(12f)
+                        .setBorder(Border.NO_BORDER)
+                        .setFont(latobold)
+                ).setFontColor(ColorConstants.BLACK).setBackgroundColor(DeviceRgb(62, 140, 202))
+                    .setBorder(Border.NO_BORDER).setMarginLeft(284f).setMarginTop(30f)
+            }
+            document.add(amountCell)
+            val mpesaInfo = Table(floatArrayOf(176.75f, 160.75f, 164f))
+            val mpesa = listOf("529901", "ACCOUNT NO", "5021964795002")
+            mpesa.forEach {
+                mpesaInfo.addCell(
+                    Cell().setBorder(Border.NO_BORDER).setBackgroundColor(DeviceRgb(62, 140, 202))
+                        .add(Paragraph(it))
+                ).setFontColor(ColorConstants.WHITE)
+                    .setHeight(35f)
+                    .setFont(gerhanaFont)
+                    .setFontColor(ColorConstants.WHITE)
+            }
+
+
+            val bankInfoTable = Table(floatArrayOf(135.75f, 120.75f, 120.75f, 125.75f))
+            val aboutDetailing = Table(floatArrayOf(135.15f))
+            val aboutDetailing2 =aboutDetailing
+            val detailHeading = listOf("BANK DETAIL")
+
+            val dH1 = detailHeading.first()
+            val detailHeading2 = listOf("M-PESA PAYBILL")
+            val dH2 = detailHeading2.last()
+
+            dH2.forEach {
+                aboutDetailing2.addCell(
+                    Cell().setBorder(Border.NO_BORDER)
+                        .add(Paragraph(dH2))
+                        .setBackgroundColor(DeviceRgb(62, 140, 202))
+                ).setFontColor(ColorConstants.WHITE)
+                    .setHeight(35f)
+                    .setFont(gerhanaFont)
+                    .setMarginTop(10f)
+            }
+
+
+            detailHeading.forEach {
+                aboutDetailing.addCell(
+                    Cell().add(Paragraph(dH1).setBorder(Border.NO_BORDER))
+                ).setMarginTop(25.25f).setBackgroundColor(DeviceRgb(62, 140, 202))
+                    .setFontColor(ColorConstants.WHITE).setFont(gerhanaFont)
+            }
+
+            document.add(aboutDetailing)
+            val infosBank = listOf("ACCOUNT NAME", "BANK NAME", "BRANCH", "ACCOUNT NO")
+            val bankdetail =
+                listOf("INFIELD ENGINEERING LTD", "KINGDOM BANK", "NAIROBI", "5021964795002")
+
+            infosBank.forEach {
+                bankInfoTable.addCell(
+                    Cell().setFontColor(ColorConstants.WHITE).add(Paragraph(it))
+                        .setBackgroundColor(DeviceRgb(62, 140, 202)).setBorder(Border.NO_BORDER)
+                        .setFont(gerhanaFont)
+
+                ).setMarginTop(20f)
+
+            }
+
+            bankdetail.forEach {
+                bankInfoTable.setBorder(Border.NO_BORDER)
+                bankInfoTable.addCell(
+                    Cell().setBorderLeft(SolidBorder(DeviceRgb(224, 224, 224), 0.04f))
+                        .setBorderBottom(SolidBorder(DeviceRgb(224, 224, 224), 0.08f))
+                        .setFontColor(ColorConstants.BLACK).add(Paragraph(it))
+                        .setBorderRight(SolidBorder(DeviceRgb(224, 224, 224), 0.04f))
+                        .setFontSize(11f)
+
+                ).setMarginTop(0.01f)
+                    .setFont(latobold)
+            }
+            infosBank.last()
+
+
+            document.add(bankInfoTable)
+            document.add(aboutDetailing2)
+            document.add(mpesaInfo)
+
+            //document metadata
+            pdfDocument.documentInfo.setAuthor("nelvinKelly@gmail.com").setTitle("Estimates")
+                .addCreationDate().setCreator("" + "Megistanas Developers")
+
+            document.close()
+
+            println("PDF generated at: ${file.absolutePath}")
+
+            Toast.makeText(this, "Download Success...", Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+
+    //function to show list of inserted data in the recycler view
+    private fun setupListintoRecycleview() {
+        val itemList = getItemlist()
+
+        if (itemList.isNotEmpty()) {
+            binding.recycleItem.visibility = View.VISIBLE
+            binding.recycleItem.layoutManager = LinearLayoutManager(this) // ✅ OK in Activity
+
+            val itemAdapter = ItemAdapter(this, itemList) // ✅ 'this' = Activity context
+            binding.recycleItem.adapter = itemAdapter
+        } else {
+            binding.recycleItem.visibility = View.GONE
+        }
+    }
+
+    fun publicSetview() {
+        setupListintoRecycleview()
+    }
+
+
+    //    function to get the items list
+    private fun getItemlist(): ArrayList<ModelClass> {
+//        create instance of the databaseHandler class
+        val databaseHandler: DatabaseHandler = DatabaseHandler(this)
+//          calling the viewProduct  of DatabaseHandler class to read the list
+        return databaseHandler.viewProduct()
+
+        /**
+         * a shorter replacement use the inline function
+         *
+        private fun getItemlist() = DatabaseHandler(this).viewProduct()
+         *
+        or
+        private fun getItemlist(): ArrayList<ModelClass> {
+        return DatabaseHandler(this).viewProduct()
+        }
+
+         */
+    }
+
+    // method to update the inputs in the dialog
+
+    fun updateDialog(modelClass: ModelClass) {
+        // Create the Dialog
+        val dialog = AlertDialog.Builder(this).setTitle("update items info")
+            .setView(R.layout.edititem_dialog)
+            .setCancelable(false)   //will not allow user to cancel after
+            .create()
+//        now show the dialog
+        dialog.show()
+
+        // Find views from dialog layout
+        val nameEditText = dialog.findViewById<EditText>(R.id.edit_item_namedialog)
+        val quantityEditText = dialog.findViewById<EditText>(R.id.edit_item_quantity)
+        val priceEditText = dialog.findViewById<EditText>(R.id.edit_item_pricedialog)
+        val taxRateEditText = dialog.findViewById<EditText>(R.id.edit_item_taxRatedialog)
+        val saveButton = dialog.findViewById<Button>(R.id.updatedialog)
+        val cancelButton = dialog.findViewById<Button>(R.id.dialogcancelbtn)
+
+        // Fill views with existing data
+        nameEditText?.setText(modelClass.itemName)
+        quantityEditText?.setText(modelClass.quantity.toString())
+        priceEditText?.setText(modelClass.price.toString())
+        taxRateEditText?.setText(modelClass.total.toString())
+        //cancellation button
+        cancelButton?.setOnClickListener {
+            dialog.dismiss()
+        }
+
+
+        // Save/update action
+        saveButton?.setOnClickListener {
+            val updatedName = nameEditText?.text.toString()
+            val updatedQuantity = quantityEditText?.text.toString().toIntOrNull()
+            val updatedPrice = priceEditText?.text.toString().toDoubleOrNull()
+            val updatedTax = taxRateEditText?.text.toString().toFloatOrNull()
+
+            if (updatedName.isBlank() || updatedQuantity == null || updatedPrice == null || updatedTax == null) {
+                Toast.makeText(this, "All fields must be valid", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val updatedModel = ModelClass(
+                id = modelClass.id, // keep same ID
+                itemName = updatedName,
+                quantity = updatedQuantity,
+                price = updatedPrice,
+                total = updatedTax,
+                tax = updatedTax
+            )
+
+            val db = DatabaseHandler(this)
+            // define this method in your DB handler (updateRecords)
+            val status = db.updateRecords(updatedModel)
+
+            if (status > -1) {
+                Toast.makeText(this, "Item updated", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+                // Optional: refresh RecyclerView
+            } else {
+                Toast.makeText(this, "Failed to update", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        dialog.show()
+    }
+
+    fun deleteItems(modellist: ModelClass) {
+
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle(R.string.delete)
+//                set message for the alert dialog box
+        builder.setMessage("Delete ${modellist.itemName}")
+        builder.setIcon(R.drawable.baseline_crisis_alert_24)
+//        perform the positive action
+        builder.setPositiveButton("Yes") { dialogInterface, which ->
+//                creating an instance of the database classs
+            val databaseseHandler: DatabaseHandler = DatabaseHandler(this)
+//                 call the delete method of the database
+            val status = databaseseHandler.deleteRecords(
+                ModelClass(
+                    modellist.id,
+                    modellist.quantity,
+                    "",
+                    modellist.price,
+                    modellist.total,
+                    modellist.tax
+                )
+            )
+            if (status > -1) {
+                Toast.makeText(this, "Deleted Successfully", Toast.LENGTH_LONG).show()
+
+//           call the method listing items into the rectcleview so that the list is updated after the delete
+                setupListintoRecycleview()
+            }
+            dialogInterface.dismiss()// the dialog to be dismissed
+        }
+//        performing the negative action
+        builder.setNegativeButton("No") { dialogInterface, which ->
+            dialogInterface.dismiss()
+        }
+//        create the alert dialog
+        val alertDialog: AlertDialog = builder.create()
+//        set other dialog properties
+        alertDialog.setCancelable(false)// will not allow user to cancel after deletetion
+        alertDialog.show() // show the dialog to the UI
+
+
+    }
+
+}

@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:paddingBottom="1dp"
+    android:paddingTop="4dp"
+    android:id="@+id/itemlistlayoutMain">
+
+
+
+
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/item_name_cardvwiew"
+        android:layout_width="match_parent"
+        android:layout_height="110dp"
+        android:background="@drawable/shadow"
+
+
+        >
+
+        <ImageButton
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginLeft="10dp"
+            android:background="@drawable/baseline_format_list_bulleted_24"
+            android:layout_gravity="top|start"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="25dp"
+            android:layout_gravity="center|start"
+
+            android:layout_marginLeft="40dp"
+
+            android:text="Qty:"
+            android:gravity="center|center_horizontal"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_gravity="bottom|start"
+            android:layout_marginLeft="40dp"
+
+            android:gravity="bottom"
+            android:layout_marginBottom="10dp"
+            android:text="Id:"
+            android:textDirection="ltr"
+            android:textSize="15sp" />
+
+        <TextView
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_gravity="bottom|start"
+            android:layout_marginStart="75dp"
+
+            android:text="1:"
+            android:gravity="bottom"
+            android:id="@+id/tvitem_id"
+            android:layout_marginBottom="10dp"
+            android:textDirection="ltr"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/tvitem_name"
+            android:layout_width="140dp"
+            android:layout_height="45dp"
+            android:layout_gravity="top"
+            android:layout_marginHorizontal="40dp"
+
+            android:text="@string/sample_string_text"
+            android:textDirection="ltr"
+            android:textSize="15sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:id="@+id/tvitem_quantity"
+            android:layout_height="wrap_content"
+            android:text="@string/sample_string_text"
+            android:textDirection="ltr"
+            android:textSize="15sp"
+
+            android:layout_gravity="center_vertical"
+
+            android:layout_marginHorizontal="75dp"/>
+
+        <TextView
+            android:id="@+id/tvitem_price"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sample_string_text"
+            android:textSize="15sp"
+            android:layout_gravity="top|end"
+
+            android:layout_marginEnd="15dp"/>/>
+        <TextView
+            android:id="@+id/tvitem_tax"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sample_string_text"
+            android:textSize="15sp"
+            android:layout_marginTop="-20dp"
+            android:layout_gravity="center|end"
+
+            android:layout_marginEnd="20dp"/>/>
+
+        <TextView
+            android:id="@+id/tvitem_total"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sample_string_text"
+            android:layout_marginBottom="40dp"
+            android:textSize="15sp"
+            android:layout_gravity="bottom|end"
+
+            android:layout_marginEnd="15dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Price:"
+            android:textSize="15sp"
+            android:layout_marginStart="60dp"
+            android:layout_gravity="center|top"
+
+            android:textFontWeight="7"
+            android:textStyle="bold"
+            android:layout_marginEnd="20dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tax:"
+            android:textSize="15sp"
+            android:layout_marginTop="-20dp"
+            android:layout_marginStart="60dp"
+            android:layout_gravity="center|center_vertical"
+
+            android:textFontWeight="7"
+            android:textStyle="bold"
+            android:layout_marginEnd="27dp"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Total:"
+            android:textSize="15sp"
+            android:layout_marginStart="60dp"
+            android:layout_gravity="bottom|center"
+            android:layout_marginBottom="40dp"
+
+            android:textFontWeight="7"
+            android:textStyle="bold"
+            android:layout_marginEnd="21dp"/>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_marginEnd="30dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:baselineAligned="true"
+            android:layout_marginBottom="10dp"
+            android:layout_gravity="bottom|end">
+
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/baseline_edit_24"
+                android:paddingRight="30dp"
+                android:background="@color/transparent"
+                android:layout_gravity="end|bottom"
+                android:id="@+id/itemlist_edititemselected"/>
+
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:paddingRight="10dp"
+                android:layout_height="wrap_content"
+                android:src="@drawable/baseline_delete_24"
+                android:background="@color/transparent"
+                android:layout_gravity="end|bottom"
+                android:id="@+id/itemlist_deleteitemselected"/>
+
+
+
+        </LinearLayout>
+
+
+
+    </androidx.cardview.widget.CardView>
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="15dp"
+        />
+
+
+</LinearLayout>
+

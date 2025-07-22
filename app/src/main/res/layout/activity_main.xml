@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/newEstimateLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F4F5F8"
+    android:orientation="vertical">
+
+
+    <!-- page section   -->
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomEstimateNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        app:backgroundTint="@color/dark_blue2"
+        app:itemBackground="@drawable/shadow"
+        app:itemIconSize="24dp"
+        app:itemIconTint="@color/dark_blue2"
+        app:itemTextColor="@color/blue"
+        app:layout_constraintBottom_toBottomOf="parent"
+
+        app:menu="@menu/landingpage_invoice_navbar"
+         />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nestedScrollView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+
+        android:orientation="vertical"
+        app:flow_horizontalAlign="center"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        >
+
+
+        <RelativeLayout
+            android:id="@+id/mainreltve_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:gravity="top|center_vertical"
+            >
+
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardviewEstimate"
+                android:layout_width="370dp"
+                android:layout_height="wrap_content"
+                android:foregroundGravity="center"
+
+                >
+
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent">
+
+
+                    <TextView
+                        android:id="@+id/tv_Estimate_name"
+                        android:layout_width="120dp"
+                        android:layout_height="30dp"
+                        android:layout_marginStart="15dp"
+                        android:layout_marginTop="15dp"
+
+                        android:gravity="start"
+                        android:labelFor="@+id/edit_item_name"
+                        android:text="INV001"
+                        android:textSize="22sp" />
+
+                    <TextView
+                        android:id="@+id/tv_inv1"
+                        android:layout_width="120dp"
+                        android:layout_height="30dp"
+                        android:layout_below="@+id/tv_Estimate_name"
+                        android:layout_marginStart="15dp"
+
+                        android:gravity="start"
+                        android:text="@string/creation_date"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:id="@+id/tv_inv2"
+                        android:layout_width="120dp"
+                        android:layout_height="30dp"
+                        android:layout_below="@+id/tv_inv1"
+                        android:layout_marginStart="15dp"
+
+                        android:gravity="start"
+                        android:labelFor="@id/edit_item_quantity"
+                        android:text="@string/due_on"
+                        android:textSize="15sp" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_marginHorizontal="25dp"
+                        android:layout_marginVertical="35dp"
+                        android:gravity="center">
+
+                        <ImageButton
+                            android:id="@+id/btn_inv001"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/baseline_arrow_forward_" />
+
+                    </LinearLayout>
+
+
+                </RelativeLayout>
+
+            </androidx.cardview.widget.CardView>
+
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardviewtemplate"
+                android:layout_width="370dp"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/cardviewEstimate"
+                android:layout_marginVertical="20dp"
+                android:foregroundGravity="center"
+                android:padding="10dp"
+                tools:ignore="MissingConstraints">
+
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent">
+
+
+                    <TextView
+                        android:id="@+id/tv_temp"
+                        android:layout_width="120dp"
+                        android:layout_height="30dp"
+                        android:layout_marginStart="15dp"
+                        android:layout_marginTop="15dp"
+
+                        android:gravity="start"
+                        android:labelFor="@+id/edit_item_name"
+                        android:text="Template"
+                        android:textSize="22sp" />
+
+                    <TextView
+                        android:id="@+id/tv_temp2"
+                        android:layout_width="120dp"
+                        android:layout_height="30dp"
+                        android:layout_below="@+id/tv_temp"
+                        android:layout_marginStart="15dp"
+
+                        android:gravity="start"
+                        android:text="@string/create"
+                        android:textSize="15sp" />
+
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_marginHorizontal="25dp"
+                        android:layout_marginVertical="35dp"
+                        android:gravity="center">
+
+                        <ImageButton
+                            android:id="@+id/btn_template"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/baseline_arrow_forward_" />
+
+                    </LinearLayout>
+
+
+                </RelativeLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardviewBusinessInfo"
+                android:layout_width="370dp"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/cardviewtemplate"
+                android:foregroundGravity="center"
+                android:padding="10dp"
+                tools:ignore="MissingConstraints"
+
+                >
+
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent">
+
+
+                    <TextView
+                        android:id="@+id/tv_Business_info"
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:layout_marginStart="15dp"
+                        android:layout_marginTop="15dp"
+
+                        android:gravity="start"
+                        android:labelFor="@+id/edit_item_name"
+                        android:text="@string/bussiness_information"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:id="@+id/tv_client_info"
+                        android:layout_width="120dp"
+                        android:layout_height="30dp"
+                        android:layout_below="@+id/tv_Business_info"
+                        android:layout_marginStart="15dp"
+
+                        android:gravity="start"
+                        android:text="@string/client_info"
+                        android:textSize="16sp" />
+
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_marginHorizontal="25dp"
+                        android:layout_marginVertical="35dp"
+                        android:gravity="center">
+
+                        <ImageButton
+                            android:id="@+id/btnclientInfo"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/baseline_arrow_forward_" />
+
+                    </LinearLayout>
+
+                    <androidx.coordinatorlayout.widget.CoordinatorLayout
+                        android:id="@+id/coordinatorLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+
+                    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+
+                </RelativeLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardviewItemslist"
+                android:layout_width="370dp"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/cardviewBusinessInfo"
+                android:layout_marginVertical="20dp"
+                android:foregroundGravity="center"
+                android:padding="10dp"
+                tools:ignore="MissingConstraints"
+
+                >
+
+                <RelativeLayout
+                    android:layout_width="368dp"
+                    android:layout_height="match_parent">
+
+
+                    <TextView
+                        android:id="@+id/tv_items"
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:layout_marginStart="15dp"
+                        android:layout_marginTop="15dp"
+
+                        android:gravity="start"
+                        android:labelFor="@+id/edit_item_name"
+                        android:text="@string/items_list"
+                        android:textSize="18sp" />
+
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/itemsListed"
+                        android:layout_width="350dp"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/tv_items"
+                        android:layout_marginHorizontal="10dp"
+                        android:layout_marginTop="1dp"
+                        app:cardCornerRadius="5dp"
+                        app:cardForegroundColor="@color/transparent">
+
+                        <android.widget.ScrollView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:nestedScrollingEnabled="true">
+
+
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/recycleItem"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_marginTop="5dp"
+
+
+                                />
+
+                        </android.widget.ScrollView>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/additemscardView"
+                        android:layout_width="350dp"
+                        android:layout_height="40dp"
+                        android:layout_below="@id/itemsListed"
+                        android:layout_marginHorizontal="10dp"
+                        android:layout_marginTop="15dp"
+                        app:cardCornerRadius="5dp"
+                        app:cardForegroundColor="@color/lightSky">
+
+                        <ImageButton
+                            android:id="@+id/addbuttonImage"
+                            android:layout_width="25dp"
+                            android:layout_height="25dp"
+                            android:layout_gravity="center_vertical"
+                            android:background="@drawable/plus" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginHorizontal="30dp"
+                            android:gravity="center|fill"
+                            android:text="@string/add_item_to_list"
+                            android:textSize="12sp" />
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/addItemsSubtotalCardview"
+                        android:layout_width="350dp"
+                        android:layout_height="40dp"
+                        android:layout_below="@id/additemscardView"
+                        android:layout_marginHorizontal="10dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        app:cardCornerRadius="5dp"
+                        app:cardForegroundColor="@color/lightSky">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginHorizontal="10dp"
+
+                            android:text="@string/sub_total"
+                            android:textSize="18sp" />
+
+                        <TextView
+                            android:id="@+id/esum_subtotal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginStart="140dp"
+
+                            android:gravity="end"
+                            android:text="@string/ksh_0_00"
+                            android:textSize="18sp" />
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/addItemsTotal"
+                        android:layout_width="350dp"
+                        android:layout_height="40dp"
+                        android:layout_below="@id/addItemsSubtotalCardview"
+                        android:layout_alignParentBottom="false"
+                        android:layout_marginHorizontal="10dp"
+                        android:layout_marginBottom="20dp"
+                        app:cardCornerRadius="5dp"
+                        app:cardForegroundColor="@color/lightSky">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginHorizontal="10dp"
+
+                            android:text="@string/total"
+                            android:textSize="18sp"
+
+                            />
+
+                        <TextView
+                            android:id="@+id/esum_Total"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginStart="140dp"
+
+                            android:gravity="end"
+                            android:text="@string/esumTotal_ksh_0_00"
+                            android:textSize="18sp" />
+
+                    </com.google.android.material.card.MaterialCardView>
+
+
+                </RelativeLayout>
+
+            </androidx.cardview.widget.CardView>
+
+
+        </RelativeLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
