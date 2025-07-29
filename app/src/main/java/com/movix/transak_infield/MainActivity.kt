@@ -1,23 +1,20 @@
 package com.movix.transak_infield
 
+
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
-
-
 import android.os.Bundle
 import android.os.Environment
-
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.movix.transak_infield.databinding.ActivityMainBinding
 import androidx.appcompat.app.*
+import androidx.core.app.SharedElementCallback
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.itextpdf.io.font.FontProgramFactory
 import com.itextpdf.io.font.PdfEncodings
 import com.itextpdf.io.image.ImageDataFactory
@@ -27,33 +24,35 @@ import com.itextpdf.kernel.colors.DeviceRgb
 import com.itextpdf.kernel.font.PdfFont
 import com.itextpdf.kernel.font.PdfFontFactory
 import com.itextpdf.kernel.font.PdfFontFactory.EmbeddingStrategy
-import com.itextpdf.kernel.geom.Line
 import com.itextpdf.kernel.geom.PageSize
 import com.itextpdf.kernel.geom.Rectangle
-
-import com.itextpdf.kernel.pdf.PdfWriter
 import com.itextpdf.kernel.pdf.PdfDocument
+import com.itextpdf.kernel.pdf.PdfWriter
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas
 import com.itextpdf.layout.Document
 import com.itextpdf.layout.borders.Border
 import com.itextpdf.layout.borders.SolidBorder
-import com.itextpdf.layout.element.Paragraph
-import com.itextpdf.layout.element.Table
 import com.itextpdf.layout.element.Cell
 import com.itextpdf.layout.element.Image
+import com.itextpdf.layout.element.Paragraph
+import com.itextpdf.layout.element.Table
+import com.itextpdf.layout.properties.TextAlignment
 import com.itextpdf.layout.properties.UnitValue
+import com.movix.transak_infield.databinding.ActivityMainBinding
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
 import java.io.File
 import java.io.FileOutputStream
 
 
 open class MainActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityMainBinding
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -71,16 +70,24 @@ open class MainActivity : AppCompatActivity() {
         }
 
         binding.btnTemplate.setOnClickListener {
-           // prevent double-tap
-            lifecycleScope.launch(Dispatchers.IO) {
-                estimatePdf()  // Run PDF logic in background
+            // prevent double-tap
 
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, "Download Success...", Toast.LENGTH_LONG)
-                        .show()
+            GlobalScope.launch {
+
+                val lifecyclejob: Job = lifecycleScope.launch(Dispatchers.IO) {
+                    estimatePdf()  // Run PDF logic in background
+
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@MainActivity, "Download Success...", Toast.LENGTH_LONG)
+                            .show()
+                    }
+
+
                 }
+                lifecyclejob.join()
             }
         }
+
 
 
 
@@ -113,7 +120,6 @@ open class MainActivity : AppCompatActivity() {
 
         }
 
-
         //call the method that show items into our recycler view
         setupListintoRecycleview()
 
@@ -127,6 +133,12 @@ open class MainActivity : AppCompatActivity() {
         }
 
     }
+//meaning of this overide im tryin to use
+	override fun setEnterSharedElementCallback(callback: SharedElementCallback?) {
+		super.setEnterSharedElementCallback(callback)
+		setupListintoRecycleview()
+	}
+	//end of suspend function
 
     fun getPdfFontFromAssets(context: Context): PdfFont {
         val inputStream = context.assets.open("fonts/gerhana.ttf")
@@ -192,22 +204,6 @@ open class MainActivity : AppCompatActivity() {
             val pdfCanvas = PdfCanvas(pdfDocument.addNewPage())
 
 
-//
-
-
-//            create the fonts using the byte array
-
-
-//            set the fonts for use by getting the storage directory first
-
-//            val fontStream3 = this.assets.open("fonts/seguiemj.ttf")
-
-//create the font program factory
-
-
-//            parse fontprogam to create the font
-
-
 //            create the image path
 
             val width = PageSize.A4.width
@@ -228,40 +224,38 @@ open class MainActivity : AppCompatActivity() {
             pdfCanvas.addImageFittedIntoRectangle(
                 imageDatafromArr, Rectangle(0f, 0f, width, height), false
             )
-            // draw horizontal line
+            // draw horizontal line on the top section of header
 
-            pdfCanvas.setLineWidth(0.05f)
+            pdfCanvas.setLineWidth(0.06f)
 
             pdfCanvas.moveTo(50.00, 689.00)
             pdfCanvas.lineTo(544.00, 689.00)
             pdfCanvas.stroke().setStrokeColor(DeviceRgb(47, 59, 81))
 
+//       1. Define Table Headers: and its properties the font color background colour and border
 
-//       1. Define Table Headers:
-//            create columnwidth dimension
             val latoRegular = latoRegularFont(this)
             val queensFont = queensFont(this)
             val gerhanaFont = getPdfFontFromAssets(this)
             val latobold = latoBold(this)
+            val textColor = DeviceRgb(44, 45, 47)
 
-            val tablemargintop = 206f
+//            the solid border color resource custom defined
+            val border = SolidBorder(DeviceRgb(224, 224, 244), 0.9f)
+//            where to start the table at
+            val tablemargintop = 202f
+            //            create columnwidth dimension
             val columnWidth = floatArrayOf(221.5f, 62.75f, 73.5f, 47f, 100f)
 
             val table = Table(columnWidth)  //table having column widths
                 .setWidth(UnitValue.createPointValue(columnWidth.sum()))  // full width
-                .setBorderTop(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
-                .setBorderRight(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
-                .setBorderLeft(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
-                .setBorderBottom(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
 
-                .setFontSize(12f).setFont(gerhanaFont).setFontColor(DeviceRgb(44, 45, 47))
-
-
+                .setBorderLeft(border)
+                .setBorderRight(border)
+                .setBorderBottom(border)
+                .setBorderTop(Border.NO_BORDER)
+                .setFontSize(11f).setFont(gerhanaFont).setFontColor(textColor)
                 .setMarginTop(tablemargintop)
-
-
-            val line1 = Line(22.5f, 704.5f, 544f, 704.5f)
-
 
             // Add header cells
             val headers = listOf("DESCRIPTION", "QUANTITY", "PRICE", "TAX", "AMOUNT")
@@ -271,11 +265,10 @@ open class MainActivity : AppCompatActivity() {
 
                 table.addCell(
                     Cell().setBorder(Border.NO_BORDER).add(
-                        Paragraph(it).setFont(latobold).setBold()
-                            .setFontColor(ColorConstants.WHITE)
+                        Paragraph(it).setFont(latobold).setBold().setFontColor(ColorConstants.WHITE)
                     ).setBackgroundColor(DeviceRgb(62, 140, 202)) // blue header background
 
-                ).setBorder(Border.NO_BORDER)
+                )
 
 
             }
@@ -305,48 +298,56 @@ open class MainActivity : AppCompatActivity() {
             items.forEach { item ->
                 //Loop through and calculate amount = price × quantity:
                 val amount = item.price * item.quantity
-                table.addCell(item.itemName.uppercase())
-                    .setBorderTop(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
-                    .setBorderRight(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
-                    .setBorderLeft(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
-                    .setBorderBottom(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                // create a border with a custom colour lighter grey-blue and width weight 0.9
 
-                table.addCell(item.quantity.toString()).setBorder(Border.NO_BORDER)
-                    .setBorderTop(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
-                    .setBorderRight(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
-                    .setBorderLeft(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
-                    .setBorderBottom(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                val cell1 = Cell().add(
+                    Paragraph(item.itemName.uppercase())
+                        .setBorder(Border.NO_BORDER)
+                        .setTextAlignment(TextAlignment.LEFT)
+                ).setBorder(border)
 
 
-                table.addCell("${"%.2f".format(item.price)}").setBorder(Border.NO_BORDER)
-                    .setBorderTop(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
-                    .setBorderRight(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
-                    .setBorderLeft(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
-                    .setBorderBottom(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                val cell2 = Cell().add(
+                    Paragraph(item.quantity.toString()).setBorder(Border.NO_BORDER)
+                        .setBorder(Border.NO_BORDER)
+                        .setFontColor(textColor)
+                        .setTextAlignment(TextAlignment.CENTER)
+                ).setBorder(border)
 
 
-                table.addCell(item.tax.toString())
-                    .setBorderTop(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
-                    .setBorderRight(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
-                    .setBorderLeft(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
-                    .setBorderBottom(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                val cell3 = Cell().add(
+                    Paragraph("${"%,.2f".format(item.price)}").setBorder(Border.NO_BORDER)
+                        .setBorder(Border.NO_BORDER)
+                        .setFontColor(textColor)
+                        .setTextAlignment(TextAlignment.RIGHT)
+                ).setBorder(border)
 
 
-                table.addCell("${"%.2f".format(amount)}")
-                    .setBorderTop(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
-                    .setBorderRight(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
-                    .setBorderLeft(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
-                    .setBorderBottom(SolidBorder(DeviceRgb(224, 224, 244), 0.9f))
+                val cell4 = Cell().add(
+                    Paragraph(item.tax.toString())
+                        .setBorder(Border.NO_BORDER)
+                        .setFontColor(textColor)
+                        .setTextAlignment(TextAlignment.CENTER)
+                ).setBorder(border)
 
-//                table.setFont(fonts)
+                val cell5 = Cell().add(
+                    Paragraph("${"%,.2f".format(amount)}")
+                        .setBorder(Border.NO_BORDER)
+                        .setFontColor(textColor)
+                        .setTextAlignment(TextAlignment.RIGHT)
+                ).setBorder(border)
 
-
+                table.addCell(cell1)
+                table.addCell(cell2)
+                table.addCell(cell3)
+                table.addCell(cell4)
+                table.addCell(cell5)
             }
 // the header sections
 //            call the image of qr function to be used in the itext pdf
-            val docName ="CLIENT_iNFIELDER"
-            val qrImage= Templatepdf1().qrcodeGenerator(docName)
-            document.add(qrImage.setFixedPosition(1,425.21f,690f))
+            val docName = "CLIENT_iNFIELDER"
+            val qrImage = Templatepdf1().qrcodeGenerator(docName)
+            document.add(qrImage.setFixedPosition(1, 431.21f, 685f))
 
             document.add(
                 Paragraph("INFIELD").setBold()
@@ -357,7 +358,6 @@ open class MainActivity : AppCompatActivity() {
                 Paragraph("ENGINEERING").setBold()
                     .setFontColor(DeviceRgb(67, 105, 45)) // engineering jungle green
                     .setFontSize(18f).setFixedPosition(223.1f, 784.8f, 134f)
-
             )
             document.add(
                 Paragraph("SERVICES LTD").setBold()
@@ -367,9 +367,7 @@ open class MainActivity : AppCompatActivity() {
             document.add(
                 Paragraph("P.O BOX 62700-19052").setFontColor(
                     DeviceRgb(
-                        47,
-                        59,
-                        81
+                        47, 59, 81
                     )
                 ) // address dark blue
                     .setFontSize(16f).setFixedPosition(146f, 737.3f, 184f).setFont(latoRegular)
@@ -414,9 +412,7 @@ open class MainActivity : AppCompatActivity() {
             document.add(
                 Paragraph("CREATION DATE: ").setFontColor(
                     DeviceRgb(
-                        47,
-                        59,
-                        81
+                        47, 59, 81
                     )
                 ) // address dark blue
                     .setFontSize(13f)
@@ -452,25 +448,27 @@ open class MainActivity : AppCompatActivity() {
             document.add(table)
             val amountCell = Table(floatArrayOf(93f, 130f))
             val amountTotal = mutableListOf("Subtotal", "0.0", "Vat", "0.0", "Total", "0.0")
-            val dbData = DatabaseHandler(this)
-            amountTotal.forEach {
-                val items = dbData.viewProduct()
-                for (ik in items) {
-                    ik.tax
-                    var total = ik.total
-                    ik.price
-                    total += total
-//we are debugging here FOR THE CALCULATION OF PRICES AND TOTALS
-                    amountTotal[1] = total.toString()
-                    amountTotal[3] = "120"
-                    amountTotal[5] = "120"
 
-                }
+            amountTotal.forEach {
+//function to sum total of items from the database
+                val subtotal = GlobalFunck().getSubTotal(applicationContext)
+                val textformat ="%,.2f"
+                val objTax = GlobalFunck().summationOfTax(applicationContext)
+                var objTotal = GlobalFunck().summationofTotal(applicationContext)
+
+
+                println("the trial goes hee in this list $subtotal")
+                //we are debugging here FOR THE CALCULATION OF PRICES AND TOTALS
+                amountTotal[1] = "${textformat.format(Math.ceil(subtotal.toDouble()))}"
+                amountTotal[3] = "${textformat.format(Math.ceil(objTax))}"
+                amountTotal[5] = "${textformat.format(Math.ceil(objTotal.toDouble()))}"
+
+
+
 
                 amountCell.addCell(
                     Cell().add(Paragraph(it)).setHeight(18f).setFontSize(12f)
-                        .setBorder(Border.NO_BORDER)
-                        .setFont(latobold)
+                        .setBorder(Border.NO_BORDER).setFont(latobold)
                 ).setFontColor(ColorConstants.BLACK).setBackgroundColor(DeviceRgb(62, 140, 202))
                     .setBorder(Border.NO_BORDER).setMarginLeft(284f).setMarginTop(30f)
             }
@@ -481,42 +479,42 @@ open class MainActivity : AppCompatActivity() {
                 mpesaInfo.addCell(
                     Cell().setBorder(Border.NO_BORDER).setBackgroundColor(DeviceRgb(62, 140, 202))
                         .add(Paragraph(it))
-                ).setFontColor(ColorConstants.WHITE)
-                    .setHeight(35f)
-                    .setFont(gerhanaFont)
+                ).setFontColor(ColorConstants.WHITE).setHeight(35f).setFont(gerhanaFont)
                     .setFontColor(ColorConstants.WHITE)
             }
 
 
             val bankInfoTable = Table(floatArrayOf(135.75f, 120.75f, 120.75f, 125.75f))
+
             val aboutDetailing = Table(floatArrayOf(135.15f))
-            val aboutDetailing2 =aboutDetailing
             val detailHeading = listOf("BANK DETAIL")
 
-            val dH1 = detailHeading.first()
+            val mpesadetail = Table(floatArrayOf(135.15f))
             val detailHeading2 = listOf("M-PESA PAYBILL")
-            val dH2 = detailHeading2.last()
+
+
+            val dH2 = detailHeading2.first()
+
 
             dH2.forEach {
-                aboutDetailing2.addCell(
-                    Cell().setBorder(Border.NO_BORDER)
-                        .add(Paragraph(dH2))
+                mpesadetail.addCell(
+                    Cell().setBorder(Border.NO_BORDER).add(Paragraph(dH2))
                         .setBackgroundColor(DeviceRgb(62, 140, 202))
-                ).setFontColor(ColorConstants.WHITE)
-                    .setHeight(35f)
-                    .setFont(gerhanaFont)
-                    .setMarginTop(10f)
-            }
+                ).setFontColor(ColorConstants.WHITE).setHeight(35f).setFont(gerhanaFont)
+                    .setMarginTop(1f).setMarginBottom(0f)
 
+            }
 
             detailHeading.forEach {
                 aboutDetailing.addCell(
-                    Cell().add(Paragraph(dH1).setBorder(Border.NO_BORDER))
+                    Cell().add(Paragraph(it).setBorder(Border.NO_BORDER))
                 ).setMarginTop(25.25f).setBackgroundColor(DeviceRgb(62, 140, 202))
                     .setFontColor(ColorConstants.WHITE).setFont(gerhanaFont)
+	                .setBorder(Border.NO_BORDER)
+
             }
 
-            document.add(aboutDetailing)
+
             val infosBank = listOf("ACCOUNT NAME", "BANK NAME", "BRANCH", "ACCOUNT NO")
             val bankdetail =
                 listOf("INFIELD ENGINEERING LTD", "KINGDOM BANK", "NAIROBI", "5021964795002")
@@ -540,15 +538,15 @@ open class MainActivity : AppCompatActivity() {
                         .setBorderRight(SolidBorder(DeviceRgb(224, 224, 224), 0.04f))
                         .setFontSize(11f)
 
-                ).setMarginTop(0.01f)
-                    .setFont(latobold)
+                ).setMarginTop(0.01f).setFont(latobold)
             }
             infosBank.last()
 
-
+            document.add(aboutDetailing)
             document.add(bankInfoTable)
-            document.add(aboutDetailing2)
+            document.add(mpesadetail)
             document.add(mpesaInfo)
+
 
             //document metadata
             pdfDocument.documentInfo.setAuthor("nelvinKelly@gmail.com").setTitle("Estimates")
@@ -578,10 +576,6 @@ open class MainActivity : AppCompatActivity() {
         } else {
             binding.recycleItem.visibility = View.GONE
         }
-    }
-
-    fun publicSetview() {
-        setupListintoRecycleview()
     }
 
 
@@ -628,7 +622,7 @@ open class MainActivity : AppCompatActivity() {
         nameEditText?.setText(modelClass.itemName)
         quantityEditText?.setText(modelClass.quantity.toString())
         priceEditText?.setText(modelClass.price.toString())
-        taxRateEditText?.setText(modelClass.total.toString())
+        taxRateEditText?.setText(modelClass.tax.toString())
         //cancellation button
         cancelButton?.setOnClickListener {
             dialog.dismiss()
@@ -661,11 +655,12 @@ open class MainActivity : AppCompatActivity() {
             val status = db.updateRecords(updatedModel)
 
             if (status > -1) {
-                Toast.makeText(this, "Item updated", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "success", Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
                 // Optional: refresh RecyclerView
+	           setupListintoRecycleview()
             } else {
-                Toast.makeText(this, "Failed to update", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Failed", Toast.LENGTH_SHORT).show()
             }
         }
 

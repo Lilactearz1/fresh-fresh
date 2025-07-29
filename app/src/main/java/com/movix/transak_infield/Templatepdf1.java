@@ -27,13 +27,13 @@ public class Templatepdf1 {
     // Method to generate QR code and return iText 7 Image
     public Image qrcodeGenerator(String data) {
         try {
-            BitMatrix bitMatrix = new MultiFormatWriter().encode(data, BarcodeFormat.QR_CODE, 180, 180);
-            Bitmap bitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
+            BitMatrix bitMatrix = new MultiFormatWriter().encode(data, BarcodeFormat.QR_CODE, 106, 106);
+            Bitmap bitmap = Bitmap.createBitmap(110, 110, Bitmap.Config.ARGB_8888);
 
-            for (int x = 0; x < 100; x++) {
-                for (int y = 0; y < 100; y++) {
+            for (int x = 0; x < 105; x++) {
+                for (int y = 0; y < 105; y++) {
                     boolean isSet = bitMatrix.get(x, y);
-                    int color = isSet ? Color.BLACK : Color.WHITE;
+                    int color = isSet ? Color.BLACK : Color.TRANSPARENT;
                     bitmap.setPixel(x, y, color);
                 }
             }
@@ -84,8 +84,5 @@ public class Templatepdf1 {
         }
     }
 
-    public void downloadpdf(PdfDocument pdfDocument,Context context) {
 
-
-    }
 }

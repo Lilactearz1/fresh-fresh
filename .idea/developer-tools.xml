@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="DeveloperToolsToolWindowSettingsV1" lastSelectedContentNodeId="color-picker">
+  <component name="DeveloperToolsToolWindowSettingsV1" lastSelectedContentNodeId="text-statistic">
     <developerToolsConfigurations>
       <developerToolConfiguration developerToolId="text-format-converter" id="60dd99a0-adf5-4bf9-a6b1-b9f52dec6c74" name="Workbench">
         <properties>
@@ -26,6 +26,8 @@
         </properties>
       </developerToolConfiguration>
     </developerToolsConfigurations>
-    <expandedGroupNodeIds />
+    <expandedGroupNodeIds>
+      <expandedGroupNodeId value="text" />
+    </expandedGroupNodeIds>
   </component>
 </project>

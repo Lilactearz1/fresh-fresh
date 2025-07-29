@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+
     >
+    <group
+        android:id="@+id/landingpage_navbar">
+
+
     <item
         android:id="@+id/preview1"
         android:title="@string/preview"
@@ -16,6 +22,7 @@
         android:icon="@drawable/baseline_download_for_offline_24">
 
     </item>
+    </group>
 
 
 </menu>

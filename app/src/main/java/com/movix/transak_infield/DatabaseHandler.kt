@@ -13,7 +13,7 @@ import android.widget.TextView
 class DatabaseHandler(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
-        private const val DATABASE_VERSION = 6
+        private const val DATABASE_VERSION = 4
         private const val DATABASE_NAME = "Transak_infield.db"
         private const val TABLE_NAME = "TableInvoice"
 
@@ -24,6 +24,7 @@ class DatabaseHandler(context: Context) :
         private const val KEY_ITEM_TOTAL = "item_total"
         private const val KEY_TAX = "item_tax"
     }
+
 
     override fun onCreate(db: SQLiteDatabase?) {
 //        creating table with fields /COLUMNS WITH THE NAME TEXT TYPE: INTEGER ,TEXT ,CHAR
@@ -56,6 +57,7 @@ class DatabaseHandler(context: Context) :
         contentValues.put(KEY_PRICE, modelClass.price)
         contentValues.put(KEY_TAX, modelClass.tax)
         contentValues.put(KEY_ITEM_TOTAL, modelClass.total)
+
 //        inserting rows
         val insertSuccess = db.insert(TABLE_NAME, null, contentValues)
 //        second param2 is a string containing nullColumnHack
@@ -91,6 +93,7 @@ class DatabaseHandler(context: Context) :
         var total: Float
         var tax: Float
 
+
 //      Move through the cursor
         if (cursor.moveToFirst()) {
             do {
@@ -100,6 +103,8 @@ class DatabaseHandler(context: Context) :
                 price = cursor.getDouble(cursor.getColumnIndexOrThrow(KEY_PRICE))
                 total = cursor.getFloat(cursor.getColumnIndexOrThrow(KEY_ITEM_TOTAL))
                 tax = cursor.getFloat(cursor.getColumnIndexOrThrow(KEY_TAX))
+
+
                 val modelClass1 = ModelClass(
                     id = id,
                     quantity = quantity,
@@ -110,6 +115,8 @@ class DatabaseHandler(context: Context) :
                 )
 
                 productList.add(modelClass1)
+
+
             } while (cursor.moveToNext())
         }
         cursor.close()
@@ -124,8 +131,9 @@ class DatabaseHandler(context: Context) :
         contentValues.put(KEY_NAME, modelClass.itemName) // put itemName .quantity, price,total
         contentValues.put(KEY_QUANTITY, modelClass.quantity)
         contentValues.put(KEY_PRICE, modelClass.price)
-        contentValues.put(KEY_ITEM_TOTAL, modelClass.total)
         contentValues.put(KEY_TAX, modelClass.tax)
+        contentValues.put(KEY_ITEM_TOTAL, modelClass.total)
+
 //    updating rows
 
         val successUpdate =

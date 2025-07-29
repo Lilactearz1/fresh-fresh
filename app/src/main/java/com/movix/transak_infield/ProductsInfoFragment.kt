@@ -10,6 +10,10 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.savedstate.SavedState
+import com.google.android.material.navigation.NavigationBarItemView
+import com.google.android.material.navigation.NavigationBarMenu
+import com.google.android.material.navigation.NavigationBarView
 import com.movix.transak_infield.databinding.FragmentProductsInfoBinding
 
 // TODO: Rename parameter arguments, choose names that match
@@ -31,7 +35,9 @@ class ProductsInfoFragment : Fragment() {
     private lateinit var itemQuantity: EditText
     private lateinit var itemPrice: EditText
     private lateinit var itemTaxrate: EditText
-    private lateinit var amountScrean: TextView
+    private lateinit var amountScreen: TextView
+    private  lateinit var  navigationBar:NavigationBarView
+
 
 
 //   private lateinit var databaseHandler:DatabaseHandler
@@ -60,7 +66,9 @@ class ProductsInfoFragment : Fragment() {
         itemQuantity = binding.addItemQuantity
         itemPrice = binding.addItemPrice
         itemTaxrate = binding.addItemTaxRate
-        amountScrean = binding.tvAddItemAmountScreen
+        amountScreen=view.findViewById(R.id.tv_amount_display_value)
+
+
 
         val backImagebtn = binding.button1
         val savebtn = binding.btnsave
@@ -70,7 +78,6 @@ class ProductsInfoFragment : Fragment() {
             addtoRecords(view) }
 
         backImagebtn.setOnClickListener {
-
             requireActivity().supportFragmentManager.popBackStack()
 
 
@@ -79,6 +86,8 @@ class ProductsInfoFragment : Fragment() {
         }
 
     }
+
+
 
 //    method for saving records to the database
 
@@ -112,11 +121,20 @@ class ProductsInfoFragment : Fragment() {
             itemTaxrate.error = "input field"
             return
         }
+        val productAmount:Float = try {
+
+       (itemPrice.text.toString().toFloat()*itemQuantity.text.toString().toFloat())
+        }catch (e: NumberFormatException){
+            itemQuantity.error = "inputfield"
+            itemPrice.error = "input field"
+            return
+        }
+
 
 //    create a model instance to use in the database
         val databaseHandler: DatabaseHandler = DatabaseHandler(requireContext())
 
-        val products = ModelClass(0, productQuantity, productDescription, productPrice,productTax,productTax)
+        val products = ModelClass(0, productQuantity, productDescription, productPrice,productAmount,productTax)
 
         if (productDescription.isNotEmpty() && productQuantity.toString()
                 .isNotEmpty() && productPrice.toString().isNotEmpty() && productTax.toString()
@@ -135,7 +153,7 @@ class ProductsInfoFragment : Fragment() {
                 itemTaxrate.text.clear()
 
 //                after all the inputs are cleared the screen to read 0.00 fo r amount
-                amountScrean.setText("0.00")
+                amountScreen.text = "0.00"
 
 // call the method that add adds list into the recyclerview
 
