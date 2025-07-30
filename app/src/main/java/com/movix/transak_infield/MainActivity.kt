@@ -10,6 +10,7 @@ import android.provider.ContactsContract.Contacts
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.*
 import androidx.core.app.SharedElementCallback
@@ -54,6 +55,7 @@ import java.io.FileOutputStream
 
 open class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+	private lateinit var  itemsCount:TextView
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,9 +73,6 @@ open class MainActivity : AppCompatActivity() {
                 .addToBackStack(null).commit()
         }
 
-		val dbHandlerCheck =DatabaseHandler(applicationContext)
-	    val clientsCreation=ClientsCreation(1,"Your right man","0707672304")
-	    dbHandlerCheck.addClientsInformations(clientsCreation)
 
         binding.btnTemplate.setOnClickListener {
             // prevent double-tap
@@ -126,8 +125,14 @@ open class MainActivity : AppCompatActivity() {
 
         }
 
-        //call the method that show items into our recycler view
+//set the text view to
+	    itemsCount = binding.tvItems
+//	    function to count items nimber inserted
+	    fun countItems(){ itemsCount .text = "Items No: [${setupListintoRecycleview()}]"}
+	    countItems()
+	    //call the method that show items into our recycler view
         setupListintoRecycleview()
+
 
         supportFragmentManager.addOnBackStackChangedListener {
             val fragment = supportFragmentManager.findFragmentById(R.id.newEstimateLayout)
@@ -135,17 +140,16 @@ open class MainActivity : AppCompatActivity() {
             // Only refresh list when the visible fragment is null (i.e., back to main view)
             if (fragment == null) {
                 setupListintoRecycleview()
+	            //	    function to count items nimber inserted
+	            countItems()
+	            println("items number ${setupListintoRecycleview()}")
             }
         }
 
     }
-//meaning of this overide im tryin to use
-	override fun setEnterSharedElementCallback(callback: SharedElementCallback?) {
-		super.setEnterSharedElementCallback(callback)
-		setupListintoRecycleview()
-	}
-	//end of suspend function
 
+
+//set the fonts for the pdf sections
     fun getPdfFontFromAssets(context: Context): PdfFont {
         val inputStream = context.assets.open("fonts/gerhana.ttf")
         val fontBytes = inputStream.readBytes()
@@ -571,7 +575,7 @@ open class MainActivity : AppCompatActivity() {
 
 
     //function to show list of inserted data in the recycler view
-    private fun setupListintoRecycleview() {
+    private fun setupListintoRecycleview():Int{
         val itemList = getItemlist()
 
         if (itemList.isNotEmpty()) {
@@ -583,6 +587,10 @@ open class MainActivity : AppCompatActivity() {
         } else {
             binding.recycleItem.visibility = View.GONE
         }
+//	    method to count the children
+	    val countItems =ItemAdapter(applicationContext,itemList)
+
+	    return countItems.itemCount
     }
 
 

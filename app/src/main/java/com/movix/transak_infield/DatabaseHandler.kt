@@ -12,7 +12,7 @@ import android.database.sqlite.SQLiteOpenHelper
 class DatabaseHandler(context: Context) :
 	SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 	companion object {
-		private const val DATABASE_VERSION = 5
+		private const val DATABASE_VERSION = 6
 		private const val DATABASE_NAME = "Transak_infield.db"
 		private const val TABLE_NAME = "TableInvoice"
 		private const val CUSTOMER_TABLE = "TableCustomer"
@@ -40,7 +40,7 @@ class DatabaseHandler(context: Context) :
 //        CREATE TABLE called TableInvoice(param1,param2,param3,.....)
 
 		val CREATE_CUSTOMERS_TABLE =
-			("CREATE TABLE " + CUSTOMER_TABLE + " (" + CUSTOMER_ID + " INTEGER PRIMARY KEY, " + CUSTOMER_NAME + " VARCHAR(50), " + CUSTOMER_PHONE + " TEXT" +  // Use TEXT for phone numbers
+			("CREATE TABLE " + CUSTOMER_TABLE + " (" + CUSTOMER_ID + " INTEGER PRIMARY KEY, " + CUSTOMER_NAME + " VARCHAR(50), " + CUSTOMER_PHONE + " TEXT" +
 					")")
 
 
@@ -62,9 +62,12 @@ class DatabaseHandler(context: Context) :
 	}
 
 	override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-		db!!.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
-		db!!.execSQL("DROP TABLE IF EXISTS $CUSTOMER_TABLE")
-		db!!.execSQL("DROP TABLE IF EXISTS $ESTIMATE_TABLE")
+//		you can omit !! since the db is not null at this pointThe system always calls it with a valid db instance, so it’s safe to use db!! once, or just assume it’s non-null and skip !! entirely (which is better).
+		db!!.execSQL("DROP TABLE IF EXISTS $ESTIMATE_TABLE") // Drop child first
+		db.execSQL("DROP TABLE IF EXISTS $CUSTOMER_TABLE")
+		db.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
+
+
 		onCreate(db)
 	}
 
@@ -85,7 +88,8 @@ class DatabaseHandler(context: Context) :
 	fun updateClientsInfos(clientsCreation: ClientsCreation): Int {
 		val db=this.writableDatabase
 		val contentValues =ContentValues()
-		contentValues.put(CUSTOMER_ID,clientsCreation.id)
+//		 Note: It’s not wrong to include CUSTOMER_ID in put() again, but it’s not necessary when updating by it.
+//		contentValues.put(CUSTOMER_ID,clientsCreation.id)
 		contentValues.put(CUSTOMER_NAME,clientsCreation.name)
 		contentValues.put(CUSTOMER_PHONE,clientsCreation.phone)
 		val updateSuccess = db.update(CUSTOMER_TABLE,contentValues, "$CUSTOMER_ID="+clientsCreation.id,null)
@@ -101,6 +105,7 @@ class DatabaseHandler(context: Context) :
 		contentValues.put(ESTIMATE_DATE,estimateinfo.creationDate)
 //		another way to pass the varag parameter created *(asterisk) called the spread operator
 		contentValues.put(DUE_DATE,estimateinfo.dueDate)
+		contentValues.put(CUSTOMER_ID, estimateinfo.customerId) // FIXED: Add this line
 		val successEstimate=db.insert(ESTIMATE_TABLE,null,contentValues)
 		db.close()
 		return successEstimate
@@ -113,6 +118,7 @@ class DatabaseHandler(context: Context) :
 		contentValues.put(ESTIMATE_DATE,estimateinfo.creationDate)
 //		another way to pass the varag parameter created *(asterisk) called the spread operator
 		contentValues.put(DUE_DATE,estimateinfo.dueDate)
+		contentValues.put(CUSTOMER_ID, estimateinfo.customerId)  // Important: Link to customer! -> Insert foreign key
 		val successUpdate=db.update(ESTIMATE_TABLE,contentValues,"$ESTIMATE_ID="+estimateinfo.id,null)
 		db.close()
 		return successUpdate

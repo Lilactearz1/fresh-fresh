@@ -56,6 +56,7 @@ class ItemAdapter(
         holder.textTax.text = "${item.tax}"
 
 
+
         holder.btnEdit.setOnClickListener() { View ->
             if (context is MainActivity) {
 
@@ -69,9 +70,8 @@ class ItemAdapter(
             }
         }
 
+
         val cardbackgrnd = holder.cardviewListItem
-
-
         if (position % 2 == 0) {
 
             val colourBackgnd = cardbackgrnd.setBackgroundColor(
