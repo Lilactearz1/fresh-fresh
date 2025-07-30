@@ -26,7 +26,8 @@ class GlobalFunck{
 		val dbView = DatabaseHandler(context)
 		var viewitem = dbView.viewProduct()
 
-		for (items in viewitem){
+	  viewitem.forEachIndexed{ _, items->
+
 			val price = items.price
 			val quantitty= items.quantity
 			val taxedIndex =items.tax

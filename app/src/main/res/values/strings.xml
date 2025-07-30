@@ -206,6 +206,7 @@
     <string name="download">Download</string>
     <string name="add_item_to_list">Add item to list</string>
     <string name="sample_string_text">Sample string text</string>
+    <string name="title_activity_archives">Archives</string>
 
 
 </resources>

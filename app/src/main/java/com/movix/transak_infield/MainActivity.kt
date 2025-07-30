@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.os.Environment
+import android.provider.ContactsContract.Contacts
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -54,6 +55,7 @@ import java.io.FileOutputStream
 open class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
@@ -68,6 +70,10 @@ open class MainActivity : AppCompatActivity() {
             supportFragmentManager.beginTransaction().replace(R.id.newEstimateLayout, fragment)
                 .addToBackStack(null).commit()
         }
+
+		val dbHandlerCheck =DatabaseHandler(applicationContext)
+	    val clientsCreation=ClientsCreation(1,"Your right man","0707672304")
+	    dbHandlerCheck.addClientsInformations(clientsCreation)
 
         binding.btnTemplate.setOnClickListener {
             // prevent double-tap
@@ -186,6 +192,7 @@ open class MainActivity : AppCompatActivity() {
     }
 
 
+
     private fun estimatePdf() {
 
         try {
@@ -261,11 +268,11 @@ open class MainActivity : AppCompatActivity() {
             val headers = listOf("DESCRIPTION", "QUANTITY", "PRICE", "TAX", "AMOUNT")
 
 
-            headers.forEach {
+            headers.forEach { head->
 
                 table.addCell(
                     Cell().setBorder(Border.NO_BORDER).add(
-                        Paragraph(it).setFont(latobold).setBold().setFontColor(ColorConstants.WHITE)
+                        Paragraph(head).setFont(latobold).setBold().setFontColor(ColorConstants.WHITE)
                     ).setBackgroundColor(DeviceRgb(62, 140, 202)) // blue header background
 
                 )
@@ -457,7 +464,7 @@ open class MainActivity : AppCompatActivity() {
                 var objTotal = GlobalFunck().summationofTotal(applicationContext)
 
 
-                println("the trial goes hee in this list $subtotal")
+
                 //we are debugging here FOR THE CALCULATION OF PRICES AND TOTALS
                 amountTotal[1] = "${textformat.format(Math.ceil(subtotal.toDouble()))}"
                 amountTotal[3] = "${textformat.format(Math.ceil(objTax))}"
@@ -587,7 +594,7 @@ open class MainActivity : AppCompatActivity() {
         return databaseHandler.viewProduct()
 
         /**
-         * a shorter replacement use the inline function
+         * a shorter replacement use the inline function "single expression function
          *
         private fun getItemlist() = DatabaseHandler(this).viewProduct()
          *
@@ -598,6 +605,9 @@ open class MainActivity : AppCompatActivity() {
 
          */
     }
+
+
+
 
     // method to update the inputs in the dialog
 

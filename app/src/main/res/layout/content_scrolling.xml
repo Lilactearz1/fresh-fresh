@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context=".Archives"
+    tools:showIn="@layout/activity_archives">
+
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:background="@drawable/backpdf"
+        app:layout_constraintTop_toTopOf="parent">
+        <LinearLayout
+            android:layout_width="170dp"
+            android:layout_marginStart="10dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="120dp"
+                android:layout_height="150dp"
+                android:id="@+id/archivecad1"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="1dp"
+                app:cardBackgroundColor="@drawable/shadow">
+
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+
+                android:layout_width="150dp"
+                android:layout_height="40dp"
+                android:layout_gravity="bottom|start"
+                android:layout_marginStart="16dp"
+                android:paddingLeft="10dp"
+                android:gravity="left|center"
+                android:labelFor="@id/archivecad1"
+                android:text="INVOICE1" />
+        </LinearLayout>
+
+        <Space
+            android:layout_width="20dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="20dp"/>
+
+        <LinearLayout
+            android:layout_marginTop="15dp"
+            android:layout_width="173dp"
+            android:layout_marginStart="10dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="120dp"
+                android:layout_height="150dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="1dp"
+                app:cardBackgroundColor="@drawable/shadow">
+
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+
+                android:layout_width="150dp"
+                android:layout_height="40dp"
+                android:layout_gravity="bottom|start"
+                android:layout_marginStart="16dp"
+                android:gravity="left|center"
+                android:labelFor="@id/archivecad1"
+                android:paddingLeft="10dp"
+                android:text="INVOICE1" />
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+
+</androidx.core.widget.NestedScrollView>
