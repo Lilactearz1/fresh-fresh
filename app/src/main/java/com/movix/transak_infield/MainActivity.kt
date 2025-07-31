@@ -7,9 +7,12 @@ import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.os.Environment
 import android.provider.ContactsContract.Contacts
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.*
@@ -49,6 +52,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.StringFormat
 import java.io.File
 import java.io.FileOutputStream
 
@@ -56,6 +60,8 @@ import java.io.FileOutputStream
 open class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 	private lateinit var  itemsCount:TextView
+	private  lateinit var Subtotal:GlobalFunck
+	private  lateinit var Total:GlobalFunck
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,6 +78,7 @@ open class MainActivity : AppCompatActivity() {
             supportFragmentManager.beginTransaction().replace(R.id.newEstimateLayout, fragment)
                 .addToBackStack(null).commit()
         }
+
 
 
         binding.btnTemplate.setOnClickListener {
@@ -93,6 +100,28 @@ open class MainActivity : AppCompatActivity() {
             }
         }
 
+	    val btnDownload=binding.btnSave
+
+
+
+	    btnDownload?.setOnClickListener{
+		    println( "onCreate: clicked btn linear")
+			Toast.makeText(this,"im clicked",Toast.LENGTH_LONG).show()
+		    GlobalScope.launch {
+
+			    val lifecyclejob: Job = lifecycleScope.launch(Dispatchers.IO) {
+				    estimatePdf()  // Run PDF logic in background
+
+				    withContext(Dispatchers.Main) {
+					    Toast.makeText(this@MainActivity, "Download Success...", Toast.LENGTH_LONG)
+						    .show()
+				    }
+
+
+			    }
+			    lifecyclejob.join()
+		    }
+	    }
 
 
 
@@ -130,8 +159,24 @@ open class MainActivity : AppCompatActivity() {
 //	    function to count items nimber inserted
 	    fun countItems(){ itemsCount .text = "Items No: [${setupListintoRecycleview()}]"}
 	    countItems()
+
+	fun txtViewTotals(){
+	    val stringFomat="%,.2f"
+	    val itemSubtal =binding.esumSubtotal
+	    val itemsTotal=binding.esumTotal
+	    Subtotal = GlobalFunck()
+	    val stringSubtotal=stringFomat.format(Math.floor(Subtotal.getSubTotal(applicationContext).toDouble()))
+	   itemSubtal.text=stringSubtotal
+
+	    Total= GlobalFunck()
+	    val stringTotal=stringFomat.format(Math.floor(Total.summationofTotal(applicationContext).toDouble()))
+	    itemsTotal.text=stringTotal
+	}
+
 	    //call the method that show items into our recycler view
         setupListintoRecycleview()
+//	    call method for tv add subtotal and totals
+	    txtViewTotals()
 
 
         supportFragmentManager.addOnBackStackChangedListener {
@@ -142,6 +187,9 @@ open class MainActivity : AppCompatActivity() {
                 setupListintoRecycleview()
 	            //	    function to count items nimber inserted
 	            countItems()
+	            //	    call method for tv add subtotal and totals
+	            txtViewTotals()
+
 	            println("items number ${setupListintoRecycleview()}")
             }
         }
@@ -664,7 +712,7 @@ open class MainActivity : AppCompatActivity() {
                 itemName = updatedName,
                 quantity = updatedQuantity,
                 price = updatedPrice,
-                total = updatedTax,
+                total = (updatedQuantity*updatedPrice).toFloat(),
                 tax = updatedTax
             )
 
