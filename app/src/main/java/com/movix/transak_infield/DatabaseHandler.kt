@@ -6,17 +6,19 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteOpenHelper
+import androidx.core.database.getIntOrNull
 
 //creating a database logic that extends the SQLiteOpenHelper base class
 
 class DatabaseHandler(context: Context) :
 	SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 	companion object {
-		private const val DATABASE_VERSION = 6
+		private const val DATABASE_VERSION = 8
 		private const val DATABASE_NAME = "Transak_infield.db"
 		private const val TABLE_NAME = "TableInvoice"
 		private const val CUSTOMER_TABLE = "TableCustomer"
 		private const val ESTIMATE_TABLE = "Estimates"
+		private const val ESTIMATE_TITLE = "Title"
 
 		private const val CUSTOMER_ID = "customer_id"
 		private const val CUSTOMER_PHONE = "customer_phone"
@@ -45,7 +47,10 @@ class DatabaseHandler(context: Context) :
 
 
 		val CREATE_ESTIMATE_TABLE =
-			("CREATE TABLE " + ESTIMATE_TABLE + " (" + ESTIMATE_ID + " INTEGER PRIMARY KEY, " + ESTIMATE_DATE + " DATETIME DEFAULT CURRENT_TIMESTAMP, " + DUE_DATE + " DATETIME DEFAULT CURRENT_TIMESTAMP, " + CUSTOMER_ID + " INTEGER, " +
+			("CREATE TABLE " + ESTIMATE_TABLE + " ("
+					+ ESTIMATE_ID + " INTEGER PRIMARY KEY, "
+					+ ESTIMATE_TITLE + " VARCHAR(200), "
+					+ ESTIMATE_DATE + " DATETIME DEFAULT CURRENT_TIMESTAMP, " + DUE_DATE + " DATETIME DEFAULT CURRENT_TIMESTAMP, " + CUSTOMER_ID + " INTEGER, " +
 					// Must match the primary key column in Customers table
 					"FOREIGN KEY(" + CUSTOMER_ID + ") REFERENCES " + CUSTOMER_TABLE + "(" + CUSTOMER_ID + ") ON DELETE CASCADE" + ")")
 
@@ -73,53 +78,61 @@ class DatabaseHandler(context: Context) :
 
 //	method to add customers info into the databse
 
-	fun addClientsInformations(clientsCreation: ClientsCreation):Long{
-		val db=this.writableDatabase
-		val contentValues=ContentValues()
-		contentValues.put(CUSTOMER_ID,clientsCreation.id)
-		contentValues.put(CUSTOMER_NAME,clientsCreation.name)
-		contentValues.put(CUSTOMER_PHONE,clientsCreation.phone)
-	    val infosSuccess = db.insertOrThrow(CUSTOMER_TABLE,null,contentValues)
+	fun addClientsInformations(clientsCreation: ClientsCreation): Long {
+		val db = this.writableDatabase
+		val contentValues = ContentValues()
+		contentValues.put(CUSTOMER_ID, clientsCreation.id)
+		contentValues.put(CUSTOMER_NAME, clientsCreation.name)
+		contentValues.put(CUSTOMER_PHONE, clientsCreation.phone)
+		val infosSuccess = db.insertOrThrow(CUSTOMER_TABLE, null, contentValues)
 
-	db.close()
-	return infosSuccess
+		db.close()
+		return infosSuccess
 	}
 
 	fun updateClientsInfos(clientsCreation: ClientsCreation): Int {
-		val db=this.writableDatabase
-		val contentValues =ContentValues()
+		val db = this.writableDatabase
+		val contentValues = ContentValues()
 //		 Note: It’s not wrong to include CUSTOMER_ID in put() again, but it’s not necessary when updating by it.
 //		contentValues.put(CUSTOMER_ID,clientsCreation.id)
-		contentValues.put(CUSTOMER_NAME,clientsCreation.name)
-		contentValues.put(CUSTOMER_PHONE,clientsCreation.phone)
-		val updateSuccess = db.update(CUSTOMER_TABLE,contentValues, "$CUSTOMER_ID="+clientsCreation.id,null)
+		contentValues.put(CUSTOMER_NAME, clientsCreation.name)
+		contentValues.put(CUSTOMER_PHONE, clientsCreation.phone)
+		val updateSuccess =
+			db.update(CUSTOMER_TABLE, contentValues, "$CUSTOMER_ID=" + clientsCreation.id, null)
 
 		db.close()
 		return updateSuccess
 	}
 
-	fun addEstimateInfo(estimateinfo: Estimateinfo):Long{
-		val db =  this.writableDatabase
-		val contentValues= ContentValues()
-		contentValues.put(ESTIMATE_ID,estimateinfo.id)
-		contentValues.put(ESTIMATE_DATE,estimateinfo.creationDate)
+	fun addEstimateInfo(estimateinfo: Estimateinfo): Long {
+		val db = this.writableDatabase
+		val contentValues = ContentValues()
+//		contentValues.put(ESTIMATE_ID, estimateinfo.id)
+		contentValues.put(ESTIMATE_TITLE, estimateinfo.titleINV)
+		contentValues.put(ESTIMATE_DATE, estimateinfo.creationDate)
 //		another way to pass the varag parameter created *(asterisk) called the spread operator
-		contentValues.put(DUE_DATE,estimateinfo.dueDate)
+		contentValues.put(DUE_DATE, estimateinfo.dueDate)
 		contentValues.put(CUSTOMER_ID, estimateinfo.customerId) // FIXED: Add this line
-		val successEstimate=db.insert(ESTIMATE_TABLE,null,contentValues)
+		val successEstimate = db.insert(ESTIMATE_TABLE, null, contentValues)
 		db.close()
 		return successEstimate
 	}
-//update estimate infos
-	fun updateEstimateInfo(estimateinfo: Estimateinfo):Int{
-		val db =  this.writableDatabase
-		val contentValues= ContentValues()
-		contentValues.put(ESTIMATE_ID,estimateinfo.id)
-		contentValues.put(ESTIMATE_DATE,estimateinfo.creationDate)
+
+	//update estimate infos
+	fun updateEstimateInfo(estimateinfo: Estimateinfo): Int {
+		val db = this.writableDatabase
+		val contentValues = ContentValues()
+		contentValues.put(ESTIMATE_ID, estimateinfo.id)
+		contentValues.put(ESTIMATE_TITLE, estimateinfo.titleINV)
+		contentValues.put(ESTIMATE_DATE, estimateinfo.creationDate)
 //		another way to pass the varag parameter created *(asterisk) called the spread operator
-		contentValues.put(DUE_DATE,estimateinfo.dueDate)
-		contentValues.put(CUSTOMER_ID, estimateinfo.customerId)  // Important: Link to customer! -> Insert foreign key
-		val successUpdate=db.update(ESTIMATE_TABLE,contentValues,"$ESTIMATE_ID="+estimateinfo.id,null)
+		contentValues.put(DUE_DATE, estimateinfo.dueDate)
+		contentValues.put(
+			CUSTOMER_ID,
+			estimateinfo.customerId
+		)  // Important: Link to customer! -> Insert foreign key
+		val successUpdate =
+			db.update(ESTIMATE_TABLE, contentValues, "$ESTIMATE_ID=" + estimateinfo.id, null)
 		db.close()
 		return successUpdate
 	}
@@ -230,5 +243,48 @@ class DatabaseHandler(context: Context) :
 		db.close()
 
 		return successDelete
+	}
+
+	fun viewEstimateInfo(): ArrayList<Estimateinfo> {
+	  val estimate :ArrayList<Estimateinfo> = ArrayList()
+		val db = this.readableDatabase
+		val selectQuery = "SELECT * FROM $ESTIMATE_TABLE"
+		var cursor:Cursor? = null
+
+		try {
+			cursor = db.rawQuery(selectQuery, null)
+
+		} catch (e: SQLiteException) {
+			db.execSQL(selectQuery)
+			return ArrayList()
+		}
+//		create a variable for differnt columns
+		var id: Int
+		var title: String
+		var creatDate: String
+		var dueDate: String
+		var customerId:Int
+
+		if (cursor.moveToFirst())
+			do {
+				id =cursor.getInt(cursor.getColumnIndexOrThrow(ESTIMATE_ID))
+				title =cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_TITLE))
+				creatDate =cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_DATE))
+				dueDate =cursor.getString(cursor.getColumnIndexOrThrow(DUE_DATE))
+				customerId= cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID))
+				val  result =Estimateinfo(
+					id = id,
+					 titleINV =title,
+					creationDate = creatDate,
+					dueDate = dueDate,
+					customerId = customerId
+				)
+
+				estimate.add(result)
+			}while (cursor.moveToNext())
+
+			cursor.close()
+			db.close()
+		return estimate
 	}
 }

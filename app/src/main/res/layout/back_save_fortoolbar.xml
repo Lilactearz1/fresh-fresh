@@ -9,59 +9,59 @@
 
     <LinearLayout
         app:layout_constraintTop_toTopOf="parent"
-        android:id="@+id/preview"
+        android:id="@+id/back"
         android:layout_width="150dp"
         android:clickable="true"
         android:focusable="true"
         android:layout_height="50dp"
         android:layout_marginStart="25dp"
-        android:background="@drawable/shadow"
-        android:gravity="bottom|center"
+        android:focusableInTouchMode="true"
+        android:contextClickable="true"
+
+        android:gravity="start|center"
         android:orientation="vertical"
         app:layout_constraintStart_toStartOf="parent">
 
         <RelativeLayout
+            android:focusableInTouchMode="true"
+            android:contextClickable="true"
+            android:clipChildren="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/baseline_preview_24"
+            android:enableOnBackInvokedCallback="true"
+            android:background="@drawable/baseline_arrow_back_24"
             android:backgroundTint="@color/dark_blue2">
 
         </RelativeLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Preview"
-            android:textColor="@color/dark_blue2" />
+
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/Download"
-        app:layout_constraintTop_toTopOf="parent"
         android:layout_width="150dp"
         android:layout_height="50dp"
+        android:layout_marginTop="4dp"
         android:clickable="true"
+        android:clipChildren="true"
         android:focusable="true"
-        android:background="@drawable/shadow"
-        android:gravity="bottom|center"
+        android:gravity="center|end"
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/preview">
+        app:layout_constraintHorizontal_bias="0.813"
+        app:layout_constraintStart_toEndOf="@+id/back"
+        app:layout_constraintTop_toTopOf="parent">
 
         <RelativeLayout
+            android:id="@+id/Save"
             android:layout_width="wrap_content"
-            android:id="@+id/Downloadrelative"
             android:layout_height="wrap_content"
-            android:background="@drawable/baseline_download_for_offline_24"
+            android:background="@drawable/baseline_add_task_24"
             android:backgroundTint="@color/dark_blue2">
 
         </RelativeLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Download"
-            android:textColor="@color/dark_blue2" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

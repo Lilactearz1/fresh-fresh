@@ -31,7 +31,7 @@
             app:layout_constraintBottom_toBottomOf="parent">
 
             <include
-                layout="@layout/buttonspreviewanddownload"
+                layout="@layout/back_save_fortoolbar"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
                 android:layout_gravity="center|center_vertical">

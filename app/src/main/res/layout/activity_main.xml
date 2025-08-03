@@ -11,48 +11,7 @@
 
 
     <!-- page section   -->
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:id="@+id/coordinatorLayout2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent">
-        <!-- Fixed bottom button bar -->
-        <LinearLayout
-            android:id="@+id/bottom_button_bar"
-            android:layout_width="match_parent"
-            android:layout_height="86dp"
-            android:layout_gravity="bottom"
-            android:focusable="true"
-            android:background="@android:color/white"
-            android:orientation="horizontal"
-            android:padding="10dp"
-            android:weightSum="2">
 
-            <Button
-                android:id="@+id/btnPreview"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_marginEnd="8dp"
-                android:layout_weight="1"
-            android:clickable="true"
-                android:focusable="true"
-                android:background="@drawable/entrybox"
-                android:text="Preview"
-                android:textColor="#3F51B5" />
-
-            <Button
-                android:id="@+id/btnSave"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:clickable="true"
-                android:layout_weight="1"
-                android:background="@drawable/entrybox"
-                android:text="Save"
-                android:textColor="@color/dark_blue2" />
-        </LinearLayout>
-
-
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
 
     <androidx.core.widget.NestedScrollView
@@ -64,7 +23,6 @@
         android:paddingBottom="120dp"
         app:flow_horizontalAlign="center"
 
-        app:layout_constraintBottom_toTopOf="@+id/coordinatorLayout2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -430,6 +388,13 @@
         </RelativeLayout>
 
     </androidx.core.widget.NestedScrollView>
+    <androidx.compose.ui.platform.ComposeView
+        android:id ="@+id/bottomnav"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
