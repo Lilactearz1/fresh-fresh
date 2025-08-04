@@ -144,8 +144,7 @@ class ProductsInfoFragment : Fragment() {
                 itemQuantity.text.clear()
                 itemTaxrate.text.clear()
 
-//                after all the inputs are cleared the screen to read 0.00 fo r amount
-                amountScreen.text = "0.00"
+//
 
 // call the method that add adds list into the recyclerview
 

@@ -2,22 +2,18 @@ package com.movix.transak_infield
 
 import android.app.DatePickerDialog
 import android.content.Context
-import android.icu.text.DateFormat
 import android.icu.util.Calendar
 import android.icu.util.GregorianCalendar
 import android.os.Build
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.DatePicker
 import android.widget.Spinner
 import androidx.annotation.RequiresApi
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.time.temporal.Temporal
-import java.util.Locale
+import  com.movix.transak_infield.InvoiceInfo
 
 class GlobalFunck {
 	//    method to sum list in items
@@ -75,7 +71,7 @@ class GlobalFunck {
 	}
 // function to collect  name title estimate id
 
-
+//function of databaseviewing
 	fun creationDate(context: Context): String {
 		val dbEstimateinfo = DatabaseHandler(context).viewEstimateInfo()
 		var string: String = ""
@@ -126,37 +122,41 @@ class GlobalFunck {
 		return int
 	}
 
-	//show date picker aand utilize the return string
+	//show date picker and utilize the return string
 	@RequiresApi(Build.VERSION_CODES.O)
-	fun showDatePickerDialog(context: Context): Temporal {
-		var dateformat: String = ""
+	fun showDatePickerDialog(context: Context, onDateSelection: (LocalDate) ->Unit){
+		var dateReturn: Temporal
+
 		val calender = GregorianCalendar()
 		val year = calender.get(Calendar.YEAR)
 		val month = calender.get(Calendar.MONTH)
 		val day = calender.get(Calendar.DATE)
+
 		val datePickerDialog = DatePickerDialog(
 			context, { _, selectedYear, selectedMonth, selectedDate ->
-				dateformat = "${selectedMonth}/${selectedDate}/${selectedYear}"
+				val datelist = listOf(selectedYear, selectedMonth.plus(1), selectedDate)
+				dateReturn = LocalDate.of(datelist[0], datelist[1], datelist[2])
 
 			}, year, month, day
 		)
 		//to restrict future dates(eg for D.O.B)
 //			datePickerDialog.datePicker.maxDate=System.currentTimeMillis()
+
+
 		datePickerDialog.setOnDateSetListener { view, year, month, dayOfMonth ->
-			dateformat = "$dayOfMonth /${month + 1} /$year"
-// You can push them direct
+			dateReturn = LocalDate.of(year, month + 1, dayOfMonth)
+			println("may be this $dateReturn")
+			val capturedDate: LocalDate = LocalDate.from(dateReturn)
+// You can push them direct to where you want to use it or
+//			to use them elsewhere in the app like this way
+			onDateSelection(capturedDate)// <- call back with a result
+
 		}
+
 		datePickerDialog.show()
-		val dayPick = datePickerDialog.datePicker.dayOfMonth
-		val monthPick = datePickerDialog.datePicker.month.plus(1)
-		val yearPick = datePickerDialog.datePicker.year
-		val dateFormat = DateTimeFormatter.ofPattern("dd/mm/yyyy")
-		val localDate: Temporal = LocalDate.of(yearPick ,monthPick,dayPick)
-
-
-		return localDate
 
 	}
+
 
 	// spinner format for the terms
 	fun spinner(
@@ -189,32 +189,40 @@ class GlobalFunck {
 
 	//itemselected
 
-	fun selectionterms(dueTerms: Int): Char {
-		var terms: Int
-		if (dueTerms == 1) {
-			terms = 7
-		} else if (dueTerms == 2) {
-			terms = 14
-		} else if (dueTerms == 3) {
-			terms = 30
-		} else if (dueTerms == 4) {
-			terms = 90
-		} else {
-			terms = 14
+	fun selectionterms(dueTerms: Int): Int {
+		return when (dueTerms) {
+			1 -> 7
+			2 -> 14
+			3 -> 30
+			3 -> 90
+
+			else -> {14}
 		}
-		return terms.toChar()
 	}
 
 	@RequiresApi(Build.VERSION_CODES.O)
-	fun dueDateCalculator(context: Context, dueTerms: Int): String {
-		val currentDate = showDatePickerDialog(context)
 
-		val pickedTerm = selectionterms(dueTerms).code
+	fun dueDateCalculator(context: Context, dueTerms: Int) {
 
+		val currentDate = showDatePickerDialog(context) { pickedDate ->
+			val dateUp: Temporal = pickedDate
+
+			val pickedTerm = selectionterms(dueTerms)  // convert Char to Int (ASCII code)
+			val dueDate = pickedDate.plusDays(pickedTerm.toLong()) // Add the term in days
+			println("Picked Date: $pickedDate")
+			println("Due Term: $pickedTerm days")
+			println("Due Date: $dueDate")
+			val captureTitle = invoiceTitle.text.toString()
+			val estimateinfo=Estimateinfo(0,captureTitle, pickedDate.toString(),dueDate.toString(),0)
+			// You can return, show, or store dueDate here\
+			val dbInsertDataCollected =DatabaseHandler(context).addEstimateInfo(estimateinfo)
+			dbInsertDataCollected
+		}
+
+		currentDate
 //		to add number to the day and times  : You can perform time arithmetics with LocalDate, LocalTime, and LocalDateTime
-		val temporal = currentDate.plus(pickedTerm.toLong(), ChronoUnit.DAYS)
+//		val temporal = currentDate.plus(pickedTerm.toLong(), ChronoUnit.DAYS)
 
 
-		return temporal.toString()
 	}
 }

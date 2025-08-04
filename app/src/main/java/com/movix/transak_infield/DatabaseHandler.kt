@@ -13,7 +13,7 @@ import androidx.core.database.getIntOrNull
 class DatabaseHandler(context: Context) :
 	SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 	companion object {
-		private const val DATABASE_VERSION = 8
+		private const val DATABASE_VERSION = 4
 		private const val DATABASE_NAME = "Transak_infield.db"
 		private const val TABLE_NAME = "TableInvoice"
 		private const val CUSTOMER_TABLE = "TableCustomer"
@@ -42,7 +42,7 @@ class DatabaseHandler(context: Context) :
 //        CREATE TABLE called TableInvoice(param1,param2,param3,.....)
 
 		val CREATE_CUSTOMERS_TABLE =
-			("CREATE TABLE " + CUSTOMER_TABLE + " (" + CUSTOMER_ID + " INTEGER PRIMARY KEY, " + CUSTOMER_NAME + " VARCHAR(50), " + CUSTOMER_PHONE + " TEXT" +
+			("CREATE TABLE " + CUSTOMER_TABLE + " (" + CUSTOMER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " + CUSTOMER_NAME + " VARCHAR(50), " + CUSTOMER_PHONE + " TEXT" +
 					")")
 
 
@@ -81,7 +81,7 @@ class DatabaseHandler(context: Context) :
 	fun addClientsInformations(clientsCreation: ClientsCreation): Long {
 		val db = this.writableDatabase
 		val contentValues = ContentValues()
-		contentValues.put(CUSTOMER_ID, clientsCreation.id)
+//		contentValues.put(CUSTOMER_ID, clientsCreation.id)
 		contentValues.put(CUSTOMER_NAME, clientsCreation.name)
 		contentValues.put(CUSTOMER_PHONE, clientsCreation.phone)
 		val infosSuccess = db.insertOrThrow(CUSTOMER_TABLE, null, contentValues)

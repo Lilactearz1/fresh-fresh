@@ -9,9 +9,10 @@
 
     <LinearLayout
         app:layout_constraintTop_toTopOf="parent"
-        android:id="@+id/back"
+        android:id="@+id/backLayout2"
         android:layout_width="150dp"
         android:clickable="true"
+        android:enableOnBackInvokedCallback="true"
         android:focusable="true"
         android:layout_height="50dp"
         android:layout_marginStart="25dp"
@@ -27,6 +28,7 @@
             android:contextClickable="true"
             android:clipChildren="true"
             android:layout_width="35dp"
+            android:id="@+id/backLayout"
             android:layout_height="35dp"
             android:enableOnBackInvokedCallback="true"
             android:background="@drawable/baseline_arrow_back_24"
@@ -38,7 +40,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/Download"
+        android:id="@+id/savelayout"
         android:layout_width="150dp"
         android:layout_height="50dp"
         android:layout_marginTop="4dp"
@@ -49,11 +51,11 @@
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.813"
-        app:layout_constraintStart_toEndOf="@+id/back"
+        app:layout_constraintStart_toEndOf="@+id/backLayout2"
         app:layout_constraintTop_toTopOf="parent">
 
         <RelativeLayout
-            android:id="@+id/Save"
+            android:id="@+id/SaveclientDetails"
             android:layout_width="35dp"
             android:layout_height="35dp"
             android:background="@drawable/baseline_add_task_24"

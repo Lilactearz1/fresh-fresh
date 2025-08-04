@@ -9,6 +9,9 @@
     android:clickable="false"
     android:orientation="vertical">
 
+    <!--        make scroll of below the app bar   app:layout_scrollFlags="scroll|enterAlways"-->
+
+
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/invoiceAppbar"
         android:layout_width="match_parent"
@@ -16,14 +19,12 @@
         android:fitsSystemWindows="true"
 
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <include layout="@layout/back_save_fortoolbar" />
     </com.google.android.material.appbar.AppBarLayout>
-
-    <!--        make scroll of below the app bar   app:layout_scrollFlags="scroll|enterAlways"-->
-
 
     <androidx.cardview.widget.CardView
         android:layout_width="370dp"
