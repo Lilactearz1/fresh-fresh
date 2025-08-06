@@ -12,8 +12,10 @@ import androidx.core.database.getIntOrNull
 
 class DatabaseHandler(context: Context) :
 	SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+
+
 	companion object {
-		private const val DATABASE_VERSION = 4
+		private const val DATABASE_VERSION = 14
 		private const val DATABASE_NAME = "Transak_infield.db"
 		private const val TABLE_NAME = "TableInvoice"
 		private const val CUSTOMER_TABLE = "TableCustomer"
@@ -84,12 +86,12 @@ class DatabaseHandler(context: Context) :
 //		contentValues.put(CUSTOMER_ID, clientsCreation.id)
 		contentValues.put(CUSTOMER_NAME, clientsCreation.name)
 		contentValues.put(CUSTOMER_PHONE, clientsCreation.phone)
-		val infosSuccess = db.insertOrThrow(CUSTOMER_TABLE, null, contentValues)
+		val infosSuccessId = db.insertOrThrow(CUSTOMER_TABLE, null, contentValues)
 
 		db.close()
-		return infosSuccess
+		return infosSuccessId // ✅ This is the customerId you want to link the estimates and products
 	}
-
+// update customer infos
 	fun updateClientsInfos(clientsCreation: ClientsCreation): Int {
 		val db = this.writableDatabase
 		val contentValues = ContentValues()
@@ -102,6 +104,65 @@ class DatabaseHandler(context: Context) :
 
 		db.close()
 		return updateSuccess
+	}
+	//get latest client
+	fun getLatestCustomerId(): Int {
+		val db = this.readableDatabase
+		val query = "SELECT $CUSTOMER_ID FROM $CUSTOMER_TABLE ORDER BY $CUSTOMER_ID DESC LIMIT 1"
+		val cursor = db.rawQuery(query, null)
+
+		val id = if (cursor.moveToFirst()) {
+			cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID))
+		} else {
+			0
+		}
+
+		cursor.close()
+		db.close()
+		return id
+	}
+	//view clients information's
+	fun viewClientsInfo(): ArrayList<ClientsCreation> {
+		val nameList: ArrayList<ClientsCreation> = ArrayList()
+
+//       the select query gives all the data present in our table
+		val selectQuery = "SELECT * FROM $CUSTOMER_TABLE"
+		val db = this.readableDatabase
+//       the cursor starts at null point
+		var cursor: Cursor? = null
+
+//       we try to fill the cursor with a raw query which will try to
+		//       run the selectquery into our database and a null for no specific selection we need
+		try {
+			cursor = db.rawQuery(selectQuery, null)
+		} catch (e: SQLiteException) {
+			db.execSQL(selectQuery)
+			return ArrayList()
+		}
+//		create a variable for different columns
+		var id:Int
+		var customer_name: String
+		var customer_phone:String
+		// move through the cursor
+		if (cursor.moveToFirst()){
+			do {
+				id = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID))
+				customer_name = cursor.getString(cursor.getColumnIndexOrThrow(CUSTOMER_NAME))
+				customer_phone = cursor.getString(cursor.getColumnIndexOrThrow(CUSTOMER_PHONE))
+
+				val clientcreation = ClientsCreation(
+					id = id,
+					name = customer_name,
+					phone = customer_phone
+				)
+				nameList.add(clientcreation)
+
+			}	while (cursor.moveToNext())
+
+		}
+		cursor.close()
+		db.close()
+		return nameList
 	}
 
 	fun addEstimateInfo(estimateinfo: Estimateinfo): Long {
@@ -248,7 +309,7 @@ class DatabaseHandler(context: Context) :
 	fun viewEstimateInfo(): ArrayList<Estimateinfo> {
 	  val estimate :ArrayList<Estimateinfo> = ArrayList()
 		val db = this.readableDatabase
-		val selectQuery = "SELECT * FROM $ESTIMATE_TABLE"
+		val selectQuery = "SELECT * FROM $ESTIMATE_TABLE ORDER BY ESTIMATE_ID DESC" // Order by latest first"
 		var cursor:Cursor? = null
 
 		try {
@@ -287,4 +348,7 @@ class DatabaseHandler(context: Context) :
 			db.close()
 		return estimate
 	}
+
+
+
 }

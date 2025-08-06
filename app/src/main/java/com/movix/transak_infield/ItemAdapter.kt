@@ -75,7 +75,7 @@ class ItemAdapter(
         if (position % 2 == 0) {
 
             val colourBackgnd = cardbackgrnd.setBackgroundColor(
-                context.getColor(R.color.light_view)
+                context.getColor(R.color.Alice_blue)
 
             )
             colourBackgnd

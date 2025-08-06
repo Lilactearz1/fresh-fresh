@@ -9,7 +9,7 @@
 
     <LinearLayout
         app:layout_constraintTop_toTopOf="parent"
-        android:id="@+id/back"
+        android:id="@+id/backfold"
         android:layout_width="150dp"
         android:clickable="true"
         android:focusable="true"
@@ -26,6 +26,7 @@
             android:focusableInTouchMode="true"
             android:contextClickable="true"
             android:clipChildren="true"
+            android:id="@+id/back"
             android:layout_width="35dp"
             android:layout_height="35dp"
             android:enableOnBackInvokedCallback="true"
@@ -49,13 +50,15 @@
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.813"
-        app:layout_constraintStart_toEndOf="@+id/back"
+        app:layout_constraintStart_toEndOf="@+id/backfold"
         app:layout_constraintTop_toTopOf="parent">
 
         <RelativeLayout
             android:id="@+id/Save"
             android:layout_width="35dp"
             android:layout_height="35dp"
+            android:clickable="true"
+            android:focusable="true"
             android:background="@drawable/baseline_add_task_24"
             >
 

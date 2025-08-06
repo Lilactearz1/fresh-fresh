@@ -18,7 +18,9 @@
     <color name="teal_500">#6EF0E6</color>
     <color name="lightAqua">#F4F5F8</color>
     <color name="dark_blue2">#2F4176</color>
+    <color name="Alice_blue">#F0F8FF</color>
     <color name="lightSky">#80BCBCD0</color>
+    <color name="pale_bluetint">#EEF5FF</color>
     <color name="light_view">#C7D9F0</color>
     <color name="transparent">#00FFFFFF</color>
     <color name="grey">#00454444</color>
