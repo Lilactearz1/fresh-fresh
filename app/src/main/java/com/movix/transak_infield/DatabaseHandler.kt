@@ -12,10 +12,12 @@ import androidx.core.database.getIntOrNull
 
 class DatabaseHandler(context: Context) :
 	SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+
+
 	companion object {
-		private const val DATABASE_VERSION = 4
+		private const val DATABASE_VERSION = 16
 		private const val DATABASE_NAME = "Transak_infield.db"
-		private const val TABLE_NAME = "TableInvoice"
+		private const val INVOICE_TABLE = "TableInvoice"
 		private const val CUSTOMER_TABLE = "TableCustomer"
 		private const val ESTIMATE_TABLE = "Estimates"
 		private const val ESTIMATE_TITLE = "Title"
@@ -56,8 +58,15 @@ class DatabaseHandler(context: Context) :
 
 
 		val CREATE_PRODUCTS_TABLE =
-			("CREATE TABLE " + TABLE_NAME + "(" + KEY_ID + " INTEGER PRIMARY KEY," // not "INTEGERPRIMARY"
-					+ KEY_NAME + " TEXT," + KEY_QUANTITY + " INTEGER," + KEY_PRICE + " REAL," + KEY_ITEM_TOTAL + " REAL," + KEY_TAX + " REAL" + ")")
+			("CREATE TABLE " + INVOICE_TABLE + "("
+					+ KEY_ID + " INTEGER PRIMARY KEY,"
+					+ KEY_NAME + " TEXT,"
+					+ KEY_QUANTITY + " INTEGER,"
+					+ KEY_PRICE + " REAL,"
+					+ KEY_ITEM_TOTAL + " REAL,"
+					+ KEY_TAX + " REAL,"
+					+CUSTOMER_ID + " INTEGER,"
+					+ "FOREIGN KEY(" + CUSTOMER_ID + ") REFERENCES " + CUSTOMER_TABLE + "(" + CUSTOMER_ID + ") ON DELETE CASCADE" + ")")
 
 
 //        tell the database(db?) to go ahead and execute SQL (execSQL)
@@ -70,7 +79,7 @@ class DatabaseHandler(context: Context) :
 //		you can omit !! since the db is not null at this pointThe system always calls it with a valid db instance, so it’s safe to use db!! once, or just assume it’s non-null and skip !! entirely (which is better).
 		db!!.execSQL("DROP TABLE IF EXISTS $ESTIMATE_TABLE") // Drop child first
 		db.execSQL("DROP TABLE IF EXISTS $CUSTOMER_TABLE")
-		db.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
+		db.execSQL("DROP TABLE IF EXISTS $INVOICE_TABLE")
 
 
 		onCreate(db)
@@ -84,12 +93,13 @@ class DatabaseHandler(context: Context) :
 //		contentValues.put(CUSTOMER_ID, clientsCreation.id)
 		contentValues.put(CUSTOMER_NAME, clientsCreation.name)
 		contentValues.put(CUSTOMER_PHONE, clientsCreation.phone)
-		val infosSuccess = db.insertOrThrow(CUSTOMER_TABLE, null, contentValues)
+		val infosSuccessId = db.insertOrThrow(CUSTOMER_TABLE, null, contentValues)
 
 		db.close()
-		return infosSuccess
+		return infosSuccessId // ✅ This is the customerId you want to link the estimates and products
 	}
 
+	// update customer infos
 	fun updateClientsInfos(clientsCreation: ClientsCreation): Int {
 		val db = this.writableDatabase
 		val contentValues = ContentValues()
@@ -102,6 +112,67 @@ class DatabaseHandler(context: Context) :
 
 		db.close()
 		return updateSuccess
+	}
+
+	//get latest client
+	fun getLatestCustomerId(): Int {
+		val db = this.readableDatabase
+		val query = "SELECT $CUSTOMER_ID FROM $CUSTOMER_TABLE ORDER BY $CUSTOMER_ID DESC LIMIT 1"
+		val cursor = db.rawQuery(query, null)
+
+		val id = if (cursor.moveToFirst()) {
+			cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID))
+		} else {
+			0
+		}
+
+		cursor.close()
+		db.close()
+		return id
+	}
+
+	//view clients information's
+	fun viewClientsInfo(): ArrayList<ClientsCreation> {
+		val nameList: ArrayList<ClientsCreation> = ArrayList()
+
+//       the select query gives all the data present in our table
+		val selectQuery = "SELECT * FROM $CUSTOMER_TABLE"
+		val db = this.readableDatabase
+//       the cursor starts at null point
+		var cursor: Cursor? = null
+
+//       we try to fill the cursor with a raw query which will try to
+		//       run the selectquery into our database and a null for no specific selection we need
+		try {
+			cursor = db.rawQuery(selectQuery, null)
+		} catch (e: SQLiteException) {
+			db.execSQL(selectQuery)
+			return ArrayList()
+		}
+//		create a variable for different columns
+		var id: Int
+		var customer_name: String
+		var customer_phone: String
+		// move through the cursor
+		if (cursor.moveToFirst()) {
+			do {
+				id = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID))
+				customer_name = cursor.getString(cursor.getColumnIndexOrThrow(CUSTOMER_NAME))
+				customer_phone = cursor.getString(cursor.getColumnIndexOrThrow(CUSTOMER_PHONE))
+
+				val clientcreation = ClientsCreation(
+					id = id,
+					name = customer_name,
+					phone = customer_phone
+				)
+				nameList.add(clientcreation)
+
+			} while (cursor.moveToNext())
+
+		}
+		cursor.close()
+		db.close()
+		return nameList
 	}
 
 	fun addEstimateInfo(estimateinfo: Estimateinfo): Long {
@@ -149,7 +220,7 @@ class DatabaseHandler(context: Context) :
 		contentValues.put(KEY_ITEM_TOTAL, modelClass.total)
 
 //        inserting rows
-		val insertSuccess = db.insert(TABLE_NAME, null, contentValues)
+		val insertSuccess = db.insert(INVOICE_TABLE, null, contentValues)
 //        second param2 is a string containing nullColumnHack
 
 		db.close()  //close the database connection
@@ -162,7 +233,7 @@ class DatabaseHandler(context: Context) :
 		val productList: ArrayList<ModelClass> = ArrayList()
 
 //       the select query gives all the data present in our table
-		val selectQuery = "SELECT * FROM $TABLE_NAME"
+		val selectQuery = "SELECT * FROM $INVOICE_TABLE"
 		val db = this.readableDatabase
 //       the cursor starts at null point
 		var cursor: Cursor? = null
@@ -226,7 +297,8 @@ class DatabaseHandler(context: Context) :
 
 //    updating rows
 
-		val successUpdate = db.update(TABLE_NAME, contentValues, KEY_ID + "=" + modelClass.id, null)
+		val successUpdate =
+			db.update(INVOICE_TABLE, contentValues, KEY_ID + "=" + modelClass.id, null)
 // the key id is used to update the specific id of the row selected even if there are other similar product
 
 		db.close()
@@ -239,17 +311,18 @@ class DatabaseHandler(context: Context) :
 		val contentValues = ContentValues()
 		contentValues.put(KEY_ID, modelClass.id) // model class id
 
-		val successDelete = db.delete(TABLE_NAME, KEY_ID + "=" + modelClass.id, null)
+		val successDelete = db.delete(INVOICE_TABLE, KEY_ID + "=" + modelClass.id, null)
 		db.close()
 
 		return successDelete
 	}
 
 	fun viewEstimateInfo(): ArrayList<Estimateinfo> {
-	  val estimate :ArrayList<Estimateinfo> = ArrayList()
+		val estimate: ArrayList<Estimateinfo> = ArrayList()
 		val db = this.readableDatabase
-		val selectQuery = "SELECT * FROM $ESTIMATE_TABLE"
-		var cursor:Cursor? = null
+		val selectQuery =
+			"SELECT * FROM $ESTIMATE_TABLE ORDER BY ESTIMATE_ID DESC" // Order by latest first"
+		var cursor: Cursor? = null
 
 		try {
 			cursor = db.rawQuery(selectQuery, null)
@@ -263,28 +336,78 @@ class DatabaseHandler(context: Context) :
 		var title: String
 		var creatDate: String
 		var dueDate: String
-		var customerId:Int
+		var customerId: Int
 
 		if (cursor.moveToFirst())
 			do {
-				id =cursor.getInt(cursor.getColumnIndexOrThrow(ESTIMATE_ID))
-				title =cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_TITLE))
-				creatDate =cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_DATE))
-				dueDate =cursor.getString(cursor.getColumnIndexOrThrow(DUE_DATE))
-				customerId= cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID))
-				val  result =Estimateinfo(
+				id = cursor.getInt(cursor.getColumnIndexOrThrow(ESTIMATE_ID))
+				title = cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_TITLE))
+				creatDate = cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_DATE))
+				dueDate = cursor.getString(cursor.getColumnIndexOrThrow(DUE_DATE))
+				customerId = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID))
+				val result = Estimateinfo(
 					id = id,
-					 titleINV =title,
+					titleINV = title,
 					creationDate = creatDate,
 					dueDate = dueDate,
 					customerId = customerId
 				)
 
 				estimate.add(result)
-			}while (cursor.moveToNext())
+			} while (cursor.moveToNext())
 
-			cursor.close()
-			db.close()
+		cursor.close()
+		db.close()
 		return estimate
 	}
+
+	fun getAllEstimate(): List<Estimateinfo> {
+		val estimates = mutableListOf<Estimateinfo>()
+		val db = this.readableDatabase
+		val cursor = db.rawQuery("SELECT * FROM $ESTIMATE_TABLE", null)
+
+		if (cursor.moveToFirst()) {
+			do {
+				val id = cursor.getInt(cursor.getColumnIndexOrThrow(ESTIMATE_ID))
+				val title = cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_TITLE))
+				val createdDate = cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_DATE))
+				val estimateDue = cursor.getString(cursor.getColumnIndexOrThrow(DUE_DATE))
+				val customerId = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID))
+				estimates.add(Estimateinfo(id, title, createdDate, estimateDue, customerId))
+			} while (cursor.moveToNext())
+		}
+
+		cursor.close()
+		db.close()
+		return estimates
+	}
+
+	// this is similar to the vieProducts method
+	fun getItemsForCustomer(customerId: Int): ArrayList<ModelClass> {
+		val items = ArrayList<ModelClass>()
+		val db = this.readableDatabase
+		val cursor = db.rawQuery(
+			"SELECT * FROM INVOICE_TABLE WHERE customer_id = ?",
+			arrayOf(customerId.toString())
+		)
+
+		if (cursor.moveToFirst()) {
+			do {
+				val id = cursor.getInt(cursor.getColumnIndexOrThrow(KEY_ID))
+				val itemName = cursor.getString(cursor.getColumnIndexOrThrow(KEY_NAME))
+				val quantity = cursor.getInt(cursor.getColumnIndexOrThrow(KEY_QUANTITY))
+				val price = cursor.getDouble(cursor.getColumnIndexOrThrow(KEY_PRICE))
+				val total = cursor.getFloat(cursor.getColumnIndexOrThrow(KEY_ITEM_TOTAL))
+				val tax = cursor.getFloat(cursor.getColumnIndexOrThrow(KEY_TAX))
+
+				items.add(ModelClass(id, quantity, itemName, price, total, tax))
+			} while (cursor.moveToNext())
+		}
+
+		cursor.close()
+		db.close()
+		return items
+	}
+
+
 }

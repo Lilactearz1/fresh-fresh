@@ -60,6 +60,7 @@
                 android:id="@+id/add_item_invoicenumber"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
+                 android:focusable="auto"
                 android:layout_alignParentTop="true"
                 android:layout_marginTop="49dp"
                 android:background="@drawable/entrybox"
@@ -85,18 +86,25 @@
                 android:layout_below="@+id/tv_add_creationDate"
                 android:layout_marginTop="0dp"
                 android:background="@drawable/entrybox"
-
                 android:orientation="horizontal">
 
-                <DatePicker
+                <EditText
                     android:id="@+id/pickcreationDate"
-                    android:layout_width="350dp"
-                    android:layout_height="wrap_content"
+                    android:layout_width="310dp"
+                    android:layout_height="50dp"
                     android:layout_gravity="center|end"
+                    android:focusable="true"
+                    android:clickable="false"
+                    android:nextFocusForward="@id/add_edt_invoice_title"
                     android:layout_marginStart="10dp"
                     android:layout_marginEnd="10dp"
-                    android:background="@drawable/baseline_edit_calendar_24"
                     android:foreground="@color/lightAqua" />
+                <TextView
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:gravity="center"
+                    android:layout_gravity="center"
+                    android:background="@drawable/baseline_edit_calendar_24"/>
 
             </LinearLayout>
 
@@ -116,14 +124,12 @@
                 android:id="@+id/add_spinnerterms"
                 android:layout_width="match_parent"
                 android:gravity="end"
-                android:layout_height="wrap_content"
+                android:layout_height="50dp"
                 android:layout_below="@+id/add_dueterms"
                 android:alpha="0.8"
                 android:spinnerMode="dropdown"
                 android:foreground="@color/lightAqua"
                 android:dropDownSelector="@drawable/baseline_arrow_drop_down_24"
-
-
 
                 />
 

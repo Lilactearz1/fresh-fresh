@@ -76,7 +76,7 @@ class GlobalFunck {
 		val dbEstimateinfo = DatabaseHandler(context).viewEstimateInfo()
 		var string: String = ""
 		dbEstimateinfo.forEachIndexed { index, title ->
-			string = title.dueDate
+			string = title.creationDate
 		}
 		return string
 	}
@@ -113,14 +113,28 @@ class GlobalFunck {
 	}
 
 	fun customerId(context: Context): Int {
-		val dbEstimateinfo = DatabaseHandler(context).viewEstimateInfo()
-		var int: Int = 0
-		dbEstimateinfo.forEachIndexed { index, title ->
+		val db = DatabaseHandler(context)
+		val estimates = db.viewEstimateInfo()
 
-			int = title.customerId
+		// Return the customerId of the most recent estimate if available
+		return if (estimates.isNotEmpty()) {
+			estimates.last().customerId
+		} else {
+			0 // Default if none exists
 		}
-		return int
 	}
+
+	fun customerName(context: Context): String {
+		val db = DatabaseHandler(context)
+		val customers = db.viewClientsInfo()
+		var string=""
+		customers.forEachIndexed{index,creation ->
+			string=creation.name
+		}
+
+	 return string
+	}
+
 
 	//show date picker and utilize the return string
 	@RequiresApi(Build.VERSION_CODES.O)
@@ -194,35 +208,16 @@ class GlobalFunck {
 			1 -> 7
 			2 -> 14
 			3 -> 30
-			3 -> 90
-
-			else -> {14}
+			4 -> 90
+			else -> 2 // Default
 		}
 	}
 
+
+	//calculate date for save operations
 	@RequiresApi(Build.VERSION_CODES.O)
-
-	fun dueDateCalculator(context: Context, dueTerms: Int) {
-
-		val currentDate = showDatePickerDialog(context) { pickedDate ->
-			val dateUp: Temporal = pickedDate
-
-			val pickedTerm = selectionterms(dueTerms)  // convert Char to Int (ASCII code)
-			val dueDate = pickedDate.plusDays(pickedTerm.toLong()) // Add the term in days
-			println("Picked Date: $pickedDate")
-			println("Due Term: $pickedTerm days")
-			println("Due Date: $dueDate")
-			val captureTitle = invoiceTitle.text.toString()
-			val estimateinfo=Estimateinfo(0,captureTitle, pickedDate.toString(),dueDate.toString(),0)
-			// You can return, show, or store dueDate here\
-			val dbInsertDataCollected =DatabaseHandler(context).addEstimateInfo(estimateinfo)
-			dbInsertDataCollected
-		}
-
-		currentDate
-//		to add number to the day and times  : You can perform time arithmetics with LocalDate, LocalTime, and LocalDateTime
-//		val temporal = currentDate.plus(pickedTerm.toLong(), ChronoUnit.DAYS)
-
-
+	fun calculateDueDate(baseDate:LocalDate, dueTerms: Int): LocalDate? {
+		val days=selectionterms(dueTerms)
+		return baseDate.plusDays(days.toLong())
 	}
 }

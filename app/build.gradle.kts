@@ -44,6 +44,7 @@ android {
 
 dependencies {
 	implementation("androidx.compose.material3:material3:1.3.2")
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -59,6 +60,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.navigation.runtime.android)
 	implementation(libs.androidx.material3.android)
+	implementation(libs.androidx.tv.material)
 	testImplementation(libs.junit)
     testImplementation(libs.junit.jupiter)
 	testImplementation(libs.junit.jupiter)
@@ -69,7 +71,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation ("com.itextpdf:itext7-core:7.2.5")
-    implementation( "com.google.zxing:core:3.5.2")
+	implementation( "com.google.zxing:core:3.5.2")
     implementation ("com.journeyapps:zxing-android-embedded:4.3.0")
 
 

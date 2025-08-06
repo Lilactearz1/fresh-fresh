@@ -18,10 +18,18 @@
         android:theme="@style/AppTheme"
         tools:targetApi="31">
         <activity
-            android:name=".Archives"
-            android:exported="false"
+            android:name=".MainLandingPage"
+            android:exported="true"
             android:label="@string/title_activity_archives"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -29,9 +37,9 @@
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme">
             <intent-filter>
+
                 <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
     </application>

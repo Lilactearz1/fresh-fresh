@@ -6,29 +6,19 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.os.Environment
-import android.provider.ContactsContract.Contacts
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Create
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.core.app.SharedElementCallback
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -55,31 +45,28 @@ import com.itextpdf.layout.element.Paragraph
 import com.itextpdf.layout.element.Table
 import com.itextpdf.layout.properties.TextAlignment
 import com.itextpdf.layout.properties.UnitValue
+
 import com.movix.transak_infield.databinding.ActivityMainBinding
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.StringFormat
 import java.io.File
 import java.io.FileOutputStream
 
 import androidx.compose.material3.*
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.itextpdf.kernel.events.PdfDocumentEvent
+import java.time.LocalDate
+import kotlin.properties.Delegates
+
 //import the R .id r. layout ,drawables
-import com.movix.transak_infield.R.*
-import com.movix.transak_infield.DatabaseHandler
-import com.movix.transak_infield.InvoiceInfo
 
 
 open class MainActivity : AppCompatActivity() {
@@ -87,6 +74,7 @@ open class MainActivity : AppCompatActivity() {
 	private lateinit var itemsCount: TextView
 	private lateinit var Subtotal: GlobalFunck
 	private lateinit var Total: GlobalFunck
+	private var  dueTerms =0
 
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -163,6 +151,8 @@ open class MainActivity : AppCompatActivity() {
 				.replace(R.id.newEstimateLayout, productsInfoFragment).addToBackStack(null).commit()
 
 		}
+		val db=DatabaseHandler(applicationContext)
+
 
 //set the text view to
 		itemsCount = binding.tvItems
@@ -338,20 +328,29 @@ open class MainActivity : AppCompatActivity() {
 
 	private fun estimatePdf() {
 
-		val	clientName =GlobalFunck().customerId(applicationContext)
+		val	clientId =GlobalFunck().customerId(applicationContext)
 		val	clientNumber=GlobalFunck()
-		val	estimateTitle=GlobalFunck().titleINV(applicationContext)
-		val invoiceNumber=GlobalFunck().id(applicationContext)
-		val creatioDate=GlobalFunck().creationDate(applicationContext)
-		val  duedate=GlobalFunck().dueDate(applicationContext)
 
+		val	estimateTitle=GlobalFunck().titleINV(applicationContext)
+		// for the invoice to be counted from number index 0+1 to avoid the zero client
+		val invoiceNumber=GlobalFunck().id(applicationContext).plus(1)
+		var creationDate=GlobalFunck().creationDate(applicationContext)
+
+		if (creationDate.isEmpty()){
+			creationDate= LocalDate.now().toString()
+		}
+		val toLocalDate =  LocalDate.parse(creationDate)
+
+		val duedate =GlobalFunck().calculateDueDate(toLocalDate,dueTerms)
+		val clientName = GlobalFunck().customerName(applicationContext)
+		if (clientName.isEmpty()){clientName.plus("INFIELDER_$invoiceNumber")}
 		try {
 
 			// File path in Downloads folder
 			val path =
 				Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
 					.toString()
-			val file = File(path, "$invoiceNumber itext7_sample.pdf")
+			val file = File(path, "$invoiceNumber-$clientId $clientName.pdf")
 
 			// iText 7 writing
 			val writer = PdfWriter(file)
@@ -549,7 +548,7 @@ open class MainActivity : AppCompatActivity() {
 
 			document.add(
 				Paragraph(
-					"BILL TO: \n" + "name of client"
+					"BILL TO: \n" + "$clientName"
 				).setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
 					.setFontSize(12.5f)
 
@@ -566,7 +565,8 @@ open class MainActivity : AppCompatActivity() {
 
 			)
 			document.add(
-				Paragraph("QVTE:11111").setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
+				//Set the Quote number
+				Paragraph("QTE-INF-#$invoiceNumber").setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
 					.setFontSize(13f).setFont(queensFont).setFixedPosition(500.2F, 669f, 164f)
 
 
@@ -585,7 +585,7 @@ open class MainActivity : AppCompatActivity() {
 
 			)
 			document.add(
-				Paragraph("CR22/08/25 ").setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
+				Paragraph("$creationDate ").setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
 					.setFontSize(13f).setFont(queensFont).setFixedPosition(500.2F, 653.1f, 164f)
 
 
@@ -599,7 +599,7 @@ open class MainActivity : AppCompatActivity() {
 			)
 
 			document.add(
-				Paragraph("Ddet: ").setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
+				Paragraph("$duedate").setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
 					.setFontSize(13f).setFont(queensFont).setFixedPosition(500.2F, 635.1f, 164f)
 			)
 
@@ -704,10 +704,14 @@ open class MainActivity : AppCompatActivity() {
 			}
 			infosBank.last()
 
+				// Add footer event handler by calling the handler created in the clientsCreation file
+			pdfDocument.addEventHandler(PdfDocumentEvent.END_PAGE, FooterEvent())
+
 			document.add(aboutDetailing)
 			document.add(bankInfoTable)
 			document.add(mpesadetail)
 			document.add(mpesaInfo)
+
 
 
 			//document metadata
