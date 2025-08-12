@@ -1,16 +1,20 @@
 package com.movix.transak_infield;
 
+import android.app.Application;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.graphics.pdf.PdfDocument;
 import com.itextpdf.layout.element.Image;
 
 import android.os.Build;
 import android.os.Environment;
 import android.widget.Toast;
+
+import androidx.core.content.res.ResourcesCompat;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
@@ -22,7 +26,14 @@ import com.itextpdf.io.source.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.file.Files;
 
-public class Templatepdf1 {
+public class Templatepdf1{
+    //create a typface resources
+
+    public Typeface getTypeface(Context context) {
+       Typeface typeface=ResourcesCompat.getFont(context,R.font.queen);
+        return typeface;
+    }
+
 
     // Method to generate QR code and return iText 7 Image
     public Image qrcodeGenerator(String data) {

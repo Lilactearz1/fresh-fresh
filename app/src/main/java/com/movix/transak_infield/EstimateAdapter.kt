@@ -19,6 +19,7 @@ class EstimateAdapter(
 		val customerName: TextView = itemView.findViewById(R.id.tvCustomerName)
 		val estimateTitle: TextView = itemView.findViewById(R.id.tvEstimateTitle)
 		val estimateDate: TextView = itemView.findViewById(R.id.tvEstimateDate)
+		val archives:CardView=itemView.findViewById(R.id.archivecad1)
 	//	val estimateDueDate: TextView = itemView.findViewById(R.id.tvEstimateDueDate)
 	}
 
@@ -34,7 +35,7 @@ class EstimateAdapter(
 		holder.estimateDate.text = "Created: ${estimate.creationDate}"
 //		holder.estimateDueDate.text = "Due: ${estimate.dueDate}"
 
-		holder.itemView.setOnClickListener {
+		holder.archives.setOnClickListener {
 			onEstimateSelected(estimate)
 		}
 	}

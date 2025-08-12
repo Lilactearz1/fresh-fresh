@@ -57,6 +57,7 @@
                         android:gravity="start"
                         android:labelFor="@+id/edit_item_name"
                         android:text="ESTIMATE 001"
+                        android:fontFamily="@font/lato_regular"
                         android:textSize="22sp" />
 
                     <TextView
@@ -65,7 +66,7 @@
                         android:layout_height="30dp"
                         android:layout_below="@+id/tv_Estimate_name"
                         android:layout_marginStart="15dp"
-
+                        android:fontFamily="@font/lato_regular"
                         android:gravity="start"
                         android:text="@string/creation_date"
                         android:textSize="15sp" />
@@ -123,7 +124,7 @@
                         android:layout_height="30dp"
                         android:layout_marginStart="15dp"
                         android:layout_marginTop="15dp"
-
+                        android:fontFamily="@font/lato_regular"
                         android:gravity="start"
                         android:labelFor="@+id/edit_item_name"
                         android:text="Template"
@@ -135,7 +136,7 @@
                         android:layout_height="30dp"
                         android:layout_below="@+id/tv_temp"
                         android:layout_marginStart="15dp"
-
+                        android:fontFamily="@font/lato_regular"
                         android:gravity="start"
                         android:text="@string/create"
                         android:textSize="15sp" />
@@ -184,7 +185,7 @@
                         android:layout_height="30dp"
                         android:layout_marginStart="15dp"
                         android:layout_marginTop="15dp"
-
+                        android:fontFamily="@font/lato_regular"
                         android:gravity="start"
                         android:labelFor="@+id/edit_item_name"
                         android:text="@string/bussiness_information"
@@ -196,7 +197,7 @@
                         android:layout_height="30dp"
                         android:layout_below="@+id/tv_Business_info"
                         android:layout_marginStart="15dp"
-
+                        android:fontFamily="@font/lato_regular"
                         android:gravity="start"
                         android:text="@string/client_info"
                         android:textSize="16sp" />
@@ -254,7 +255,7 @@
                         android:layout_height="30dp"
                         android:layout_marginStart="15dp"
                         android:layout_marginTop="15dp"
-
+                        android:fontFamily="@font/lato_regular"
                         android:gravity="start"
                         android:labelFor="@+id/edit_item_name"
                         android:text="@string/items_list"
@@ -277,7 +278,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:layout_marginTop="5dp"
-
+                            android:fontFamily="@font/gerhana"
 
                             />
 
@@ -308,6 +309,7 @@
                             android:layout_marginHorizontal="30dp"
                             android:gravity="center|fill"
                             android:text="@string/add_item_to_list"
+                            android:fontFamily="@font/lato_regular"
                             android:textSize="12sp" />
 
                     </com.google.android.material.card.MaterialCardView>
@@ -338,7 +340,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_vertical"
                             android:layout_marginStart="140dp"
-
+                            android:fontFamily="@font/lato_regular"
                             android:gravity="end"
                             android:text="@string/ksh_0_00"
                             android:textSize="18sp" />
@@ -372,7 +374,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_vertical"
                             android:layout_marginStart="140dp"
-
+                            android:fontFamily="@font/lato_regular"
                             android:gravity="end"
                             android:text="@string/esumTotal_ksh_0_00"
                             android:textSize="18sp" />

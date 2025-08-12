@@ -61,7 +61,7 @@ class ProductsInfoFragment : Fragment() {
         amountScreen=view.findViewById(R.id.tv_amount_display_value)
 
 
-
+GlobalFunck().setUpEnterKeyNavigation(itemDescription,itemQuantity,itemPrice,itemTaxrate)
         val backImagebtn = binding.button1
         val savebtn = binding.btnsave
 

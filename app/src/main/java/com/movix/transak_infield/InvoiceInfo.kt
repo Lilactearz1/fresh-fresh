@@ -3,10 +3,12 @@ package com.movix.transak_infield
 import android.os.Build
 import android.os.Bundle
 import android.text.InputType
+import android.view.KeyEvent
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.DatePicker
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -18,6 +20,7 @@ import androidx.annotation.RequiresApi
 import androidx.annotation.experimental.R
 import com.movix.transak_infield.R.id.*
 import com.movix.transak_infield.databinding.FragmentInvoiceInfoBinding
+import java.io.IOException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.Temporal
@@ -25,9 +28,10 @@ import kotlin.properties.Delegates
 
 // UI component declarations (some are lateinit, others use Delegates)
 private lateinit var invoiceNumber: EditText
-private lateinit var creationDate: EditText
+private lateinit var creationDate: TextView
 private lateinit var spinnerTerms: Spinner
 lateinit var invoiceTitle: EditText
+private lateinit var imageCalendar:TextView
 var dueTerms by Delegates.notNull<Int>()
 
 class InvoiceInfo : Fragment() {
@@ -60,29 +64,51 @@ class InvoiceInfo : Fragment() {
 		creationDate = binding.pickcreationDate
 		spinnerTerms = view.findViewById(add_spinnerterms)
 		invoiceTitle = binding.addEdtInvoiceTitle
+		imageCalendar=binding.imageCalendar
 
+
+		//handle the key enter and back issue for crush behavior on enter or back pressed
+		GlobalFunck().setUpEnterKeyNavigation(invoiceNumber, invoiceTitle)
 
 		// Handle DatePicker click to show a date picker dialog
-		creationDate.setOnClickListener {
+	 	creationDate.setOnClickListener {
+			invoiceNumber.imeOptions=EditorInfo.IME_ACTION_DONE
+			invoiceTitle.imeOptions=EditorInfo.IME_ACTION_DONE
+			invoiceNumber.clearFocus()
+		try {
+
 			GlobalFunck().showDatePickerDialog(requireContext()) { pickedDate ->
 				selectedCreationDate= pickedDate
 
-				println("Date received: $selectedCreationDate")
+				println("printlnDate received: $selectedCreationDate")
+
+				creationDate.text = "$selectedCreationDate"
 				// You can store or display dateUp as needed
 			}
+		}catch (e:IOException){
+			e.printStackTrace()
+		}
 		}
 
-
+		imageCalendar .setOnClickListener{view->
+		  creationDate.performClick()
+		}
 		// Setup spinner to select payment/due terms
 		val creationSpinner = GlobalFunck().spinner(requireContext(), spinnerTerms) { selectedItems ->
-			if (	selectedItems.isEmpty()){
-				dueTerms=GlobalFunck().selectionterms(2)
-			}else{
+
+			if (selectedItems.isNotEmpty()){
 				for (item in selectedItems) {
-					dueTerms = GlobalFunck().selectionterms(item.code)
+				dueTerms = GlobalFunck().selectionterms(item.code)
 
 					// You can now use dueTerms when saving to DB
 				}
+			}else{
+				for (item in selectedItems){
+
+					dueTerms=GlobalFunck().selectionterms(item.code)
+				}
+
+
 			}
 
 
@@ -90,7 +116,7 @@ class InvoiceInfo : Fragment() {
 
 		// Handle Back button functionality to pop the fragment
 		val backBtn = view.findViewById<RelativeLayout>(back)
-		backBtn.setOnClickListener {
+		backBtn?.setOnClickListener {
 			requireActivity().supportFragmentManager.popBackStack()
 		}
 
@@ -99,7 +125,11 @@ class InvoiceInfo : Fragment() {
 
 
 		saveBtn.setOnClickListener {
+			try {
+
 			val title = invoiceTitle.text
+				invoiceNumber.inputType = InputType.TYPE_NULL // Disable keyboard
+				invoiceTitle.inputType=InputType.TYPE_NULL
 
 			// If title and terms were filled, use selected values
 			if (title.isNotEmpty() && creationSpinner.toString().isNotBlank()) {
@@ -141,6 +171,9 @@ class InvoiceInfo : Fragment() {
 			}
 
 			requireActivity().supportFragmentManager.popBackStack()
+			}catch (e:IOException){
+				e.printStackTrace()
+			}
 		}
 	}
 }

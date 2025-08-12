@@ -25,7 +25,6 @@
             app:layout_scrollFlags="scroll|exitUntilCollapsed"
             app:toolbarId="@+id/toolbar">
 
-
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
@@ -36,150 +35,109 @@
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
+    <androidx.appcompat.widget.AppCompatTextView
+        android:layout_width="match_parent"
+        android:layout_height="178dp"
+        android:layout_gravity="top"
+        android:alpha="0.5"
+        android:background="@color/white" />
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="top"
-        android:layout_marginTop="190dp"
+        android:layout_marginTop="170dp"
         android:fillViewport="true"
         android:scrollbars="none">
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:orientation="horizontal">
 
 
 
         <TextView
-            android:layout_width="60dp"
+            android:layout_width="50dp"
+            android:id="@+id/allestmimate"
             android:layout_height="30dp"
             android:background="@drawable/shadow"
-            android:gravity="center|center_vertical"
+            android:gravity="center"
+            android:layout_marginStart="20dp"
             android:paddingTop="4dp"
-            android:text="Jan"
+            android:textAlignment="gravity"
+            android:text="All"
             android:textColor="@color/dark_blue2" />
 
         <TextView
-            android:layout_width="60dp"
+            android:layout_width="65dp"
             android:layout_height="30dp"
             android:layout_marginStart="10dp"
             android:background="@drawable/shadow"
-            android:gravity="center|center_vertical"
+            android:gravity="center"
             android:paddingTop="4dp"
-            android:text="Feb"
+            android:text="Unpaid"
+            android:textAlignment="center"
             android:textColor="@color/dark_blue2" />
 
         <TextView
-            android:layout_width="60dp"
+            android:layout_width="100dp"
             android:layout_height="30dp"
             android:layout_marginStart="10dp"
             android:background="@drawable/shadow"
-            android:gravity="center|center_vertical"
+            android:gravity="center"
             android:paddingTop="4dp"
-            android:text="Mar"
+            android:textAlignment="gravity"
+            android:text="Partially Paid"
             android:textColor="@color/dark_blue2" />
 
         <TextView
-            android:layout_width="60dp"
+            android:layout_width="70dp"
             android:layout_height="30dp"
             android:layout_marginStart="10dp"
             android:background="@drawable/shadow"
-            android:gravity="center|center_vertical"
+            android:gravity="center"
+            android:textAlignment="gravity"
+            android:layout_gravity="center_horizontal"
             android:paddingTop="4dp"
-            android:text="Apr"
+            android:text="Overdue"
             android:textColor="@color/dark_blue2" />
 
-        <TextView
-            android:layout_width="60dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="10dp"
-            android:background="@drawable/shadow"
-            android:gravity="center|center_vertical"
-            android:paddingTop="4dp"
-            android:text="May"
-            android:textColor="@color/dark_blue2" />
+            <TextView
+                android:layout_width="57dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/shadow"
+                android:gravity="center"
+                android:paddingTop="4dp"
+                android:text="Paid"
+                android:textAlignment="gravity"
+                android:textColor="@color/dark_blue2" />
 
-        <TextView
-            android:layout_width="60dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="10dp"
-            android:background="@drawable/shadow"
-            android:gravity="center|center_vertical"
-            android:paddingTop="4dp"
-            android:text="Jun"
-            android:textColor="@color/dark_blue2" />
+            <ImageButton
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:layout_marginStart="10dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/filtericon"
+               android:layout_marginEnd="20dp"
+                />
 
-        <TextView
-            android:layout_width="60dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="10dp"
-            android:background="@drawable/shadow"
-            android:gravity="center|center_vertical"
-            android:paddingTop="4dp"
-            android:text="Jul"
-            android:textColor="@color/dark_blue2" />
 
-        <TextView
-            android:layout_width="60dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="10dp"
-            android:background="@drawable/shadow"
-            android:gravity="center|center_vertical"
-            android:paddingTop="4dp"
-            android:text="Aug"
-            android:textColor="@color/dark_blue2" />
-
-        <TextView
-            android:layout_width="60dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="10dp"
-            android:background="@drawable/shadow"
-            android:gravity="center|center_vertical"
-            android:paddingTop="4dp"
-            android:text="Sept"
-            android:textColor="@color/dark_blue2" />
-
-        <TextView
-            android:layout_width="60dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="10dp"
-            android:background="@drawable/shadow"
-            android:gravity="center|center_vertical"
-            android:paddingTop="4dp"
-            android:text="Oct"
-            android:textColor="@color/dark_blue2" />
-
-        <TextView
-            android:layout_width="60dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="10dp"
-            android:background="@drawable/shadow"
-            android:gravity="center|center_vertical"
-            android:paddingTop="4dp"
-            android:text="Nov"
-            android:textColor="@color/dark_blue2" />
-
-        <TextView
-            android:layout_width="60dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="10dp"
-            android:background="@drawable/shadow"
-            android:gravity="center|center_vertical"
-            android:paddingTop="4dp"
-            android:text="Dec"
-            android:textColor="@color/dark_blue2" />
         </LinearLayout>
     </HorizontalScrollView>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="530dp"
-        android:layout_marginTop="225dp">
+        android:layout_marginTop="225dp"
+        android:layout_gravity="center_horizontal"
+         >
 
         <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/estimateListRecycler"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/estimateListRecycler">
+            android:layout_height="match_parent">
 
 
         </androidx.recyclerview.widget.RecyclerView>
@@ -198,11 +156,12 @@
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/floatingplus"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginBottom="70dp"
-        android:src="@android:drawable/btn_plus" />
+         app:backgroundTint="@color/material_button"
+        android:src="@drawable/asset_plus_btn" />
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="DeveloperToolsToolWindowSettingsV1" lastSelectedContentNodeId="rubber-duck">
+  <component name="DeveloperToolsToolWindowSettingsV1" lastSelectedContentNodeId="color-picker">
     <developerToolsConfigurations>
       <developerToolConfiguration developerToolId="text-format-converter" id="60dd99a0-adf5-4bf9-a6b1-b9f52dec6c74" name="Workbench">
         <properties>
@@ -22,7 +22,7 @@
       </developerToolConfiguration>
       <developerToolConfiguration developerToolId="color-picker" id="f2615137-bffb-428d-ad8e-0e6b67daf5c9" name="Workbench">
         <properties>
-          <property key="selectedColor" type="INPUT" value="com.intellij.ui.JBColor|-13680266" />
+          <property key="selectedColor" type="INPUT" value="com.intellij.ui.JBColor|-16776962" />
         </properties>
       </developerToolConfiguration>
     </developerToolsConfigurations>

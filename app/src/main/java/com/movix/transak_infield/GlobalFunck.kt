@@ -6,10 +6,14 @@ import android.icu.util.Calendar
 import android.icu.util.GregorianCalendar
 import android.os.Build
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.EditText
 import android.widget.Spinner
 import androidx.annotation.RequiresApi
+
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.time.temporal.Temporal
@@ -71,7 +75,7 @@ class GlobalFunck {
 	}
 // function to collect  name title estimate id
 
-//function of databaseviewing
+	//function of databaseviewing
 	fun creationDate(context: Context): String {
 		val dbEstimateinfo = DatabaseHandler(context).viewEstimateInfo()
 		var string: String = ""
@@ -127,18 +131,18 @@ class GlobalFunck {
 	fun customerName(context: Context): String {
 		val db = DatabaseHandler(context)
 		val customers = db.viewClientsInfo()
-		var string=""
-		customers.forEachIndexed{index,creation ->
-			string=creation.name
+		var string = ""
+		customers.forEachIndexed { index, creation ->
+			string = creation.name
 		}
 
-	 return string
+		return string
 	}
 
 
 	//show date picker and utilize the return string
 	@RequiresApi(Build.VERSION_CODES.O)
-	fun showDatePickerDialog(context: Context, onDateSelection: (LocalDate) ->Unit){
+	fun showDatePickerDialog(context: Context, onDateSelection: (LocalDate) -> Unit) {
 		var dateReturn: Temporal
 
 		val calender = GregorianCalendar()
@@ -216,8 +220,44 @@ class GlobalFunck {
 
 	//calculate date for save operations
 	@RequiresApi(Build.VERSION_CODES.O)
-	fun calculateDueDate(baseDate:LocalDate, dueTerms: Int): LocalDate? {
-		val days=selectionterms(dueTerms)
+	fun calculateDueDate(baseDate: LocalDate, dueTerms: Int): LocalDate? {
+		val days = selectionterms(dueTerms)
 		return baseDate.plusDays(days.toLong())
+
+
+	}
+	//reusable function to hold key enter and back errors for the editexts
+	fun setUpEnterKeyNavigation(vararg editexts:EditText) {
+		for (i in editexts.indices) {
+			val current = editexts[i]
+			// las editext -> "Done" and "Close"
+			if (i == editexts.lastIndex) {
+				current.imeOptions = EditorInfo.IME_ACTION_DONE
+				current.setOnEditorActionListener { view, actionId, _b ->
+					if (actionId == EditorInfo.IME_ACTION_DONE) {
+						view.clearFocus()
+						hideKeyboard(view)
+						true
+					} else false
+				}
+			} else {
+				current.imeOptions = EditorInfo.IME_ACTION_NEXT
+				current.setOnEditorActionListener { view, actionId, _b ->
+					if (actionId == EditorInfo.IME_ACTION_NEXT) {
+						editexts[i + 1].requestFocus()
+						true
+					} else false
+				}
+			}
+		}
+	}
+
+	private fun hideKeyboard(view: View?) {
+		val imm = view?.context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+		imm.hideSoftInputFromWindow(view.windowToken,0)
+
 	}
 }
+
+
+

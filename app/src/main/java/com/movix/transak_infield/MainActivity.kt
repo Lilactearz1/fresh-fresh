@@ -203,6 +203,7 @@ open class MainActivity : AppCompatActivity() {
 
 	}
 // the jetpack bottom appBar
+
  @Composable
 	private fun BottomBar() {
 		BottomAppBar(
@@ -243,6 +244,7 @@ open class MainActivity : AppCompatActivity() {
 					Text(
 						text = "Preview",
 						modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+
 					)
 				}
 
@@ -635,7 +637,7 @@ open class MainActivity : AppCompatActivity() {
 					.setBorder(Border.NO_BORDER).setMarginLeft(284f).setMarginTop(30f)
 			}
 			document.add(amountCell)
-			val mpesaInfo = Table(floatArrayOf(176.75f, 160.75f, 164f))
+			val mpesaInfo = Table(floatArrayOf(178.75f, 164.75f, 168f))
 			val mpesa = listOf("529901", "ACCOUNT NO", "5021964795002")
 			mpesa.forEach {
 				mpesaInfo.addCell(
@@ -643,10 +645,11 @@ open class MainActivity : AppCompatActivity() {
 						.add(Paragraph(it))
 				).setFontColor(ColorConstants.WHITE).setHeight(35f).setFont(gerhanaFont)
 					.setFontColor(ColorConstants.WHITE)
+
 			}
 
 
-			val bankInfoTable = Table(floatArrayOf(135.75f, 120.75f, 120.75f, 125.75f))
+			val bankInfoTable = Table(floatArrayOf(145.75f, 120.75f, 120.75f, 125.75f))
 
 			val aboutDetailing = Table(floatArrayOf(135.15f))
 			val detailHeading = listOf("BANK DETAIL")
@@ -663,16 +666,16 @@ open class MainActivity : AppCompatActivity() {
 					Cell().setBorder(Border.NO_BORDER).add(Paragraph(dH2))
 						.setBackgroundColor(DeviceRgb(62, 140, 202))
 				).setFontColor(ColorConstants.WHITE).setHeight(35f).setFont(gerhanaFont)
-					.setMarginTop(1f).setMarginBottom(0f)
+					.setMarginTop(10f)
 
 			}
 
 			detailHeading.forEach {
 				aboutDetailing.addCell(
-					Cell().add(Paragraph(it).setBorder(Border.NO_BORDER))
-				).setMarginTop(25.25f).setBackgroundColor(DeviceRgb(62, 140, 202))
+					Cell().add(Paragraph(it).setBorder(Border.NO_BORDER)).setPaddingTop(15f)
+				).setBackgroundColor(DeviceRgb(62, 140, 202))
 					.setFontColor(ColorConstants.WHITE).setFont(gerhanaFont)
-					.setBorder(Border.NO_BORDER)
+					.setBorder(Border.NO_BORDER).setPaddingTop(20f)
 
 			}
 

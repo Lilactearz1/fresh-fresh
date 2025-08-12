@@ -2,6 +2,14 @@
 
     <string name="app_name" translatable="true">Transak_Infield</string>
 
+    <string-array name="markItems"
+        translatable="true">
+
+        <item>pending</item>
+        <item>approved </item>
+        <item>cancel</item>
+    </string-array>
+
     <!-- New string resources for Navigation Drawer -->
     <string name="navigation_drawer_open" translatable="false">Open Navigation Drawer</string>
     <string name="navigation_drawer_close" translatable="false">Close Navigation Drawer</string>
@@ -17,7 +25,7 @@
     <string name="nav_shot" translatable="false">Shot</string>
     <string name="support" translatable="false">Support</string>
     <string name="nav_logout" translatable="false">Logout</string>
-    <string name="mail" translatable="false">infieldengineeringltd@gmail.com</string>
+    <string name="mail">infieldengineeringltd@gmail.com</string>
 
     <!-- hands on strings -->
 
