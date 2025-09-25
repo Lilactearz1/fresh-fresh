@@ -10,11 +10,13 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.widget.doOnTextChanged
 import androidx.savedstate.SavedState
 import com.google.android.material.navigation.NavigationBarItemView
 import com.google.android.material.navigation.NavigationBarMenu
 import com.google.android.material.navigation.NavigationBarView
 import com.movix.transak_infield.databinding.FragmentProductsInfoBinding
+import kotlin.properties.Delegates
 
 /**
  * A simple [Fragment] subclass.
@@ -30,17 +32,12 @@ class ProductsInfoFragment : Fragment() {
     private lateinit var itemTaxrate: EditText
     private lateinit var amountScreen: TextView
     private  lateinit var  navigationBar:NavigationBarView
-
+	private var  productAmount by Delegates.notNull<Float>()
 
 
 //   private lateinit var databaseHandler:DatabaseHandler
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-    }
-
-    override fun onCreateView(
+	override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
@@ -64,31 +61,61 @@ class ProductsInfoFragment : Fragment() {
 GlobalFunck().setUpEnterKeyNavigation(itemDescription,itemQuantity,itemPrice,itemTaxrate)
         val backImagebtn = binding.button1
         val savebtn = binding.btnsave
+	    amountWatcher()
 
         savebtn.setOnClickListener {
 
             addtoRecords(view) }
 
+
         backImagebtn.setOnClickListener {
             requireActivity().supportFragmentManager.popBackStack()
-
 
             Toast.makeText(requireContext(),"clicked",Toast.LENGTH_SHORT).show()
 
         }
 
+
+
     }
+	//	add text change listeners method for the products amount
+	private  fun amountWatcher(){
 
+	  itemPrice.doOnTextChanged{text,start,before,count->
+			text.toString().toFloatOrNull()?:0f
+		  updateAmount()
+		}
 
+	  itemQuantity.doOnTextChanged{text,start,before,count->
+		  text.toString().toFloatOrNull()?:0f
+		  updateAmount()
+		}
+
+	}
+
+	private fun updateAmount() {
+
+		val productPrice = itemPrice.text.toString().toDoubleOrNull() ?: 0.0
+		val productQuantity = itemQuantity.text.toString().toIntOrNull() ?: 0
+
+		val amount = productPrice * productQuantity
+
+		// You can also update a TextView here for live updates:
+		println("this up $amount")
+
+		 amountScreen.text = amount.toString()
+	}
 
 //    method for saving records to the database
 
     private fun addtoRecords(view: View) {
 
         val productDescription = try {
+
             itemDescription.text.toString()
 
         } catch (e: NumberFormatException) {
+
             itemDescription.error = "input field"
             return
         }
@@ -113,14 +140,16 @@ GlobalFunck().setUpEnterKeyNavigation(itemDescription,itemQuantity,itemPrice,ite
             itemTaxrate.error = "input field"
             return
         }
-        val productAmount:Float = try {
+	     productAmount = try {
 
        (itemPrice.text.toString().toFloat()*itemQuantity.text.toString().toFloat())
+
         }catch (e: NumberFormatException){
             itemQuantity.error = "inputfield"
             itemPrice.error = "input field"
             return
         }
+
 
 
 //    create a model instance to use in the database
@@ -131,7 +160,10 @@ GlobalFunck().setUpEnterKeyNavigation(itemDescription,itemQuantity,itemPrice,ite
         if (productDescription.isNotEmpty() && productQuantity.toString()
                 .isNotEmpty() && productPrice.toString().isNotEmpty() && productTax.toString()
                 .isNotEmpty()
-        ) {
+        )
+		{
+
+
             val status = databaseHandler.addProductToDatabase(products)
 
             if (status > -1) {
@@ -143,6 +175,7 @@ GlobalFunck().setUpEnterKeyNavigation(itemDescription,itemQuantity,itemPrice,ite
                 itemPrice.text.clear()
                 itemQuantity.text.clear()
                 itemTaxrate.text.clear()
+	            amountScreen.text= "0.00"
 
 //
 
@@ -152,6 +185,11 @@ GlobalFunck().setUpEnterKeyNavigation(itemDescription,itemQuantity,itemPrice,ite
         }
 
     }
+
+	private fun amountscreen():Float {
+		val totalsum = productAmount
+		return totalsum
+	}
 
 
 }

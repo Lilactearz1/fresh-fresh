@@ -2,6 +2,7 @@ package com.movix.transak_infield
 
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
@@ -9,6 +10,7 @@ import android.os.Environment
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.*
@@ -63,7 +65,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.itextpdf.kernel.events.PdfDocumentEvent
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import kotlin.properties.Delegates
 
 //import the R .id r. layout ,drawables
@@ -74,7 +78,8 @@ open class MainActivity : AppCompatActivity() {
 	private lateinit var itemsCount: TextView
 	private lateinit var Subtotal: GlobalFunck
 	private lateinit var Total: GlobalFunck
-	private var  dueTerms =0
+	private var dueTerms = 0
+
 
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,10 +89,16 @@ open class MainActivity : AppCompatActivity() {
 
 		setContentView(binding.root)  // Connects to activity_main.xml so check layout name to match activity
 
+		val rvl_bussinessInfo = binding.relativelayoutBussinessInfo
+		val rvl_clientInfo = binding.relativeLayoutClentInfo
 
 		binding.btnInv001.setOnClickListener {
 
-			val fragment = InvoiceInfo()
+			val estimateId =intent.getIntExtra("estimate_id",-1)
+			val bundle =Bundle().apply {
+				putInt("estimate_id",estimateId)
+			}
+			val fragment = InvoiceInfo().apply { arguments = bundle}
 			supportFragmentManager.beginTransaction().replace(R.id.newEstimateLayout, fragment)
 				.addToBackStack(null).commit()
 		}
@@ -112,6 +123,14 @@ open class MainActivity : AppCompatActivity() {
 				lifecyclejob.join()
 			}
 		}
+		rvl_bussinessInfo?.setOnClickListener {
+			binding.businessimage?.performClick()
+		}
+
+		rvl_clientInfo?.setOnClickListener {
+			binding.btnclientInfo.performClick()
+		}
+
 
 		val bottomNav = binding.bottomnav
 		bottomNav?.setContent {
@@ -126,16 +145,19 @@ open class MainActivity : AppCompatActivity() {
 		binding.btnclientInfo.setOnClickListener {
 
 			lifecycleScope.launch {
-				val clientFragment = clientinfoFragment()
-				supportFragmentManager.beginTransaction()
-//                replace from the id of the parent view(current view) to the next view
-					.replace(R.id.newEstimateLayout, clientFragment).addToBackStack(null).commit()
+				val intent=Intent(applicationContext,ClientActivity::class.java)
+				startActivity(intent)
+
 			}
+		}
+		binding.businessimage?.setOnClickListener {
+			Toast.makeText(applicationContext, "coming soon...", Toast.LENGTH_LONG).show()
 		}
 
 		val cardviewButton = binding.additemscardView
 
 		cardviewButton.setOnClickListener {
+
 			val productfrag = ProductsInfoFragment()
 			supportFragmentManager.beginTransaction()
 //                replace from the id of the parent view(current view) to the next view
@@ -145,23 +167,19 @@ open class MainActivity : AppCompatActivity() {
 
 		val addBtn_image = binding.addbuttonImage
 		addBtn_image.setOnClickListener {
-
-			val productsInfoFragment = ProductsInfoFragment()
-			supportFragmentManager.beginTransaction()
-				.replace(R.id.newEstimateLayout, productsInfoFragment).addToBackStack(null).commit()
-
+			cardviewButton.performClick()
 		}
-		val db=DatabaseHandler(applicationContext)
+		val db = DatabaseHandler(applicationContext)
 
 
 //set the text view to
 		itemsCount = binding.tvItems
-		//	    function to count items nimber inserted
+		//	    function to count items number inserted
 		fun countItems() {
 			itemsCount.text = "Items No: [${setupListintoRecycleview()}]"
 		}
 		countItems()
-
+		// function to display totals in the textview
 		fun txtViewTotals() {
 			val stringFomat = "%,.2f"
 			val itemSubtal = binding.esumSubtotal
@@ -192,22 +210,20 @@ open class MainActivity : AppCompatActivity() {
 			// Only refresh list when the visible fragment is null (i.e., back to main view)
 			if (fragment == null) {
 				setupListintoRecycleview()
-				//	    function to count items nimber inserted
+				//	    function to count items number inserted
 				countItems()
 				//	    call method for tv add subtotal and totals
 				txtViewTotals()
-
-				println("items number ${setupListintoRecycleview()}")
 			}
 		}
 
 	}
 // the jetpack bottom appBar
 
- @Composable
+	@Composable
 	private fun BottomBar() {
 		BottomAppBar(
-			containerColor = Color(47, 65, 118),
+			containerColor = Color(0, 142, 204),
 			tonalElevation = 4.dp
 		) {
 			Row(
@@ -226,7 +242,11 @@ open class MainActivity : AppCompatActivity() {
 
 
 								withContext(Dispatchers.Main) {
-									Toast.makeText(this@MainActivity, "Coming soon...", Toast.LENGTH_LONG)
+									Toast.makeText(
+										this@MainActivity,
+										"Coming soon...",
+										Toast.LENGTH_LONG
+									)
 										.show()
 								}
 
@@ -234,7 +254,7 @@ open class MainActivity : AppCompatActivity() {
 							}
 							lifecyclejob.join()
 						}
-							  },
+					},
 					shape = RoundedCornerShape(50),
 					colors = ButtonDefaults.textButtonColors(
 						containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
@@ -254,17 +274,26 @@ open class MainActivity : AppCompatActivity() {
 						GlobalScope.launch {
 //
 							val lifecyclejob: Job = lifecycleScope.launch(Dispatchers.IO) {
-								estimatePdf()  // Run PDF logic in background
+								val intent =Intent(applicationContext,Save_previewActivity::class.java)
+
+								startActivity(intent)
+
+//
 
 								withContext(Dispatchers.Main) {
-									Toast.makeText(this@MainActivity, "Download Success...", Toast.LENGTH_LONG)
-										.show()
+									Toast.makeText(
+										this@MainActivity,
+										" Success...",
+										Toast.LENGTH_LONG
+									)
+
 								}
 
 
 							}
 							lifecyclejob.join()
-						}},
+						}
+					},
 					shape = RoundedCornerShape(50),
 					colors = ButtonDefaults.textButtonColors(
 						containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
@@ -272,7 +301,7 @@ open class MainActivity : AppCompatActivity() {
 					)
 				) {
 					Text(
-						text = "Download",
+						text = "Save",
 						modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
 					)
 				}
@@ -280,7 +309,7 @@ open class MainActivity : AppCompatActivity() {
 		}
 	}
 
-
+companion object {
 	//set the fonts for the pdf sections
 	fun getPdfFontFromAssets(context: Context): PdfFont {
 		val inputStream = context.assets.open("fonts/gerhana.ttf")
@@ -305,15 +334,6 @@ open class MainActivity : AppCompatActivity() {
 		return fontFact
 	}
 
-	fun queensFont(context: Context): PdfFont {
-		val fonstStream = context.assets.open("fonts/queen.otf")
-		val inputStream = fonstStream.readBytes()
-		val fontProgram = FontProgramFactory.createFont(inputStream, true)
-		val quuenFont = PdfFontFactory.createFont(
-			fontProgram, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED
-		)
-		return quuenFont
-	}
 
 	fun latoBold(context: Context): PdfFont {
 		val fontstream = context.assets.open("fonts/latobold.ttf")
@@ -327,25 +347,55 @@ open class MainActivity : AppCompatActivity() {
 		return latoboldFont
 	}
 
+	//queens font for the pdf headings
+	fun queensFont(context: Context): PdfFont {
+		val fontStream = context.assets.open("fonts/queen.otf")
+		val inputstream = fontStream.readBytes()
+		val fontProgram = FontProgramFactory.createFont(inputstream, true)
+		val queenFont = PdfFontFactory.createFont(
+			fontProgram,
+			PdfEncodings.IDENTITY_H,
+			EmbeddingStrategy.PREFER_EMBEDDED
+		)
+		return queenFont
+	}
 
-	private fun estimatePdf() {
 
-		val	clientId =GlobalFunck().customerId(applicationContext)
-		val	clientNumber=GlobalFunck()
+	fun estimatePdf(context: Context) {
 
-		val	estimateTitle=GlobalFunck().titleINV(applicationContext)
+		val clientId = GlobalFunck().customerId(context)
+		val clientNumber = GlobalFunck()
+
+		val estimateTitle = GlobalFunck().titleINV(context)
 		// for the invoice to be counted from number index 0+1 to avoid the zero client
-		val invoiceNumber=GlobalFunck().id(applicationContext).plus(1)
-		var creationDate=GlobalFunck().creationDate(applicationContext)
+		val invoiceNumber = GlobalFunck().id(context).plus(1)
+		var creationDate = GlobalFunck().creationDate(context)
 
-		if (creationDate.isEmpty()){
-			creationDate= LocalDate.now().toString()
+		if (creationDate.isEmpty()) {
+			creationDate = LocalDate.now().toString()
 		}
-		val toLocalDate =  LocalDate.parse(creationDate)
 
-		val duedate =GlobalFunck().calculateDueDate(toLocalDate,dueTerms)
-		val clientName = GlobalFunck().customerName(applicationContext)
-		if (clientName.isEmpty()){clientName.plus("INFIELDER_$invoiceNumber")}
+		val toLocalDate = try {
+			if (creationDate.matches(Regex("\\d+"))) {
+				// If it's a numeric timestamp, convert from milliseconds
+				Instant.ofEpochMilli(creationDate.toLong())
+					.atZone(ZoneId.systemDefault())
+					.toLocalDate()
+			} else {
+				// Otherwise, parse as a normal ISO date string
+				LocalDate.parse(creationDate)
+			}
+		} catch (e: Exception) {
+			// Fallback to current date if parsing fails
+			LocalDate.now()
+		}
+
+
+		val duedate = GlobalFunck().calculateDueDate(toLocalDate, dueTerms)
+		val clientName = GlobalFunck().customerName(context)
+		if (clientName.isEmpty()) {
+			clientName.plus("INFIELDER_$invoiceNumber")
+		}
 		try {
 
 			// File path in Downloads folder
@@ -367,7 +417,7 @@ open class MainActivity : AppCompatActivity() {
 			val width = PageSize.A4.width
 			val height = PageSize.A4.height
 			// 1. Load image from drawable
-			val drawablepic = ContextCompat.getDrawable(this, R.drawable.backpdf)
+			val drawablepic = ContextCompat.getDrawable(context, R.drawable.backpdf)
 			val bitmap1 = (drawablepic as BitmapDrawable).bitmap
 
 			// 2. Convert Bitmap to ByteArray
@@ -392,10 +442,10 @@ open class MainActivity : AppCompatActivity() {
 
 //       1. Define Table Headers: and its properties the font color background colour and border
 
-			val latoRegular = latoRegularFont(this)
-			val queensFont = queensFont(this)
-			val gerhanaFont = getPdfFontFromAssets(this)
-			val latobold = latoBold(this)
+			val latoRegular = latoRegularFont(context)
+			val queensFont = queensFont(context)
+			val gerhanaFont = getPdfFontFromAssets(context)
+			val latobold = latoBold(context)
 			val textColor = DeviceRgb(44, 45, 47)
 
 //            the solid border color resource custom defined
@@ -428,8 +478,6 @@ open class MainActivity : AppCompatActivity() {
 					).setBackgroundColor(DeviceRgb(62, 140, 202)) // blue header background
 
 				)
-
-
 			}
 
 			headers.first()
@@ -437,11 +485,11 @@ open class MainActivity : AppCompatActivity() {
 
 // Images to the page
 
-			val drawable = ContextCompat.getDrawable(this, R.drawable.infieldlogo) as BitmapDrawable
+			val drawable = ContextCompat.getDrawable(context, R.drawable.infieldlogo) as BitmapDrawable
 			val bitmap = drawable.bitmap
 
 //     // Save bitmap to a temporary file
-			val imagefile = File(this.cacheDir, "infieldlogo.png")
+			val imagefile = File(context.cacheDir, "infieldlogo.png")
 			val outputStream = FileOutputStream(imagefile)
 			bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
 			outputStream.flush()
@@ -453,7 +501,7 @@ open class MainActivity : AppCompatActivity() {
 			document.add(image)
 
 //            3. Populate the Table with Rows
-			val items = DatabaseHandler(this).viewProduct()
+			val items = DatabaseHandler(context).viewProduct()
 			items.forEach { item ->
 				//Loop through and calculate amount = price × quantity:
 				val amount = item.price * item.quantity
@@ -503,8 +551,6 @@ open class MainActivity : AppCompatActivity() {
 				table.addCell(cell5)
 			}
 // the header sections
-
-
 
 
 //			call the image of qr function to be used in the itext pdf
@@ -567,8 +613,14 @@ open class MainActivity : AppCompatActivity() {
 
 			)
 			document.add(
-				//Set the Quote number
-				Paragraph("QTE-INF-#$invoiceNumber").setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
+				//Set] the Quote number
+				Paragraph("QTE-INF-#$invoiceNumber").setFontColor(
+					DeviceRgb(
+						47,
+						59,
+						81
+					)
+				) // address dark blue
 					.setFontSize(13f).setFont(queensFont).setFixedPosition(500.2F, 669f, 164f)
 
 
@@ -616,10 +668,10 @@ open class MainActivity : AppCompatActivity() {
 
 			amountTotal.forEach {
 //function to sum total of items from the database
-				val subtotal = GlobalFunck().getSubTotal(applicationContext)
+				val subtotal = GlobalFunck().getSubTotal(context)
 				val textformat = "%,.2f"
-				val objTax = GlobalFunck().summationOfTax(applicationContext)
-				var objTotal = GlobalFunck().summationofTotal(applicationContext)
+				val objTax = GlobalFunck().summationOfTax(context)
+				var objTotal = GlobalFunck().summationofTotal(context)
 
 
 				//we are debugging here FOR THE CALCULATION OF PRICES AND TOTALS
@@ -707,14 +759,13 @@ open class MainActivity : AppCompatActivity() {
 			}
 			infosBank.last()
 
-				// Add footer event handler by calling the handler created in the clientsCreation file
+			// Add footer event handler by calling the handler created in the clientsCreation file
 			pdfDocument.addEventHandler(PdfDocumentEvent.END_PAGE, FooterEvent())
 
 			document.add(aboutDetailing)
 			document.add(bankInfoTable)
 			document.add(mpesadetail)
 			document.add(mpesaInfo)
-
 
 
 			//document metadata
@@ -725,12 +776,12 @@ open class MainActivity : AppCompatActivity() {
 
 			println("PDF generated at: ${file.absolutePath}")
 
-			Toast.makeText(this, "Download Success...", Toast.LENGTH_LONG).show()
+			Toast.makeText(context, "Download Success...", Toast.LENGTH_LONG).show()
 		} catch (e: Exception) {
 			e.printStackTrace()
 		}
 	}
-
+}
 
 	//function to show list of inserted data in the recycler view
 	private fun setupListintoRecycleview(): Int {
@@ -784,19 +835,38 @@ open class MainActivity : AppCompatActivity() {
 //        now show the dialog
 		dialog.show()
 
+
 		// Find views from dialog layout
 		val nameEditText = dialog.findViewById<EditText>(R.id.edit_item_namedialog)
 		val quantityEditText = dialog.findViewById<EditText>(R.id.edit_item_quantity)
 		val priceEditText = dialog.findViewById<EditText>(R.id.edit_item_pricedialog)
 		val taxRateEditText = dialog.findViewById<EditText>(R.id.edit_item_taxRatedialog)
-		val saveButton = dialog.findViewById<Button>(R.id.updatedialog)
-		val cancelButton = dialog.findViewById<Button>(R.id.dialogcancelbtn)
+		val saveButton = dialog.findViewById<RelativeLayout>(R.id.SaveclientDetails)
+		val cancelButton = dialog.findViewById<RelativeLayout>(R.id.backLayout)
+		val amountScreen=dialog.findViewById<TextView>(R.id.tv_amount_display_value)
 
 		// Fill views with existing data
 		nameEditText?.setText(modelClass.itemName)
 		quantityEditText?.setText(modelClass.quantity.toString())
 		priceEditText?.setText(modelClass.price.toString())
 		taxRateEditText?.setText(modelClass.tax.toString())
+
+		fun updateItems(price: Double, quantity: Int) {
+			val total =price*quantity
+//			display the live amount in the text view
+			amountScreen?.text = "Ksh: $total"
+		}
+
+		// add tecxt watcher functions
+		fun textChangerListener(){
+			val price =priceEditText?.text.toString().toDoubleOrNull()
+			val quantity =quantityEditText?.text.toString().toIntOrNull()
+
+			if (price != null && quantity !=null) {
+				updateItems(price,quantity)
+			}
+		}
+		textChangerListener()
 		//cancellation button
 		cancelButton?.setOnClickListener {
 			dialog.dismiss()
@@ -816,7 +886,7 @@ open class MainActivity : AppCompatActivity() {
 			}
 
 			val updatedModel = ModelClass(
-				id = modelClass.id, // keep same ID
+				id = modelClass.id,  // keep same ID
 				itemName = updatedName,
 				quantity = updatedQuantity,
 				price = updatedPrice,

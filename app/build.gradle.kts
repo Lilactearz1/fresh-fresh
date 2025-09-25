@@ -30,6 +30,10 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+
+	    // 👇 Important for LocalDate on older devices
+	    isCoreLibraryDesugaringEnabled=true
+
     }
     kotlinOptions {
         jvmTarget = "11"
@@ -39,6 +43,7 @@ android {
         compose = true
 //        view binding allow you to connect input  ids directly to your code
         viewBinding =true
+
     }
 }
 
@@ -61,6 +66,8 @@ dependencies {
     implementation(libs.androidx.navigation.runtime.android)
 	implementation(libs.androidx.material3.android)
 	implementation(libs.androidx.tv.material)
+	implementation(libs.androidx.activity)
+	implementation(libs.places)
 	testImplementation(libs.junit)
     testImplementation(libs.junit.jupiter)
 	testImplementation(libs.junit.jupiter)
@@ -71,8 +78,15 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation ("com.itextpdf:itext7-core:7.2.5")
-	implementation( "com.google.zxing:core:3.5.2")
+	implementation( "com.google.zxing:core:3.5.3")
     implementation ("com.journeyapps:zxing-android-embedded:4.3.0")
+	coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.0.4")
+	implementation ("com.android.volley:volley:1.2.1")
+
+
+
+
+
 
 
 

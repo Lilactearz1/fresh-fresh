@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <LinearLayout
+        android:id="@+id/utilityNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/shadow"
+        android:orientation="vertical"
+        android:paddingBottom="10dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="15dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="10dp"
+                android:fontFamily="@font/latobold"
+                android:text="Ksh: 0.00"
+                android:textSize="24sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="10dp"
+                android:fontFamily="@font/gerhana"
+                android:text="Verifed"
+                android:textColor="@color/berry"
+                android:textSize="18sp" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="10dp"
+                android:fontFamily="@font/lato_regular"
+                android:text="Nelly Ochieng"
+                android:textSize="18sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="10dp"
+                android:fontFamily="@font/latobold"
+                android:text="Due date: 29-09-2025" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:layout_gravity="center_horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_centerInParent="true"
+                android:layout_marginStart="30dp"
+                android:layout_marginEnd="30dp"
+                android:backgroundTint="@color/blue_ncs"
+                android:gravity="center_horizontal|center"
+                android:text="Share"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                app:icon="@drawable/share"
+                app:iconGravity="textStart">
+
+            </com.google.android.material.button.MaterialButton>
+
+        </RelativeLayout>
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginStart="10dp"
+            android:layout_weight="0"
+            android:alignmentMode="alignMargins"
+            android:animateLayoutChanges="true"
+            android:columnCount="4"
+            android:layout_marginEnd="10dp"
+            android:columnOrderPreserved="true"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:id="@+id/Download1"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_row="0"
+                android:layout_column="0"
+                android:layout_gravity="center"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/entrybox"
+                android:src="@drawable/baseline_arrow_drop_down_24" />
+
+            <ImageView
+                android:id="@+id/edit1"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_row="0"
+                android:layout_column="1"
+                android:layout_gravity="center"
+                android:layout_marginStart="15dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/entrybox"
+                android:src="@drawable/baseline_edit_24" />
+
+            <ImageView
+                android:id="@+id/print1"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_row="0"
+                android:layout_column="2"
+                android:layout_gravity="center"
+                android:layout_marginStart="15dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/entrybox"
+                android:src="@drawable/round_airplay_24" />
+
+            <ImageView
+                android:id="@+id/more1"
+                android:layout_width="38dp"
+                android:layout_height="40dp"
+                android:layout_row="0"
+                android:layout_column="3"
+                android:layout_gravity="center"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/entrybox"
+                android:src="@drawable/baseline_format_list_bulleted_24"
+
+                />
+
+            <TextView
+                android:layout_row="1"
+                android:layout_column="0"
+                android:layout_gravity="center"
+                android:layout_marginEnd="10dp"
+                android:fontFamily="@font/latobold"
+                android:text="Download" />
+
+            <TextView
+                android:layout_row="1"
+                android:layout_column="1"
+                android:layout_gravity="center"
+                android:layout_marginEnd="10dp"
+                android:fontFamily="@font/latobold"
+                android:text="Edit" />
+
+            <TextView
+                android:layout_row="1"
+                android:layout_column="2"
+                android:layout_gravity="center"
+                android:layout_marginEnd="10dp"
+                android:fontFamily="@font/latobold"
+
+                android:text="Print" />
+
+            <TextView
+                android:layout_row="1"
+                android:layout_column="3"
+                android:layout_gravity="center"
+                android:layout_marginEnd="10dp"
+                android:fontFamily="@font/latobold"
+                android:text="More" />
+
+
+        </GridLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

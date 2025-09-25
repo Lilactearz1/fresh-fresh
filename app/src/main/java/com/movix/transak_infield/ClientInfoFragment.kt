@@ -31,15 +31,10 @@ class clientinfoFragment : Fragment() {
 	private val binding get() = _binding!!
 
 
-	override fun onCreate(savedInstanceState: Bundle?) {
-		super.onCreate(savedInstanceState)
-
-	}
-
 	override fun onCreateView(
 		inflater: LayoutInflater, container: ViewGroup?,
 		savedInstanceState: Bundle?
-	): View? {
+	): View {
 		// Inflate the layout for this fragment
 		_binding = FragmentClientInfoBinding.inflate(inflater, container, false)
 		return binding.root
@@ -74,7 +69,7 @@ class clientinfoFragment : Fragment() {
 			}
 
 			// Create the client object (modify constructor if email should be included)
-			val addDetail = ClientsCreation(0, clientName, clientPhone /* , clientMail if needed */)
+			val addDetail = ClientsCreation(name= clientName, phone =  clientPhone )
 
 			// Save the client details to the database
 			val dbStatus = DatabaseHandler(requireContext()).addClientsInformations(addDetail)

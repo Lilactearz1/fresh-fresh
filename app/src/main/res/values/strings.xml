@@ -2,8 +2,7 @@
 
     <string name="app_name" translatable="true">Transak_Infield</string>
 
-    <string-array name="markItems"
-        translatable="true">
+    <string-array name="markItems" translatable="true">
 
         <item>pending</item>
         <item>approved </item>

@@ -57,7 +57,7 @@ class ItemAdapter(
 
 
 
-        holder.btnEdit.setOnClickListener() { View ->
+        holder.btnEdit.setOnClickListener { View ->
             if (context is MainActivity) {
 
                 context.updateDialog(item)

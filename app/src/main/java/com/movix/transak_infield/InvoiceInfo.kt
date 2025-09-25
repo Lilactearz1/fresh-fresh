@@ -3,27 +3,21 @@ package com.movix.transak_infield
 import android.os.Build
 import android.os.Bundle
 import android.text.InputType
-import android.view.KeyEvent
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import android.widget.DatePicker
 import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.annotation.experimental.R
 import com.movix.transak_infield.R.id.*
 import com.movix.transak_infield.databinding.FragmentInvoiceInfoBinding
 import java.io.IOException
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.temporal.Temporal
 import kotlin.properties.Delegates
 
 // UI component declarations (some are lateinit, others use Delegates)
@@ -32,7 +26,8 @@ private lateinit var creationDate: TextView
 private lateinit var spinnerTerms: Spinner
 lateinit var invoiceTitle: EditText
 private lateinit var imageCalendar:TextView
-var dueTerms by Delegates.notNull<Int>()
+
+  var dueTerms: Int = 14
 
 class InvoiceInfo : Fragment() {
 	// ViewBinding to access layout views
@@ -41,15 +36,9 @@ class InvoiceInfo : Fragment() {
 	private var selectedCreationDate: LocalDate? = null
 
 
-	override fun onCreate(savedInstanceState: Bundle?) {
-		super.onCreate(savedInstanceState)
-		// You can initialize arguments or logic here if needed
-
-	}
-
 	override fun onCreateView(
 		inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-	): View? {
+	): View {
 		// Inflate the view using view binding
 		_binding = FragmentInvoiceInfoBinding.inflate(inflater, container, false)
 		return binding.root
@@ -141,10 +130,10 @@ class InvoiceInfo : Fragment() {
 				val db = DatabaseHandler(requireContext())
 				val customerId=GlobalFunck().customerId(requireContext())
 
-				val estimateInfo = Estimateinfo(
-					0, invoiceTitle.text.toString(),
-					pickedDate.toString(), dueDate.toString(), customerId
+				val estimateInfo = Estimateinfo(titleINV = invoiceTitle.text.toString(),
+					creationDate = pickedDate.toString(), dueDate = dueDate.toString()
 				)
+
 				db.addEstimateInfo(estimateInfo)
 					Toast.makeText(context,"Activity is done",Toast.LENGTH_LONG).show()
 				invoiceTitle.text.clear()
@@ -157,6 +146,7 @@ class InvoiceInfo : Fragment() {
 				val now = LocalDate.now()
 				val dueDate = LocalDate.of(
 					now.year, now.month, now.dayOfMonth.plus(14)
+
 				)
 				val defaultNumbering = "INFIELDER CLIENT OF DATE $now"
 				val db = DatabaseHandler(requireContext())
