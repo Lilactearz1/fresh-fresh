@@ -1,38 +1,36 @@
 package com.movix.transak_infield
 
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.text.InputType
-import android.view.KeyEvent
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import android.widget.DatePicker
 import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.annotation.experimental.R
 import com.movix.transak_infield.R.id.*
 import com.movix.transak_infield.databinding.FragmentInvoiceInfoBinding
 import java.io.IOException
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.temporal.Temporal
 import kotlin.properties.Delegates
 
 // UI component declarations (some are lateinit, others use Delegates)
 private lateinit var invoiceNumber: EditText
 private lateinit var creationDate: TextView
 private lateinit var spinnerTerms: Spinner
-lateinit var invoiceTitle: EditText
+private lateinit var invoiceTitle: EditText
 private lateinit var imageCalendar:TextView
-var dueTerms by Delegates.notNull<Int>()
+private var estimateId: Int = 0
+
+
+  var dueTerms: Int = 14
 
 class InvoiceInfo : Fragment() {
 	// ViewBinding to access layout views
@@ -41,23 +39,25 @@ class InvoiceInfo : Fragment() {
 	private var selectedCreationDate: LocalDate? = null
 
 
-	override fun onCreate(savedInstanceState: Bundle?) {
-		super.onCreate(savedInstanceState)
-		// You can initialize arguments or logic here if needed
-
-	}
-
 	override fun onCreateView(
 		inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-	): View? {
+	): View {
 		// Inflate the view using view binding
 		_binding = FragmentInvoiceInfoBinding.inflate(inflater, container, false)
 		return binding.root
 	}
 
+
 	@RequiresApi(Build.VERSION_CODES.O)
 	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
+
+		estimateId = arguments?.getInt("estimate_id") ?: 0
+
+		if (estimateId == 0) {
+			Toast.makeText(requireContext(), "⚠️ Missing estimate ID", Toast.LENGTH_SHORT).show()
+		}
+
 
 		// Link UI elements to variables
 		invoiceNumber = binding.addItemInvoicenumber
@@ -66,6 +66,8 @@ class InvoiceInfo : Fragment() {
 		invoiceTitle = binding.addEdtInvoiceTitle
 		imageCalendar=binding.imageCalendar
 
+
+//		if (estimateId != 0){ updateEstimateDisplay(requireContext())}
 
 		//handle the key enter and back issue for crush behavior on enter or back pressed
 		GlobalFunck().setUpEnterKeyNavigation(invoiceNumber, invoiceTitle)
@@ -98,6 +100,7 @@ class InvoiceInfo : Fragment() {
 
 			if (selectedItems.isNotEmpty()){
 				for (item in selectedItems) {
+
 				dueTerms = GlobalFunck().selectionterms(item.code)
 
 					// You can now use dueTerms when saving to DB
@@ -106,6 +109,7 @@ class InvoiceInfo : Fragment() {
 				for (item in selectedItems){
 
 					dueTerms=GlobalFunck().selectionterms(item.code)
+
 				}
 
 
@@ -125,9 +129,10 @@ class InvoiceInfo : Fragment() {
 
 
 		saveBtn.setOnClickListener {
+
 			try {
 
-			val title = invoiceTitle.text
+			var title = invoiceTitle.text
 				invoiceNumber.inputType = InputType.TYPE_NULL // Disable keyboard
 				invoiceTitle.inputType=InputType.TYPE_NULL
 
@@ -141,12 +146,24 @@ class InvoiceInfo : Fragment() {
 				val db = DatabaseHandler(requireContext())
 				val customerId=GlobalFunck().customerId(requireContext())
 
-				val estimateInfo = Estimateinfo(
-					0, invoiceTitle.text.toString(),
-					pickedDate.toString(), dueDate.toString(), customerId
+				val estimateInfo = Estimateinfo(titleINV = invoiceTitle.text.toString(),
+					creationDate = pickedDate.toString(), dueDate = dueDate.toString()
 				)
-				db.addEstimateInfo(estimateInfo)
-					Toast.makeText(context,"Activity is done",Toast.LENGTH_LONG).show()
+
+				if (estimateId != 0) {
+					db.updateEstimateInfo(
+					estimateinfo = estimateInfo
+					)
+
+					Toast.makeText(requireContext(), "Estimate updated successfully", Toast.LENGTH_SHORT).show()
+				} else {
+					val newId = db.addEstimateInfo(estimateInfo)
+					EstimateSession.saveSession(requireContext(), newId.toInt())
+					Toast.makeText(requireContext(), "New estimate created", Toast.LENGTH_SHORT).show()
+				}
+
+
+				Toast.makeText(context,"Activity is done",Toast.LENGTH_LONG).show()
 				invoiceTitle.text.clear()
 
 
@@ -156,9 +173,10 @@ class InvoiceInfo : Fragment() {
 				// Use default values if title or terms are missing
 				val now = LocalDate.now()
 				val dueDate = LocalDate.of(
-					now.year, now.month, now.dayOfMonth.plus(14)
-				)
+					now.year, now.month, now.dayOfMonth).plusDays(14)
+
 				val defaultNumbering = "INFIELDER CLIENT OF DATE $now"
+
 				val db = DatabaseHandler(requireContext())
 				val customerId = GlobalFunck().customerId(requireContext())
 
@@ -176,4 +194,17 @@ class InvoiceInfo : Fragment() {
 			}
 		}
 	}
+	fun updateEstimateDisplay(context: Context) {
+
+		val db: ArrayList<Estimateinfo> =DatabaseHandler(context).viewEstimateInfo()
+
+		for (it in db){
+			creationDate.setText(it.creationDate)
+			invoiceTitle.setText(it.titleINV)
+
+			it.status.name
+		}
+	}
+
+
 }

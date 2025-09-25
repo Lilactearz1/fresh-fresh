@@ -12,6 +12,7 @@ import com.itextpdf.layout.element.Image;
 
 import android.os.Build;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.widget.Toast;
 
 import androidx.core.content.res.ResourcesCompat;
@@ -61,6 +62,7 @@ public class Templatepdf1{
             return null;
         }
     }
+
 
     public void ePdf(Context context) {
         PdfDocument pdfDocument = new PdfDocument();

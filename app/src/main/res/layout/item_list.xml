@@ -22,6 +22,7 @@
         >
 
         <ImageButton
+            app:tint="@color/blue_ncs"
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_marginLeft="10dp"
@@ -163,6 +164,7 @@
             android:layout_gravity="bottom|end">
 
             <ImageButton
+                app:tint="@color/blue_ncs"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/baseline_edit_24"

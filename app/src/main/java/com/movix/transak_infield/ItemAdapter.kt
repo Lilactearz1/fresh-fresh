@@ -19,7 +19,7 @@ import androidx.recyclerview.widget.RecyclerView
 
 class ItemAdapter(
     private val context: Context,
-    private val itemList: ArrayList<ModelClass>
+    val itemList: ArrayList<ModelClass>
 
 ) : RecyclerView.Adapter<ItemAdapter.ViewHolder>() {
 
@@ -57,7 +57,7 @@ class ItemAdapter(
 
 
 
-        holder.btnEdit.setOnClickListener() { View ->
+        holder.btnEdit.setOnClickListener { View ->
             if (context is MainActivity) {
 
                 context.updateDialog(item)
@@ -85,6 +85,15 @@ class ItemAdapter(
 
 
     }
+	// Add this function inside ItemAdapter
+	fun setData(newItems: List<ModelClass>) {
+		itemList.clear()
+		itemList.addAll(newItems)
+		notifyDataSetChanged()
+	}
 
-    override fun getItemCount(): Int = itemList.size
+
+	override fun getItemCount(): Int = itemList.size
+
+
 }

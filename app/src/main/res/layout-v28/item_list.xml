@@ -24,6 +24,7 @@
         <ImageButton
             android:layout_width="20dp"
             android:layout_height="20dp"
+            app:tint="@color/blue_ncs"
             android:layout_marginLeft="10dp"
             android:background="@drawable/baseline_format_list_bulleted_24"
             android:layout_gravity="top|start"/>
@@ -169,7 +170,8 @@
                 android:paddingRight="30dp"
                 android:background="@color/transparent"
                 android:layout_gravity="end|bottom"
-                android:id="@+id/itemlist_edititemselected"/>
+                android:id="@+id/itemlist_edititemselected"
+                app:tint="@color/blue_ncs" />
 
             <ImageButton
                 android:layout_width="wrap_content"

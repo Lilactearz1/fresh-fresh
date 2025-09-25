@@ -10,148 +10,203 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.widget.doOnTextChanged
 import androidx.savedstate.SavedState
 import com.google.android.material.navigation.NavigationBarItemView
 import com.google.android.material.navigation.NavigationBarMenu
 import com.google.android.material.navigation.NavigationBarView
 import com.movix.transak_infield.databinding.FragmentProductsInfoBinding
+import kotlin.properties.Delegates
 
 /**
  * A simple [Fragment] subclass.
-
+it launhes from the mainactivity window invoice btn
  */
 class ProductsInfoFragment : Fragment() {
 
-    private var _binding: FragmentProductsInfoBinding? = null
-    private val binding get() = _binding!!
-    private lateinit var itemDescription: EditText
-    private lateinit var itemQuantity: EditText
-    private lateinit var itemPrice: EditText
-    private lateinit var itemTaxrate: EditText
-    private lateinit var amountScreen: TextView
-    private  lateinit var  navigationBar:NavigationBarView
-
+	private var _binding: FragmentProductsInfoBinding? = null
+	private val binding get() = _binding!!
+	private lateinit var itemDescription: EditText
+	private lateinit var itemQuantity: EditText
+	private lateinit var itemPrice: EditText
+	private lateinit var itemTaxrate: EditText
+	private lateinit var amountScreen: TextView
+	private lateinit var navigationBar: NavigationBarView
+	private var productAmount by Delegates.notNull<Float>()
+	private lateinit var db: DatabaseHandler
 
 
 //   private lateinit var databaseHandler:DatabaseHandler
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+	override fun onCreateView(
+		inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+	): View {
+		_binding = FragmentProductsInfoBinding.inflate(inflater, container, false)
+		return binding.root
+	}
 
-    }
+	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+		super.onViewCreated(view, savedInstanceState)
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentProductsInfoBinding.inflate(inflater, container, false)
-        return binding.root
-    }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+		val estimateId = arguments?.getInt("estimate_id", -1) ?: -1
+		val customerId = arguments?.getInt("customerId", 0) ?: 0
 
-        // Initialize database
+		if (customerId == 0) {
+			Log.d("InvoiceDebug", "No customer assigned yet — pending assignment.")
+		}
+
+		Log.d("InvoiceDebug", "Received estimateId = $estimateId")
+		Log.d("InvoiceDebug", "Received customerId = $customerId")
+
+
+		// Initialize database
 //         databaseHandler = DatabaseHandler(requireContext())
-        // Now you can use binding to access EditText and Button
-        itemDescription = binding.addItemName
-        itemQuantity = binding.addItemQuantity
-        itemPrice = binding.addItemPrice
-        itemTaxrate = binding.addItemTaxRate
-        amountScreen=view.findViewById(R.id.tv_amount_display_value)
+		// Now you can use binding to access EditText and Button
+		itemDescription = binding.addItemName
+		itemQuantity = binding.addItemQuantity
+		itemPrice = binding.addItemPrice
+		itemTaxrate = binding.addItemTaxRate
+		amountScreen = view.findViewById(R.id.tv_amount_display_value)
 
 
-GlobalFunck().setUpEnterKeyNavigation(itemDescription,itemQuantity,itemPrice,itemTaxrate)
-        val backImagebtn = binding.button1
-        val savebtn = binding.btnsave
+		GlobalFunck().setUpEnterKeyNavigation(itemDescription, itemQuantity, itemPrice, itemTaxrate)
+		val backImagebtn = binding.button1
+		val savebtn = binding.btnsave
+		amountWatcher()
 
-        savebtn.setOnClickListener {
+		savebtn.setOnClickListener {
 
-            addtoRecords(view) }
+			addtoRecords(view)
 
-        backImagebtn.setOnClickListener {
-            requireActivity().supportFragmentManager.popBackStack()
-
-
-            Toast.makeText(requireContext(),"clicked",Toast.LENGTH_SHORT).show()
-
-        }
-
-    }
+		}
 
 
+
+
+
+		backImagebtn.setOnClickListener {
+			requireActivity().supportFragmentManager.popBackStack()
+
+			Toast.makeText(requireContext(), "clicked", Toast.LENGTH_SHORT).show()
+
+		}
+
+
+	}
+
+	//	add text change listeners method for the products amount
+	private fun amountWatcher() {
+
+		itemPrice.doOnTextChanged { text, start, before, count ->
+			text.toString().toFloatOrNull() ?: 0f
+			updateAmount()
+		}
+
+		itemQuantity.doOnTextChanged { text, start, before, count ->
+			text.toString().toFloatOrNull() ?: 0f
+			updateAmount()
+		}
+
+	}
+
+	private fun updateAmount() {
+
+		val productPrice = itemPrice.text.toString().toDoubleOrNull() ?: 0.0
+		val productQuantity = itemQuantity.text.toString().toIntOrNull() ?: 0
+
+		val amount = productPrice * productQuantity
+
+		// You can also update a TextView here for live updates:
+		println("this up $amount")
+
+		amountScreen.text = amount.toString()
+	}
 
 //    method for saving records to the database
 
-    private fun addtoRecords(view: View) {
+	private fun addtoRecords(view: View) {
 
-        val productDescription = try {
-            itemDescription.text.toString()
+		val productDescription = try {
 
-        } catch (e: NumberFormatException) {
-            itemDescription.error = "input field"
-            return
-        }
+			itemDescription.text.toString()
 
-        val productQuantity = try {
-            itemQuantity.text.toString().toInt()
-        } catch (e: NumberFormatException) {
-            itemQuantity.error = "input field"
-            return
-        }
+		} catch (e: NumberFormatException) {
 
-        val productPrice = try {
-            itemPrice.text.toString().toDouble()
-        } catch (e: NumberFormatException) {
-            itemPrice.error = "input field"
-            return
-        }
+			itemDescription.error = "input field"
+			return
+		}
 
-        val productTax = try {
-            itemTaxrate.text.toString().toFloat()
-        } catch (e: NumberFormatException) {
-            itemTaxrate.error = "input field"
-            return
-        }
-        val productAmount:Float = try {
+		val productQuantity = try {
+			itemQuantity.text.toString().toInt()
+		} catch (e: NumberFormatException) {
+			itemQuantity.error = "input field"
+			return
+		}
 
-       (itemPrice.text.toString().toFloat()*itemQuantity.text.toString().toFloat())
-        }catch (e: NumberFormatException){
-            itemQuantity.error = "inputfield"
-            itemPrice.error = "input field"
-            return
-        }
+		val productPrice = try {
+			itemPrice.text.toString().toDouble()
+		} catch (e: NumberFormatException) {
+			itemPrice.error = "input field"
+			return
+		}
+
+		val productTax = try {
+			itemTaxrate.text.toString().toFloat()
+		} catch (e: NumberFormatException) {
+			itemTaxrate.error = "input field"
+			return
+		}
+		productAmount = try {
+
+			(itemPrice.text.toString().toFloat() * itemQuantity.text.toString().toFloat())
+
+		} catch (e: NumberFormatException) {
+			itemQuantity.error = "inputfield"
+			itemPrice.error = "input field"
+			return
+		}
 
 
 //    create a model instance to use in the database
-        val databaseHandler: DatabaseHandler = DatabaseHandler(requireContext())
+		val databaseHandler: DatabaseHandler = DatabaseHandler(requireContext())
 
-        val products = ModelClass(0, productQuantity, productDescription, productPrice,productAmount,productTax)
+		val products = ModelClass(
+			0, productQuantity, productDescription, productPrice, productAmount, productTax
+		)
 
-        if (productDescription.isNotEmpty() && productQuantity.toString()
-                .isNotEmpty() && productPrice.toString().isNotEmpty() && productTax.toString()
-                .isNotEmpty()
-        ) {
-            val status = databaseHandler.addProductToDatabase(products)
+		if (productDescription.isNotEmpty() && productQuantity.toString()
+				.isNotEmpty() && productPrice.toString().isNotEmpty() && productTax.toString()
+				.isNotEmpty()
+		) {
 
-            if (status > -1) {
-                Toast.makeText(requireContext(), "Saved", Toast.LENGTH_SHORT).show()
 
-                //
-                //optionally  clear input fields
-                itemDescription.text.clear()
-                itemPrice.text.clear()
-                itemQuantity.text.clear()
-                itemTaxrate.text.clear()
+			val status = databaseHandler.addProductToDatabase(products)
+
+			if (status > -1) {
+				Toast.makeText(requireContext(), "Saved", Toast.LENGTH_SHORT).show()
+
+				//
+				//optionally  clear input fields
+				itemDescription.text.clear()
+				itemPrice.text.clear()
+				itemQuantity.text.clear()
+				itemTaxrate.text.clear()
+				amountScreen.text = "0.00"
 
 //
 
 // call the method that add adds list into the recyclerview
 
-            }
-        }
+			}
+		}
 
-    }
+	}
+
+	private fun amountscreen(): Float {
+		val totalsum = productAmount
+		return totalsum
+	}
 
 
 }

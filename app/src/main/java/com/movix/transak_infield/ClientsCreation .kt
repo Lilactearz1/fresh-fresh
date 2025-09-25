@@ -1,25 +1,27 @@
 package com.movix.transak_infield
 
 import android.content.Context
-import android.provider.ContactsContract.CommonDataKinds.Email
-import androidx.compose.ui.text.font.Font
-import androidx.tv.material3.Border
+import android.util.Log
 import com.itextpdf.kernel.colors.DeviceRgb
-import java.sql.Date
 import com.itextpdf.kernel.events.*
-import com.movix.transak_infield.MainActivity
-import com.itextpdf.kernel.geom.PageSize
-import com.itextpdf.kernel.pdf.*
 import com.itextpdf.layout.*
 import com.itextpdf.layout.element.*
-import com.itextpdf.kernel.geom.Rectangle
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas
 
 import com.itextpdf.layout.properties.TextAlignment
 
 
-open class ClientsCreation (var id:Int,val name:String,val phone:String) {}
-class Estimateinfo(val id:Int,var titleINV:String,var creationDate:String,val dueDate: String,val customerId:Int)
+open class ClientsCreation (val id:Int=0,  /*Default to 0 so you don’t need to pass it*/
+                            val name:String,val phone:String ,vararg mail:String)
+
+data class Estimateinfo(
+	val id: Int = 0, // autoIncrement in DB
+	var titleINV: String = "",
+	var creationDate: String = "",
+	var dueDate: String = "",
+	val customerId: Int = 0,
+	var status: EstimateStatus = EstimateStatus.OPEN
+)
 
 
 
@@ -32,7 +34,7 @@ open class FooterEvent : IEventHandler {
 		val pdfCanvas = PdfCanvas(page.newContentStreamAfter(), page.resources, pdfDoc)
 
 		val footerText = Paragraph(
-			"| Water Pump Installations | Borehole Drilling & Equipping | Solar Structures | Plumbing | Electrical | Irrigation | Civil Works"
+			"| Water Pump Installations | Borehole Drilling & Equipping | Solar Structures | Fabrication | Plumbing | Electrical | Irrigation | Civil Works"
 		) 	 .setFontSize(9f)
 			.setFontColor(DeviceRgb(67, 105, 45))
 			.setTextAlignment(TextAlignment.CENTER)
@@ -46,6 +48,46 @@ open class FooterEvent : IEventHandler {
 		canvas.close()
 	}
 }
+
+object EstimateSession {
+	private const val PREF_NAME = "estimate_session"
+	private const val KEY_ESTIMATE_ID = "current_estimate"
+
+	var currentEstimate: Int? = null
+		private set
+
+	fun saveSession(context: Context, estimateId: Int) {
+		val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+		prefs.edit().putInt(KEY_ESTIMATE_ID, estimateId).apply()
+		currentEstimate = estimateId
+		Log.d("EstimateDebug", "Session saved: ID = $estimateId")
+	}
+
+	fun loadSession(context: Context) {
+		val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+		val id = prefs.getInt(KEY_ESTIMATE_ID, 0) // ✅ default is 0, not -1
+		currentEstimate = if (id != 0) id else null
+		Log.d("EstimateDebug", "Session loaded from prefs: ID = $id")
+	}
+
+	fun getSession(context: Context): Int {
+		if (currentEstimate == null) {
+			loadSession(context)
+		}
+		Log.d("EstimateDebug", "Session at app start: ${currentEstimate ?: 0}")
+		return currentEstimate ?: 0
+	}
+
+	fun clearSession(context: Context) {
+		val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+		prefs.edit().remove(KEY_ESTIMATE_ID).apply()
+		currentEstimate = null
+		Log.d("EstimateDebug", "Session cleared")
+	}
+}
+
+
+
 
 
 

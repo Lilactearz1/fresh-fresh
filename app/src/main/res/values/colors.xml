@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+
     <color name="lavendar">#571F61</color>
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
@@ -11,7 +10,7 @@
     <color name="teal_700">#FF018786</color>
     <color name="waterblue">#0B9ADB</color>
     <color name="navyblue">#021A24</color>
-    <color name="blue">#053D75</color>
+
     <color name="lilact">#9C27B0</color>
     <color name="dope">#01C2DB</color>
     <color name="aqua">#20E1FA</color>
@@ -24,6 +23,30 @@
     <color name="pale_bluetint">#EEF5FF</color>
     <color name="light_view">#C7D9F0</color>
     <color name="transparent">#00FFFFFF</color>
-    <color name="grey">#00454444</color>
+
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="grey">#4A4A4D</color>
+    <color name="light_blue">#E3E4E8FF</color>
+
+    <!--    shades -f blue-->
+    <color name="navy">#0A1172</color>
+    <color name="berry">#241571</color>
+    <color name="blue">#3944BC</color>
+
+    <!--    shades -f blue green-->
+    <color name="blue_ncs">#008ECC</color>
+    <color name="turquoise">#4DE0D0</color>
+    <color name="sea_blue">#006994</color>
+    <color name="teal_blue">#008080</color>
+
+    <!--    shades -f green-->
+    <color name="green">#3CB043</color>
+    <color name="emerald">#028a0f</color>
+    <color name="shamrock">#03ac13</color>
+    <color name="parakeet">#03c04a</color>
+    <color name="mint">#99edc3</color>
+    <color name="pistachio">#b2d3c2</color>
 
 </resources>

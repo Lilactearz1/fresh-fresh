@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F4F5F8"
+    android:theme="@style/AppTheme.NoActionBar"
     android:focusedByDefault="true"
     android:orientation="vertical">
 
