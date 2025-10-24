@@ -1,170 +1,147 @@
 package com.movix.transak_infield
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
-import android.widget.Button
-import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.movix.transak_infield.MainActivity.Companion.handleBusinessImage
+import com.movix.transak_infield.MainActivity.Companion.handleClientInfoClick
+import com.movix.transak_infield.MainActivity.Companion.handleInvoiceButtonClick
+import com.movix.transak_infield.MainActivity.Companion.handleItemsCardView
+import com.movix.transak_infield.MainActivity.Companion.handleTemplateButtonClick
 import com.movix.transak_infield.databinding.ActivityMainBinding
-import com.movix.transak_infield.MainActivity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class CustomerItems : AppCompatActivity() {
+
 	private lateinit var _binding: ActivityMainBinding
 	private val binding get() = _binding
+
 	private lateinit var itemsCount: TextView
-	private lateinit var subtotal: GlobalFunck
-	private lateinit var total: GlobalFunck
+	private lateinit var itemAdapter: ItemAdapter
+	private var estimateId = -1
+	private var customerId = -1
+	private lateinit var items:ArrayList<ModelClass>
+
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		enableEdgeToEdge()
-
-		// todo  Inflate binding
 		_binding = ActivityMainBinding.inflate(layoutInflater)
 		setContentView(binding.root)
 
 		val db = DatabaseHandler(applicationContext)
 
-		val customerId = intent.getIntExtra("customer_id", -1)
-		if (customerId != -1) {
-			val items = db.getItemsForCustomer(customerId = customerId)
-			val adapter = ItemAdapter(this, items)
-			binding.recycleItem.layoutManager = LinearLayoutManager(this)
-			binding.recycleItem.adapter = adapter
-		}
-		println("data time 0")
-
-
-
-
-		fun updateDialog(modelClass: ModelClass) {
-			// TODO(Not Implemented)
-			// Create the Dialog
-			val dialog = AlertDialog.Builder(this).setTitle("update items info")
-				.setView(R.layout.edititem_dialog)
-				.setCancelable(false)   //will not allow user to cancel after
-				.create()
-//        now show the dialog
-			dialog.show()
-
-			// Find views from dialog layout
-			val nameEditText = dialog.findViewById<EditText>(R.id.edit_item_namedialog)
-			val quantityEditText = dialog.findViewById<EditText>(R.id.edit_item_quantity)
-			val priceEditText = dialog.findViewById<EditText>(R.id.edit_item_pricedialog)
-			val taxRateEditText = dialog.findViewById<EditText>(R.id.edit_item_taxRatedialog)
-			val saveButton = dialog.findViewById<Button>(R.id.SaveclientDetails)
-			val cancelButton = dialog.findViewById<Button>(R.id.backLayout)
-
-			// Fill views with existing data
-			nameEditText?.setText(modelClass.itemName)
-			quantityEditText?.setText(modelClass.quantity.toString())
-			priceEditText?.setText(modelClass.price.toString())
-			taxRateEditText?.setText(modelClass.tax.toString())
-			//cancellation button
-			cancelButton?.setOnClickListener {
-				dialog.dismiss()
-			}
-
-
-			// Save/update action
-			saveButton?.setOnClickListener {
-				val updatedName = nameEditText?.text.toString()
-				val updatedQuantity = quantityEditText?.text.toString().toIntOrNull()
-				val updatedPrice = priceEditText?.text.toString().toDoubleOrNull()
-				val updatedTax = taxRateEditText?.text.toString().toFloatOrNull()
-
-				if (updatedName.isBlank() || updatedQuantity == null || updatedPrice == null || updatedTax == null) {
-					Toast.makeText(this, "All fields must be valid", Toast.LENGTH_SHORT).show()
-					return@setOnClickListener
-				}
-
-				val updatedModel = ModelClass(
-					id = modelClass.id, // keep same ID
-					itemName = updatedName,
-					quantity = updatedQuantity,
-					price = updatedPrice,
-					total = (updatedQuantity * updatedPrice).toFloat(),
-					tax = updatedTax,
-				)
-
-				val db = DatabaseHandler(this)
-				// define this method in your DB handler (updateRecords)
-				val status = db.updateRecords(updatedModel)
-
-				if (status > -1) {
-					Toast.makeText(this, "success", Toast.LENGTH_SHORT).show()
-					dialog.dismiss()
-					// Optional: refresh RecyclerView
-					setupListintoRecycleview()
-				} else {
-					Toast.makeText(this, "Failed", Toast.LENGTH_SHORT).show()
-				}
-			}
-
-			dialog.show()
-		}
-
-
-//set the text view to
+		estimateId = intent.getIntExtra("estimate_id", -1)
+		customerId = intent.getIntExtra("customer_id", -1)
 		itemsCount = binding.tvItems
-		//	    function to count items number inserted
 
-		fun countItems() {
-			val counteditems = setupListintoRecycleview()
-			itemsCount.text = "Items No: [${counteditems}]"
+		if (estimateId == -1 || customerId == -1) {
+			Toast.makeText(this, "Invalid estimate or customer ID", Toast.LENGTH_SHORT).show()
+			return
 		}
-		countItems()
 
+		items = db.getItemsForEstimate(estimateId, customerId)
 
-//
-//		// function to display totals in the textview
-//		fun txtViewTotals() {
-//			val stringFomat = "%,.2f"
-//			val itemSubtal = binding.esumSubtotal
-//			val itemsTotal = binding.esumTotal
-//			subtotal = GlobalFunck()
-//			val stringSubtotal =
-//				stringFomat.format(Math.floor(subtotal.getSubTotal(applicationContext).toDouble()))
-//			itemSubtal.text = stringSubtotal
-//
-//			total = GlobalFunck()
-//			val stringTotal = stringFomat.format(
-//				Math.floor(
-//					total.summationofTotal(applicationContext).toDouble()
-//				)
-//			)
-//			itemsTotal.text = stringTotal
-//		}
+		setupRecyclerView()
+		loadItems()
+		enableSwipeToDelete()
 
+		binding.btnInv001.setOnClickListener {
+			handleInvoiceButtonClick(this, estimateId, customerId)
+		}
+
+		binding.btnTemplate.setOnClickListener {
+			handleTemplateButtonClick(this)
+		}
+
+		binding.btnclientInfo.setOnClickListener {
+			handleClientInfoClick(this)
+		}
+
+		binding.businessimage?.setOnClickListener {
+			handleBusinessImage(this)
+		}
+		binding.additemscardView.setOnClickListener {
+			handleItemsCardView(this,intent)
+		}
 
 	}
 
-	//function to show list of inserted data in the recycler view
-	private fun setupListintoRecycleview(): Int {
-		val itemList = getItemlist()
 
-		if (itemList.isNotEmpty()) {
+	private fun setupRecyclerView() {
+		binding.recycleItem.layoutManager = LinearLayoutManager(this)
+		itemAdapter = ItemAdapter(this, items)
+		binding.recycleItem.adapter = itemAdapter
+	}
+
+	private fun loadItems() {
+		val db = DatabaseHandler(this)
+		 items = db.getItemsForEstimate(estimateId, customerId)
+
+		Log.d("CustomerItems", "Fetched items count: ${items.size}")
+		db.estimated(applicationContext)
+
+		if (items.isNotEmpty()) {
 			binding.recycleItem.visibility = View.VISIBLE
-			binding.recycleItem.layoutManager = LinearLayoutManager(this) // ✅ OK in Activity
+			itemAdapter.itemList.clear()
+			itemAdapter.itemList.addAll(items)
+			itemAdapter.notifyDataSetChanged()
+			itemsCount.text = "Items No: [${items.size}]"
 
-			val itemAdapter = ItemAdapter(this, itemList) // ✅ 'this' = Activity context
-			binding.recycleItem.adapter = itemAdapter
 		} else {
 			binding.recycleItem.visibility = View.GONE
+			itemsCount.text = "No items found"
 		}
-//	    method to count the children
-		val countItems = ItemAdapter(applicationContext, itemList)
-
-		return countItems.itemCount
+		refreshTotals()
 	}
 
-	private fun getItemlist(): ArrayList<ModelClass> {
-		val db = DatabaseHandler(this).viewProduct()
-		return db
+	private fun enableSwipeToDelete() {
+		val itemTouchHelper = ItemTouchHelper(object :
+			ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+			override fun onMove(
+				recyclerView: RecyclerView,
+				viewHolder: RecyclerView.ViewHolder,
+				target: RecyclerView.ViewHolder
+			): Boolean = false
+
+			override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+				val position = viewHolder.adapterPosition
+				val item = itemAdapter.itemList[position]
+				val db = DatabaseHandler(this@CustomerItems)
+				val deleted = db.deleteItem(item.id)
+
+				if (deleted >0) {
+					itemAdapter.itemList.removeAt(position)
+					itemAdapter.notifyItemRemoved(position)
+					Toast.makeText(applicationContext, "Item deleted", Toast.LENGTH_SHORT).show()
+					refreshTotals()
+				} else {
+					Toast.makeText(applicationContext, "Delete failed", Toast.LENGTH_SHORT).show()
+					itemAdapter.notifyItemChanged(position)
+				}
+			}
+		})
+		itemTouchHelper.attachToRecyclerView(binding.recycleItem)
+	}
+
+	private fun refreshTotals() {
+		val subtotal = GlobalFunck().getSubTotal(applicationContext, estimateId)
+		val tax = GlobalFunck().summationOfTax(applicationContext,estimateId)
+		val grandTotal = subtotal + tax
+
+		binding.esumSubtotal.text = "${String.format("%.2f", subtotal)}"
+	//	binding.taxText.text = "Tax: ${String.format("%.2f", tax)}"
+		binding.esumTotal.text = "${String.format("%.2f", grandTotal)}"
 	}
 }

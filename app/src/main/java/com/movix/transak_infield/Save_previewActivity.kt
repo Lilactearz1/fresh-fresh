@@ -15,6 +15,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.button.MaterialButton
 import com.movix.transak_infield.MainActivity
+import com.movix.transak_infield.MainActivity.Companion.EXTRA_CUSTOMER_ID
+import com.movix.transak_infield.MainActivity.Companion.EXTRA_ESTIMATE_ID
 import com.movix.transak_infield.PdfUtils
 
 
@@ -31,6 +33,8 @@ class Save_previewActivity : AppCompatActivity() {
 	private lateinit var    name:TextView
 	private lateinit var    share:MaterialButton
 	private lateinit var    checkCompleted:CheckBox
+	private var estimateId: Int = -1
+	private var customerId: Int = -1
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -52,10 +56,14 @@ class Save_previewActivity : AppCompatActivity() {
 		name=findViewById(R.id.name1)
 		share =findViewById(R.id.sharebtn1)
 
+		estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
+		 customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
+
+
 
 		downloadbtn.setOnClickListener{view->
 			view.isHovered
-			PdfUtils.generateEstimatePdf(applicationContext)
+			PdfUtils.generateEstimatePdf(applicationContext,estimateId,customerId)
 			Toast.makeText(applicationContext,"Success...",Toast.LENGTH_LONG).show()
 			closeCurrentEstimate()
 
@@ -91,14 +99,14 @@ class Save_previewActivity : AppCompatActivity() {
 			Toast.makeText(applicationContext,"coming soon...",Toast.LENGTH_SHORT).show()
 		}
 
-		totalKsh .text= "Ksh: ${GlobalFunck().summationofTotal(applicationContext)}"
+		totalKsh .text= "Ksh: ${GlobalFunck().summationofTotal(applicationContext,estimateId)}"
 
 		dueDate.text= GlobalFunck().dueDate(applicationContext)
 
 		name.text =GlobalFunck().safeClientName(applicationContext)
 
 		share .setOnClickListener{
-			val pdFile=PdfUtils.generateEstimatePdf(applicationContext)
+			val pdFile=PdfUtils.generateEstimatePdf(applicationContext,estimateId,customerId)
 			pdFile.let { it
 				if (it != null){	PdfUtils.sharePdf(this,it)}
 			}
@@ -113,12 +121,13 @@ class Save_previewActivity : AppCompatActivity() {
 
 
 	override fun onPostResume() {
+
 		super.onPostResume()
 	}
 
 	override fun onResume() {
 		super.onResume()
-		val pdfFile = PdfUtils.generateEstimatePdf(applicationContext)
+		val pdfFile = PdfUtils.generateEstimatePdf(applicationContext, estimateId, customerId)
 		val pdfPreview = pdfFile?.let { PdfUtils.generatePdfPreview(this, it) }
 		findViewById<ImageView>(R.id.previewDownload1).apply {
 			pdfPreview?.let { setImageBitmap(it) }
@@ -137,6 +146,5 @@ class Save_previewActivity : AppCompatActivity() {
 		EstimateSession.clearSession(this)
 		Log.d("EstimateDebug", "Estimate $id marked as COMPLETED and session cleared.")
 	}
-
 
 }

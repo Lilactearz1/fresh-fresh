@@ -4,7 +4,9 @@ package com.movix.transak_infield
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
@@ -65,6 +67,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.itextpdf.kernel.events.PdfDocumentEvent
 import java.time.Instant
 import java.time.LocalDate
@@ -81,8 +85,12 @@ open class MainActivity : AppCompatActivity() {
 	private lateinit var Total: GlobalFunck
 	private lateinit var db:DatabaseHandler
 	private  var itemAdapter: ItemAdapter?= null
+	private  var estimateId = -1
+	private  var customerId = -1
 
 	private var dueTerms = 0
+
+
 
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -95,37 +103,31 @@ open class MainActivity : AppCompatActivity() {
 		val rvl_bussinessInfo = binding.relativelayoutBussinessInfo
 		val rvl_clientInfo = binding.relativeLayoutClentInfo
 
+		estimateId = intent.getIntExtra("estimate_id", -1)
+		customerId = intent.getIntExtra("customer_id",-1)
+
+
 		binding.btnInv001.setOnClickListener {
-
-			val estimateId = intent.getIntExtra("estimate_id", -1)
-			val bundle = Bundle().apply {
-				putInt("estimate_id", estimateId)
-			}
-			val fragment = InvoiceInfo().apply { arguments = bundle }
-			supportFragmentManager.beginTransaction().replace(R.id.newEstimateLayout, fragment)
-				.addToBackStack(null).commit()
+			handleInvoiceButtonClick(this, estimateId, customerId)
 		}
-
-
 
 		binding.btnTemplate.setOnClickListener {
-			// prevent double-tap
-
-			GlobalScope.launch {
-
-				val lifecyclejob: Job = lifecycleScope.launch(Dispatchers.IO) {
-
-
-					withContext(Dispatchers.Main) {
-						Toast.makeText(this@MainActivity, "Coming soon ...", Toast.LENGTH_LONG)
-							.show()
-					}
-
-
-				}
-				lifecyclejob.join()
-			}
+			handleTemplateButtonClick(this)
 		}
+
+		binding.btnclientInfo.setOnClickListener {
+			handleClientInfoClick(this)
+		}
+
+		binding.businessimage?.setOnClickListener {
+			handleBusinessImage(this)
+		}
+		binding.additemscardView.setOnClickListener {
+			handleItemsCardView(this,intent)
+		}
+
+
+
 		rvl_bussinessInfo?.setOnClickListener {
 			binding.businessimage?.performClick()
 		}
@@ -143,50 +145,12 @@ open class MainActivity : AppCompatActivity() {
 		}
 
 
-
-
-		binding.btnclientInfo.setOnClickListener {
-
-			lifecycleScope.launch {
-				val intent = Intent(applicationContext, ClientActivity::class.java)
-				startActivity(intent)
-
-			}
-		}
-		binding.businessimage?.setOnClickListener {
-			Toast.makeText(applicationContext, "coming soon...", Toast.LENGTH_LONG).show()
-		}
-
-		val cardviewButton = binding.additemscardView
-
-		cardviewButton.setOnClickListener {
-			// Get IDs from intent (or any other source)
-			val estimateId = intent.getIntExtra("estimate_id", -1)
-			val customerId = intent.getIntExtra("customerId", -1)
-
-			// Log for debugging
-			Log.d("InvoiceDebug", "Passing estimateId = $estimateId, customerId = $customerId to ProductsInfoFragment")
-
-			// Create fragment with arguments
-			val productfrag = ProductsInfoFragment().apply {
-				arguments = Bundle().apply {
-					putInt("estimate_id", estimateId)
-					putInt("customerId", customerId)
-				}
-			}
-
-			// Navigate to the fragment
-			supportFragmentManager.beginTransaction()
-				.replace(R.id.newEstimateLayout, productfrag)
-				.addToBackStack(null)
-				.commit()
-		}
-
-
 		val addBtn_image = binding.addbuttonImage
+
 		addBtn_image.setOnClickListener {
-			cardviewButton.performClick()
+			handleItemsCardView(this,intent)
 		}
+
 		val db = DatabaseHandler(applicationContext)
 
 
@@ -204,13 +168,13 @@ open class MainActivity : AppCompatActivity() {
 			val itemsTotal = binding.esumTotal
 			Subtotal = GlobalFunck()
 			val stringSubtotal =
-				stringFomat.format(Math.floor(Subtotal.getSubTotal(applicationContext).toDouble()))
+				stringFomat.format(Math.floor(Subtotal.getSubTotal(applicationContext,estimateId).toDouble()))
 			itemSubtal.text = stringSubtotal
 
 			Total = GlobalFunck()
 			val stringTotal = stringFomat.format(
 				Math.floor(
-					Total.summationofTotal(applicationContext).toDouble()
+					Total.summationofTotal(applicationContext,estimateId).toDouble()
 				)
 			)
 			itemsTotal.text = stringTotal
@@ -290,72 +254,143 @@ open class MainActivity : AppCompatActivity() {
 					onClick = {
 						lifecycleScope.launch {
 							try {
-								// Switch to IO thread for file operations
 								withContext(Dispatchers.IO) {
-									PdfUtils.previewPdfFormat(
-										this@MainActivity,
-										MainActivity.estimatePdf(this@MainActivity)
-									)
+									val estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
+									val customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
+									val pdfFile = estimatePdf(this@MainActivity, estimateId, customerId)
+
+									withContext(Dispatchers.Main) {
+										PdfUtils.previewPdfFormat(this@MainActivity, pdfFile)
+									}
 								}
 							} catch (e: Exception) {
 								e.printStackTrace()
-								// Show Toast safely on main thread
-								Toast.makeText(
-									this@MainActivity,
-									"Failed to open PDF",
-									Toast.LENGTH_SHORT
-								).show()
+								withContext(Dispatchers.Main) {
+									Toast.makeText(
+										this@MainActivity,
+										"Failed to open PDF: ${e.message}",
+										Toast.LENGTH_SHORT
+									).show()
+								}
 							}
 						}
-					}, shape = RoundedCornerShape(50), colors = ButtonDefaults.textButtonColors(
+					},
+					shape = RoundedCornerShape(50),
+					colors = ButtonDefaults.textButtonColors(
 						containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
 						contentColor = MaterialTheme.colorScheme.onPrimary
 					)
 				) {
-					Text(
-						text = "Preview",
-						modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-
-					)
+					Text(text = "Preview", modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
 				}
+
 
 				// Save BUTTON
 				TextButton(
-					onClick = { /* Handle save process */
+					onClick = {
 						lifecycleScope.launch(Dispatchers.IO) {
 							try {
+								val estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
+								val customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
 
-								val intent =
-									Intent(applicationContext, Save_previewActivity::class.java)
-								startActivity(intent)
+								val newIntent = Intent(this@MainActivity, Save_previewActivity::class.java).apply {
+									putExtra(EXTRA_ESTIMATE_ID, estimateId)
+									putExtra(EXTRA_CUSTOMER_ID, customerId)
+								}
+
 								withContext(Dispatchers.Main) {
+									startActivity(newIntent)
 									Toast.makeText(
-										this@MainActivity, " Success...", Toast.LENGTH_LONG
-									)
-
+										this@MainActivity,
+										"Opening save preview...",
+										Toast.LENGTH_LONG
+									).show()
 								}
 							} catch (e: Exception) {
 								e.printStackTrace()
+								withContext(Dispatchers.Main) {
+									Toast.makeText(
+										this@MainActivity,
+										"Failed to open Save Preview: ${e.message}",
+										Toast.LENGTH_SHORT
+									).show()
+								}
 							}
 						}
-
-
-					}, shape = RoundedCornerShape(50), colors = ButtonDefaults.textButtonColors(
+					},
+					shape = RoundedCornerShape(50),
+					colors = ButtonDefaults.textButtonColors(
 						containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
 						contentColor = MaterialTheme.colorScheme.onPrimary
 					)
 				) {
-					Text(
-						text = "Save",
-						modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-					)
+					Text(text = "Save", modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
 				}
+
 			}
 		}
 	}
 
 	companion object {
+
+		const val EXTRA_ESTIMATE_ID = "estimate_id"
+		const val EXTRA_CUSTOMER_ID = "customer_id"
+
 		private lateinit var file: File
+
+		fun handleInvoiceButtonClick(
+			activity: AppCompatActivity,
+			estimateId: Int,
+			customerId: Int
+		) {
+			val bundle = Bundle().apply {
+				putInt(EXTRA_ESTIMATE_ID, estimateId)
+				putInt(EXTRA_CUSTOMER_ID, customerId)
+			}
+
+			val fragment = InvoiceInfo().apply { arguments = bundle }
+
+			activity.supportFragmentManager.beginTransaction()
+				.replace(R.id.newEstimateLayout, fragment)
+				.addToBackStack(null)
+				.commit()
+		}
+
+		fun handleTemplateButtonClick(context: Context) {
+			Toast.makeText(context, "Coming soon ...", Toast.LENGTH_LONG).show()
+		}
+
+		fun handleClientInfoClick(context: Context) {
+			val intent = Intent(context, ClientActivity::class.java)
+			// ✅ Important: add FLAG_ACTIVITY_NEW_TASK if context is not an Activity
+			if (context !is AppCompatActivity) {
+				intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+			}
+			context.startActivity(intent)
+		}
+
+		fun handleBusinessImage(context: Context) {
+			Toast.makeText(context, "Coming soon...", Toast.LENGTH_LONG).show()
+		}
+
+		fun handleItemsCardView(activity: AppCompatActivity, intent: Intent) {
+			val estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
+			val customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
+
+			Log.d("InvoiceDebug", "Passing estimateId=$estimateId, customerId=$customerId to ProductsInfoFragment")
+
+			val productFrag = ProductsInfoFragment().apply {
+				arguments = Bundle().apply {
+					putInt(EXTRA_ESTIMATE_ID, estimateId)
+					putInt(EXTRA_CUSTOMER_ID, customerId)
+				}
+			}
+
+			activity.supportFragmentManager.beginTransaction()
+				.replace(R.id.newEstimateLayout, productFrag)
+				.addToBackStack(null)
+				.commit()
+		}
 
 		//set the fonts for the pdf sections
 		fun getPdfFontFromAssets(context: Context): PdfFont {
@@ -406,7 +441,7 @@ open class MainActivity : AppCompatActivity() {
 		}
 
 
-		fun estimatePdf(context: Context): File {
+		fun estimatePdf(context: Context,estimateId:Int,customerId:Int): File {
 
 			val clientId = GlobalFunck().safeClientId(context)
 			val clientNumber = GlobalFunck()
@@ -545,7 +580,7 @@ open class MainActivity : AppCompatActivity() {
 				document.add(image)
 
 //            3. Populate the Table with Rows
-				val items = DatabaseHandler(context).viewProduct()
+				val items = DatabaseHandler(context).getItemsForEstimate(estimateId, customerId)
 				items.forEach { item ->
 					//Loop through and calculate amount = price × quantity:
 					val amount = item.price * item.quantity
@@ -715,10 +750,10 @@ open class MainActivity : AppCompatActivity() {
 
 				amountTotal.forEach {
 //function to sum total of items from the database
-					val subtotal = GlobalFunck().getSubTotal(context)
+					val subtotal = GlobalFunck().getSubTotal(context,estimateId)
 					val textformat = "%,.2f"
-					val objTax = GlobalFunck().summationOfTax(context)
-					var objTotal = GlobalFunck().summationofTotal(context)
+					val objTax = GlobalFunck().summationOfTax(context,estimateId)
+					var objTotal = GlobalFunck().summationofTotal(context,estimateId)
 
 
 					//we are debugging here FOR THE CALCULATION OF PRICES AND TOTALS
@@ -831,7 +866,6 @@ open class MainActivity : AppCompatActivity() {
 		}
 	}
 
-	//function to show list of inserted data in the recycler view
 	private fun setupListIntoRecyclerView(): Int {
 		val itemList = getItemlist()
 
@@ -849,21 +883,111 @@ open class MainActivity : AppCompatActivity() {
 					notifyDataSetChanged()
 				}
 			}
+
+			val itemTouchHelper = ItemTouchHelper(object :
+				ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+
+				override fun onMove(
+					recyclerView: RecyclerView,
+					viewHolder: RecyclerView.ViewHolder,
+					target: RecyclerView.ViewHolder
+				) = false
+
+				override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+					val position = viewHolder.adapterPosition
+					val item = itemAdapter!!.itemList[position]
+
+					val db = DatabaseHandler(this@MainActivity)
+					val deleted = db.deleteItem(item.id)
+
+					if (deleted > 0) {
+						itemAdapter!!.itemList.removeAt(position)
+						itemAdapter!!.notifyItemRemoved(position)
+						Toast.makeText(
+							this@MainActivity,
+							"${item.itemName} deleted",
+							Toast.LENGTH_SHORT
+						).show()
+					} else {
+						Toast.makeText(this@MainActivity, "Delete failed", Toast.LENGTH_SHORT).show()
+					}
+
+					setupListIntoRecyclerView()
+				}
+
+				// 👇 This is where you visually draw the red background or delete icon while swiping
+				override fun onChildDraw(
+					c: Canvas,
+					recyclerView: RecyclerView,
+					viewHolder: RecyclerView.ViewHolder,
+					dX: Float,
+					dY: Float,
+					actionState: Int,
+					isCurrentlyActive: Boolean
+				) {
+					val itemView = viewHolder.itemView
+					val background = ColorDrawable(R.color.red)
+					val icon = ContextCompat.getDrawable(
+						this@MainActivity,
+						R.drawable.baseline_delete_24// your delete icon
+					)
+
+					// Draw red background as you swipe
+					if (dX > 0) { // Swiping right
+						background.setBounds(
+							itemView.left, itemView.top,
+							itemView.left + dX.toInt(), itemView.bottom
+						)
+					} else if (dX < 0) { // Swiping left
+						background.setBounds(
+							itemView.right + dX.toInt(), itemView.top,
+							itemView.right, itemView.bottom
+						)
+					} else {
+						background.setBounds(0, 0, 0, 0)
+					}
+
+					background.draw(c)
+
+					// Draw delete icon
+					icon?.let {
+						val iconMargin = (itemView.height - it.intrinsicHeight) / 2
+						val iconTop = itemView.top + iconMargin
+						val iconBottom = iconTop + it.intrinsicHeight
+
+						if (dX > 0) { // right swipe
+							val iconLeft = itemView.left + iconMargin
+							val iconRight = iconLeft + it.intrinsicWidth
+							it.setBounds(iconLeft, iconTop, iconRight, iconBottom)
+						} else if (dX < 0) { // left swipe
+							val iconRight = itemView.right - iconMargin
+							val iconLeft = iconRight - it.intrinsicWidth
+							it.setBounds(iconLeft, iconTop, iconRight, iconBottom)
+						}
+
+						it.draw(c)
+					}
+
+					super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+				}
+			})
+
+			itemTouchHelper.attachToRecyclerView(binding.recycleItem)
 		} else {
 			binding.recycleItem.visibility = View.GONE
 		}
 
-		// ✅ Return number of items currently displayed
 		return itemList.size
 	}
+
+
 
 	//    function to get the items list
 	private fun getItemlist(): ArrayList<ModelClass> {
 //        create instance of the databaseHandler class
 		val databaseHandler: DatabaseHandler = DatabaseHandler(this)
 //          calling the viewProduct  of DatabaseHandler class to read the list
-		return databaseHandler.viewProduct()
-
+		return databaseHandler.getItemsForEstimate(estimateId,customerId)
 		/**
 		 * a shorter replacement use the inline function "single expression function
 		 *
@@ -876,8 +1000,6 @@ open class MainActivity : AppCompatActivity() {
 
 		 */
 	}
-
-
 
 
 	// method to update the inputs in the dialog
@@ -931,6 +1053,7 @@ open class MainActivity : AppCompatActivity() {
 
 		// Save/update action
 		saveButton?.setOnClickListener {
+
 			val updatedName = nameEditText?.text.toString()
 			val updatedQuantity = quantityEditText?.text.toString().toIntOrNull()
 			val updatedPrice = priceEditText?.text.toString().toDoubleOrNull()
@@ -942,13 +1065,16 @@ open class MainActivity : AppCompatActivity() {
 			}
 
 			val updatedModel = ModelClass(
-				id = modelClass.id,  // keep same ID
-				itemName = updatedName,
+				id = modelClass.id,
 				quantity = updatedQuantity,
+				itemName = updatedName,
 				price = updatedPrice,
 				total = (updatedQuantity * updatedPrice).toFloat(),
-				tax = updatedTax
+				tax = updatedTax,
+				customerId = modelClass.customerId,
+				estimateId = modelClass.estimateId
 			)
+
 
 			val db = DatabaseHandler(this)
 			// define this method in your DB handler (updateRecords)
@@ -986,7 +1112,10 @@ open class MainActivity : AppCompatActivity() {
 					"",
 					modellist.price,
 					modellist.total,
-					modellist.tax
+					modellist.tax,
+					modellist.customerId,
+					modellist.estimateId,
+
 				)
 			)
 			if (status > -1) {

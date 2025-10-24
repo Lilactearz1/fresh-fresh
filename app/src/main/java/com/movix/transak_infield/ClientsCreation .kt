@@ -15,8 +15,8 @@ open class ClientsCreation (val id:Int=0,  /*Default to 0 so you don’t need to
                             val name:String,val phone:String ,vararg mail:String)
 
 data class Estimateinfo(
-	val id: Int = 0, // autoIncrement in DB
-	var titleINV: String = "",
+	val estimateId: Int = 0, // autoIncrement in DB
+	var titleINV: String?,
 	var creationDate: String = "",
 	var dueDate: String = "",
 	val customerId: Int = 0,

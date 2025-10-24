@@ -34,6 +34,9 @@ class ProductsInfoFragment : Fragment() {
 	private lateinit var navigationBar: NavigationBarView
 	private var productAmount by Delegates.notNull<Float>()
 	private lateinit var db: DatabaseHandler
+	private var estimateId: Int = -1
+	private var customerId: Int = 0
+
 
 
 //   private lateinit var databaseHandler:DatabaseHandler
@@ -49,15 +52,18 @@ class ProductsInfoFragment : Fragment() {
 		super.onViewCreated(view, savedInstanceState)
 
 
-		val estimateId = arguments?.getInt("estimate_id", -1) ?: -1
-		val customerId = arguments?.getInt("customerId", 0) ?: 0
+		  estimateId = arguments?.getInt("estimate_id", -1) ?: -1
+		  customerId = arguments?.getInt("customerId", 0) ?: 0
+
+
 
 		if (customerId == 0) {
 			Log.d("InvoiceDebug", "No customer assigned yet — pending assignment.")
 		}
 
-		Log.d("InvoiceDebug", "Received estimateId = $estimateId")
-		Log.d("InvoiceDebug", "Received customerId = $customerId")
+		Log.d("DebugCheck", "estimateId passed to fragment = $estimateId")
+		Log.d("DebugCheck", "customerId passed to fragment = $customerId")
+
 
 
 		// Initialize database
@@ -171,8 +177,19 @@ class ProductsInfoFragment : Fragment() {
 //    create a model instance to use in the database
 		val databaseHandler: DatabaseHandler = DatabaseHandler(requireContext())
 
+		Log.d("DebugCheck", "Trying to save with customerId=$customerId, estimateId=$estimateId")
+		Log.d("DebugCheck", "Customer exists: ${databaseHandler.doesCustomerExist(customerId)}")
+		Log.d("DebugCheck", "Estimate exists: ${databaseHandler.doesEstimateExist(estimateId)}")
+
+
 		val products = ModelClass(
-			0, productQuantity, productDescription, productPrice, productAmount, productTax
+			0, productQuantity,
+			productDescription,
+			productPrice,
+			productAmount,
+			productTax,
+			customerId =customerId,         // ← passed from arguments
+			estimateId = estimateId         // ← passed from arguments
 		)
 
 		if (productDescription.isNotEmpty() && productQuantity.toString()

@@ -2,12 +2,9 @@
 
 	import android.app.DatePickerDialog
 	import android.content.Context
-	import android.graphics.Bitmap
-	import android.graphics.pdf.PdfRenderer
 	import android.icu.util.Calendar
 	import android.icu.util.GregorianCalendar
 	import android.os.Build
-	import android.os.ParcelFileDescriptor
 	import android.view.View
 	import android.view.inputmethod.EditorInfo
 	import android.view.inputmethod.InputMethodManager
@@ -18,17 +15,17 @@
 	import androidx.annotation.RequiresApi
 
 	import java.time.LocalDate
-	import java.time.temporal.ChronoUnit
 	import java.time.temporal.Temporal
-	import  com.movix.transak_infield.InvoiceInfo
-	import java.io.File
 
 	class GlobalFunck {
 		//    method to sum list in items
-		fun getSubTotal(context: Context): Float {
+		fun getSubTotal(context: Context,estimateId: Int): Float {
 			var totalSum = 0F
 			val db = DatabaseHandler(context).readableDatabase
-			val cursor = db.rawQuery("SELECT item_total FROM TableInvoice", null)
+			val cursor = db.rawQuery(
+				"SELECT item_total FROM TableInvoice WHERE estimate_id = ?",
+				arrayOf(estimateId.toString())
+			)
 			if (cursor.moveToFirst()) {
 				do {
 					val total = cursor.getFloat(cursor.getColumnIndexOrThrow("item_total"))
@@ -42,25 +39,36 @@
 		}
 
 		//        an extension function to the global functions
-		fun summationOfTax(context: Context): Double {
-			var cumulativeTax = 0.0
-			val dbView = DatabaseHandler(context)
-			var viewitem = dbView.viewProduct()
+		fun summationOfTax(context: Context,estimateId: Int): Double {
+			var totalTax = 0.0
+			val db = DatabaseHandler(context).readableDatabase
 
-			viewitem.forEachIndexed { _, items ->
+			// Query to get price, quantity, and tax rate for each item under the same estimate
+			val query = """
+        SELECT item_price, item_quantity, item_tax
+        FROM TableInvoice 
+        WHERE estimate_id = ?
+    """
+			val cursor = db.rawQuery(query, arrayOf(estimateId.toString()))
 
-				val price = items.price
-				val quantitty = items.quantity
-				val taxedIndex = items.tax
-				val nontax = price * quantitty
-				// Multiply amount by taxed index
-				val taxeditemprice = (nontax * taxedIndex * 0.01)
-				//add vat data dynamically as they are entered in the table
-				cumulativeTax += taxeditemprice
-				println("test for cummulative total tax is $cumulativeTax")
+			cursor.use {
+				val priceIndex = it.getColumnIndexOrThrow("item_price")
+				val qtyIndex = it.getColumnIndexOrThrow("item_quantity")
+				val taxIndex = it.getColumnIndexOrThrow("item_tax")
 
+				while (it.moveToNext()) {
+					val price = it.getDouble(priceIndex)
+					val quantity = it.getDouble(qtyIndex)
+					val taxRate = it.getDouble(taxIndex)
+
+					// compute per-item tax: (price * quantity) * (taxRate / 100)
+					val itemTax = (price * quantity) * (taxRate / 100.0)
+					totalTax += itemTax
+				}
 			}
-			return cumulativeTax
+
+			db.close()
+			return totalTax
 		}
 
 		fun phoneNo(context: Context): String {
@@ -73,11 +81,11 @@
 		}
 
 
-		fun summationofTotal(context: Context): Float {
+		fun summationofTotal(context: Context,estimateId: Int): Float {
 	//get the summation of total plus the taxed =(taxed or non-taxed)
-			val sumTax = summationOfTax(context).toFloat()
+			val sumTax = summationOfTax(context,estimateId).toFloat()
 			var summedTotal = 0.00f
-			var subtotalAmount = getSubTotal(context)
+			var subtotalAmount = getSubTotal(context,estimateId)
 			println("this is subtotal $subtotalAmount")
 			subtotalAmount += sumTax
 	//            add the collected tax total to the initial total
@@ -114,7 +122,8 @@
 			var string: String = ""
 			dbEstimateinfo.forEachIndexed { index, title ->
 
-				string = title.titleINV
+				string = title.titleINV.toString()
+
 			}
 			return string
 		}
@@ -125,7 +134,7 @@
 
 			dbEstimateinfo.forEachIndexed { index, title ->
 
-				int = title.id
+				int = title.estimateId
 			}
 			return int.plus(1)
 
@@ -144,16 +153,8 @@
 			}
 		}
 
-		fun customerName(context: Context): String {
-			val db = DatabaseHandler(context)
-			val customers = db.viewClientsInfo()
-			var string = ""
-			customers.forEachIndexed { index, creation ->
-
-				string = creation.name
-			}
-
-			return string
+		fun customerName(context: Context): List<String> {
+			return DatabaseHandler(context).viewClientsInfo().map { it.name }
 		}
 
 
@@ -163,11 +164,14 @@
 			return safeClientId
 		}
 
-		fun safeClientName (context:Context):String{
-			var clientName=customerName(context)
-			val safeClientName = clientName.ifBlank { "INFIELDER_CLIENT" }
-			return safeClientName
+		fun safeClientName(context: Context): String {
+			val clientNames = customerName(context)
+			// Return last inserted client name or default
+			return clientNames.lastOrNull() ?: "CLIENT INFIELDER"
 		}
+
+
+
 
 
 
@@ -294,39 +298,39 @@
 
 		}
 
-		object EstimateSession {
-			private const val PREF_NAME = "EstimateSessionPrefs"
-			private const val KEY_CURRENT_ESTIMATE_ID = "current_estimate_id"
-
-			var currentEstimate: Int? = null
-
-			fun saveSession(context: Context, estimateId: Int) {
-				val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-				prefs.edit().putInt(KEY_CURRENT_ESTIMATE_ID, estimateId).apply()
-				currentEstimate = estimateId
-			}
-
-			fun loadSession(context: Context) {
-				val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-				val id = prefs.getInt(KEY_CURRENT_ESTIMATE_ID, -1)
-				currentEstimate = if (id != -1) id else null
-			}
-
-			fun clearSession(context: Context) {
-				val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-				prefs.edit().remove(KEY_CURRENT_ESTIMATE_ID).apply()
-				currentEstimate = null
-			}
-
-			fun endCurrentEstimate(context: Context) {
-				EstimateSession.currentEstimate?.let { estimateId ->
-					val db = DatabaseHandler(context)
-					db.updateEstimateStatus(estimateId, EstimateStatus.COMPLETED) // Example status
-					EstimateSession.clearSession(context)
-				}
-			}
-
-		}
+//		object EstimateSession {
+//			private const val PREF_NAME = "EstimateSessionPrefs"
+//			private const val KEY_CURRENT_ESTIMATE_ID = "current_estimate_id"
+//
+//			var currentEstimate: Int? = null
+//
+//			fun saveSession(context: Context, estimateId: Int) {
+//				val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+//				prefs.edit().putInt(KEY_CURRENT_ESTIMATE_ID, estimateId).apply()
+//				currentEstimate = estimateId
+//			}
+//
+//			fun loadSession(context: Context) {
+//				val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+//				val id = prefs.getInt(KEY_CURRENT_ESTIMATE_ID, -1)
+//				currentEstimate = if (id != -1) id else null
+//			}
+//
+//			fun clearSession(context: Context) {
+//				val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+//				prefs.edit().remove(KEY_CURRENT_ESTIMATE_ID).apply()
+//				currentEstimate = null
+//			}
+//
+//			fun endCurrentEstimate(context: Context) {
+//				EstimateSession.currentEstimate?.let { estimateId ->
+//					val db = DatabaseHandler(context)
+//					db.updateEstimateStatus(estimateId, EstimateStatus.COMPLETED) // Example status
+//					EstimateSession.clearSession(context)
+//				}
+//			}
+//
+//		}
 
 
 	}

@@ -175,56 +175,55 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:orientation="vertical"
-                    android:layout_height="match_parent">
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
+
                         <RelativeLayout
                             android:id="@+id/relativelayoutBussinessInfo"
-                            android:layout_gravity="center_vertical"
                             android:layout_width="match_parent"
-                            android:contextClickable="true"
-                            android:layout_height="wrap_content">
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:contextClickable="true">
 
                             <ImageView
+                                android:id="@+id/businessimage"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:padding="15dp"
-                                android:id="@+id/businessimage"
                                 android:layout_marginStart="10dp"
                                 android:layout_marginTop="10dp"
                                 android:layout_marginBottom="10dp"
-                                android:background="@drawable/baseline_office_24"/>
-
-
+                                android:background="@drawable/baseline_office_24"
+                                android:padding="15dp" />
 
 
                             <TextView
-                        android:layout_marginTop="15dp"
-                        android:layout_marginBottom="10dp"
-                        android:id="@+id/tv_Business_info"
-                        android:layout_width="wrap_content"
-                        android:layout_height="30dp"
-                        android:layout_marginStart="40dp"
-                        android:fontFamily="@font/lato_regular"
-                        android:gravity="start"
-                        android:labelFor="@+id/edit_item_name"
-                        android:text="@string/bussiness_information"
-                        android:textSize="18sp" />
+                                android:id="@+id/tv_Business_info"
+                                android:layout_width="wrap_content"
+                                android:layout_height="30dp"
+                                android:layout_marginStart="40dp"
+                                android:layout_marginTop="15dp"
+                                android:layout_marginBottom="10dp"
+                                android:fontFamily="@font/lato_regular"
+                                android:gravity="start"
+                                android:labelFor="@+id/edit_item_name"
+                                android:text="@string/bussiness_information"
+                                android:textSize="18sp" />
 
-                        <ImageButton
-                            android:layout_marginTop="10dp"
-                            android:layout_marginBottom="10dp"
-                            android:layout_marginEnd="10dp"
-                            android:layout_alignParentEnd="true"
-                            android:id="@+id/btnBusinessInfo"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/baseline_arrow_forward_"
-                            android:padding="10dp" />
+                            <ImageButton
+                                android:id="@+id/btnBusinessInfo"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentEnd="true"
+                                android:layout_marginTop="10dp"
+                                android:layout_marginEnd="10dp"
+                                android:layout_marginBottom="10dp"
+                                android:background="@drawable/baseline_arrow_forward_"
+                                android:padding="10dp" />
 
                         </RelativeLayout>
 
@@ -237,51 +236,49 @@
                         android:orientation="horizontal">
 
                         <RelativeLayout
-                            android:contextClickable="true"
-                            android:gravity="center_vertical"
-                            android:layout_width="match_parent"
                             android:id="@+id/relativeLayoutClentInfo"
-                            android:layout_height="wrap_content">
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:contextClickable="true"
+                            android:gravity="center_vertical">
 
                             <ImageView
+                                android:id="@+id/clientimage"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:padding="10dp"
-                                android:id="@+id/clientimage"
                                 android:layout_marginStart="10dp"
                                 android:layout_marginTop="10dp"
                                 android:layout_marginBottom="10dp"
-                                android:background="@drawable/baseline_people_24"/>
+                                android:background="@drawable/baseline_people_24"
+                                android:padding="10dp" />
 
 
-
-                    <TextView
-                        android:layout_marginTop="5dp"
-                        android:layout_alignBaseline="@id/clientimage"
-                        android:layout_marginBottom="10dp"
-                        android:id="@+id/tv_client_info"
-                        android:layout_width="120dp"
-                        android:layout_height="30dp"
-                         android:layout_marginStart="40dp"
-                        android:fontFamily="@font/lato_regular"
-                        android:gravity="center_vertical"
-                        android:text="@string/client_info"
-                        android:textSize="16sp" />
+                            <TextView
+                                android:id="@+id/tv_client_info"
+                                android:layout_width="120dp"
+                                android:layout_height="30dp"
+                                android:layout_alignBaseline="@id/clientimage"
+                                android:layout_marginStart="40dp"
+                                android:layout_marginTop="5dp"
+                                android:layout_marginBottom="10dp"
+                                android:fontFamily="@font/lato_regular"
+                                android:gravity="center_vertical"
+                                android:text="@string/client_info"
+                                android:textSize="16sp" />
 
                             <ImageButton
-                                android:layout_marginTop="10dp"
-                                android:layout_marginBottom="10dp"
-                                 android:layout_marginEnd="10dp"
-                                android:layout_alignParentEnd="true"
                                 android:id="@+id/btnclientInfo"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_alignParentEnd="true"
+                                android:layout_marginTop="10dp"
+                                android:layout_marginEnd="10dp"
+                                android:layout_marginBottom="10dp"
                                 android:background="@drawable/baseline_arrow_forward_"
                                 android:padding="10dp" />
 
                         </RelativeLayout>
                     </LinearLayout>
-
 
 
                     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -326,19 +323,30 @@
                         android:text="@string/items_list"
                         android:textSize="18sp" />
 
+                    <ScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                    </ScrollView>
+
 
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/itemsListed"
                         android:layout_width="350dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:layout_below="@id/tv_items"
                         android:layout_marginHorizontal="10dp"
                         android:layout_marginTop="1dp"
                         app:cardCornerRadius="5dp"
                         app:cardForegroundColor="@color/transparent">
 
+                        <ScrollView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+
 
                         <androidx.recyclerview.widget.RecyclerView
+
                             android:id="@+id/recycleItem"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
@@ -347,6 +355,7 @@
 
                             />
 
+                        </ScrollView>
 
                     </com.google.android.material.card.MaterialCardView>
 

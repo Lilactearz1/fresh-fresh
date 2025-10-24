@@ -17,7 +17,7 @@ class DatabaseHandler(context: Context) :
 
 
 	companion object {
-		private const val DATABASE_VERSION = 32
+		private const val DATABASE_VERSION = 39
 		private const val DATABASE_NAME = "Transak_infield.db"
 
 		private const val INVOICE_TABLE = "TableInvoice"
@@ -66,23 +66,29 @@ class DatabaseHandler(context: Context) :
 					"FOREIGN KEY(" + CUSTOMER_ID + ") REFERENCES " + CUSTOMER_TABLE + "(" + CUSTOMER_ID + ") ON DELETE SET NULL" + ")")
 
 
-		val CREATE_PRODUCTS_TABLE =
-			("CREATE TABLE " +
-					INVOICE_TABLE + "("
-					+ KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-					+ KEY_NAME + " TEXT,"
-					+ KEY_QUANTITY + " INTEGER,"
-					+ KEY_PRICE + " REAL,"
-					+ KEY_ITEM_TOTAL + " REAL,"
-					+ KEY_TAX + " REAL,"
-					+ CUSTOMER_ID + " INTEGER,"
-					+ ESTIMATE_ID + " INTEGER,"
-					+ "FOREIGN KEY(" + CUSTOMER_ID + ") REFERENCES " + CUSTOMER_TABLE + "(" + CUSTOMER_ID + ") ON DELETE CASCADE,"
-					+ "FOREIGN KEY(" + ESTIMATE_ID  + ") REFERENCES " +" $ESTIMATE_TABLE " + "(" + ESTIMATE_ID + ") ON DELETE CASCADE" +")")
+		val CREATE_PRODUCTS_TABLE = """
+    CREATE TABLE $INVOICE_TABLE (
+        $KEY_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        $KEY_NAME TEXT,
+        $KEY_QUANTITY INTEGER,
+        $KEY_PRICE REAL,
+        $KEY_ITEM_TOTAL REAL,
+        $KEY_TAX REAL,
+        $CUSTOMER_ID INTEGER NOT NULL,
+        $ESTIMATE_ID INTEGER NOT NULL,
+        FOREIGN KEY($CUSTOMER_ID) REFERENCES $CUSTOMER_TABLE($CUSTOMER_ID) ON DELETE CASCADE,
+        FOREIGN KEY($ESTIMATE_ID) REFERENCES $ESTIMATE_TABLE($ESTIMATE_ID) ON DELETE CASCADE
+    )
+""".trimIndent()
 
 
 //        tell the database(db?) to go ahead and execute SQL (execSQL)
+
 		db?.execSQL(CREATE_CUSTOMERS_TABLE)
+
+
+		db?.execSQL("INSERT OR IGNORE INTO $CUSTOMER_TABLE ($CUSTOMER_ID, $CUSTOMER_NAME, $CUSTOMER_PHONE) VALUES (1, 'Guest Customer', 'N/A')")
+
 		db?.execSQL(CREATE_ESTIMATE_TABLE)
 		db?.execSQL(CREATE_PRODUCTS_TABLE)
 
@@ -99,7 +105,7 @@ class DatabaseHandler(context: Context) :
 		onCreate(db)
 	}
 
-//	method to add customers info into the databse
+//	method to add customers info into the database
 
 	fun addClientsInformations(clientsCreation: ClientsCreation): Long {
 		val db = this.writableDatabase
@@ -222,21 +228,24 @@ class DatabaseHandler(context: Context) :
 
 	fun updateEstimateInfo(estimateinfo: Estimateinfo): Int {
 		val db = this.writableDatabase
-		val contentValues = ContentValues()
-		contentValues.put(ESTIMATE_ID, estimateinfo.id)
-		contentValues.put(ESTIMATE_TITLE, estimateinfo.titleINV)
-		contentValues.put(ESTIMATE_DATE, estimateinfo.creationDate)
-//		another way to pass the varag parameter created *(asterisk) called the spread operator
-		contentValues.put(DUE_DATE, estimateinfo.dueDate)
-		contentValues.put(
-			CUSTOMER_ID,
-			estimateinfo.customerId
-		)  // Important: Link to customer! -> Insert foreign key
-		val successUpdate =
-			db.update(ESTIMATE_TABLE, contentValues, "$ESTIMATE_ID=" + estimateinfo.id, null)
+		val contentValues = ContentValues().apply {
+			put(ESTIMATE_TITLE, estimateinfo.titleINV)
+			put(ESTIMATE_DATE, estimateinfo.creationDate)
+			put(DUE_DATE, estimateinfo.dueDate)
+
+		}
+
+		val rowsUpdated = db.update(
+			ESTIMATE_TABLE,
+			contentValues,
+			"$ESTIMATE_ID = ?",
+			arrayOf(estimateinfo.estimateId.toString())
+		)
+
 		db.close()
-		return successUpdate
+		return rowsUpdated
 	}
+
 
 
 	//    method to add data to the database
@@ -296,6 +305,7 @@ class DatabaseHandler(context: Context) :
 		var total: Float
 		var tax: Float
 		var estimateId:Int
+		var customerId:Int
 
 
 //      Move through the cursor
@@ -308,6 +318,7 @@ class DatabaseHandler(context: Context) :
 				total = cursor.getFloat(cursor.getColumnIndexOrThrow(KEY_ITEM_TOTAL))
 				tax = cursor.getFloat(cursor.getColumnIndexOrThrow(KEY_TAX))
 				estimateId= cursor.getInt(cursor.getColumnIndexOrThrow(ESTIMATE_ID))
+				customerId = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID))
 
 
 				val modelClass1 = ModelClass(
@@ -317,7 +328,8 @@ class DatabaseHandler(context: Context) :
 					price = price,
 					total = total,
 					tax = tax,
-					estimateId = estimateId
+					estimateId = estimateId,
+					customerId = customerId
 				)
 
 				productList.add(modelClass1)
@@ -325,6 +337,7 @@ class DatabaseHandler(context: Context) :
 
 			} while (cursor.moveToNext())
 		}
+		Log.d("DatabaseHandler", "Fetched ${productList.size} items from DB")
 		cursor.close()
 		db.close()
 		return productList
@@ -368,8 +381,7 @@ class DatabaseHandler(context: Context) :
 	fun viewEstimateInfo(): ArrayList<Estimateinfo> {
 		val estimate: ArrayList<Estimateinfo> = ArrayList()
 		val db = this.readableDatabase
-		val selectQuery =
-			"SELECT * FROM $ESTIMATE_TABLE ORDER BY ESTIMATE_ID DESC" // Order by latest first"
+		val selectQuery = "SELECT * FROM $ESTIMATE_TABLE ORDER BY $ESTIMATE_ID DESC"    // Order by latest first"
 		var cursor: Cursor? = null
 
 		try {
@@ -394,7 +406,7 @@ class DatabaseHandler(context: Context) :
 				dueDate = cursor.getString(cursor.getColumnIndexOrThrow(DUE_DATE))
 				customerId = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID))
 				val result = Estimateinfo(
-					id = id,
+					estimateId = id,
 					titleINV = title,
 					creationDate = creatDate,
 					dueDate = dueDate,
@@ -414,7 +426,7 @@ class DatabaseHandler(context: Context) :
 		db?.setForeignKeyConstraintsEnabled(true)
 	}
 
-	fun getAllEstimate(): List<Estimateinfo> {
+	fun getAllEstimate(): MutableList<Estimateinfo> {
 		val estimates = mutableListOf<Estimateinfo>()
 		val db = this.readableDatabase
 		val cursor = db.rawQuery("SELECT * FROM $ESTIMATE_TABLE", null)
@@ -463,33 +475,35 @@ class DatabaseHandler(context: Context) :
 		return items
 	}
 
-	fun getItemsForEstimate(estimateId: Int): ArrayList<ModelClass> {
-		val items = ArrayList<ModelClass>()
+
+	fun getItemsForEstimate(estimateId: Int, customerId: Int): ArrayList<ModelClass> {
+		val itemsList = ArrayList<ModelClass>()
 		val db = this.readableDatabase
-		val cursor = db.rawQuery(
-			"SELECT * FROM $INVOICE_TABLE WHERE $ESTIMATE_ID = ?",
-			arrayOf(estimateId.toString())
-		)
+		val query = "SELECT * FROM $INVOICE_TABLE WHERE $ESTIMATE_ID = ? AND $CUSTOMER_ID = ?"
+		val cursor = db.rawQuery(query, arrayOf(estimateId.toString(), customerId.toString()))
 
 		if (cursor.moveToFirst()) {
 			do {
-				val id = cursor.getInt(cursor.getColumnIndexOrThrow(KEY_ID))
-				val itemName = cursor.getString(cursor.getColumnIndexOrThrow(KEY_NAME))
-				val quantity = cursor.getInt(cursor.getColumnIndexOrThrow(KEY_QUANTITY))
-				val price = cursor.getDouble(cursor.getColumnIndexOrThrow(KEY_PRICE))
-				val total = cursor.getFloat(cursor.getColumnIndexOrThrow(KEY_ITEM_TOTAL))
-				val tax = cursor.getFloat(cursor.getColumnIndexOrThrow(KEY_TAX))
-				val customerId = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID))
-				val estId = cursor.getInt(cursor.getColumnIndexOrThrow(ESTIMATE_ID))
-
-				items.add(ModelClass(id, quantity, itemName, price, total, tax, customerId, estId))
+				val item = ModelClass(
+					id = cursor.getInt(cursor.getColumnIndexOrThrow(KEY_ID)),
+					itemName = cursor.getString(cursor.getColumnIndexOrThrow(KEY_NAME)),
+					quantity = cursor.getInt(cursor.getColumnIndexOrThrow(KEY_QUANTITY)),
+					price = cursor.getDouble(cursor.getColumnIndexOrThrow(KEY_PRICE)),
+					total = cursor.getFloat(cursor.getColumnIndexOrThrow(KEY_ITEM_TOTAL)),
+					tax = cursor.getFloat(cursor.getColumnIndexOrThrow(KEY_TAX)),
+					customerId = customerId,
+					estimateId = cursor.getInt(cursor.getColumnIndexOrThrow(ESTIMATE_ID)),
+				)
+				itemsList.add(item)
 			} while (cursor.moveToNext())
 		}
 
 		cursor.close()
 		db.close()
-		return items
+		return itemsList
 	}
+
+
 
 
 	//	 Query with a join to see linked data
@@ -519,7 +533,7 @@ ON e.$CUSTOMER_ID= c.$CUSTOMER_ID """.trimIndent()
 				customerId = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID))
 
 				val list = Estimateinfo(
-					id = estimateId,
+					estimateId = estimateId,
 					titleINV = title,
 					creationDate = createdDate,
 					dueDate = dueDate,
@@ -543,30 +557,28 @@ ON e.$CUSTOMER_ID= c.$CUSTOMER_ID """.trimIndent()
 		db.update(ESTIMATE_TABLE, values, "$ESTIMATE_ID=?", arrayOf(estimateId.toString()))
 	}
 
-	fun createNewEstimate(context: Context, customerId: Int): Long {
+	fun createNewEstimate(context: Context, customerId: Int,title:String ): Long {
 		val db = writableDatabase
 		val values = ContentValues().apply {
+			put(ESTIMATE_TITLE, title)
 
 			if (customerId != 0)
 				put(CUSTOMER_ID, customerId)
 
 			put(ESTIMATE_DATE, LocalDate.now().toString())
-			put(STATUS, EstimateStatus.OPEN.name) // enum value stored as string
+			put(STATUS, EstimateStatus.OPEN.name)
 		}
 
-		val newId = db.insert(ESTIMATE_TABLE, null, values) // ✅ removed unnecessary $
+		val newId = db.insert(ESTIMATE_TABLE, null, values)
 		db.close()
 
-		// ✅ Save this ID as the current session if insertion succeeded
 		if (newId != -1L) {
 			EstimateSession.saveSession(context, newId.toInt())
-			Log.d("EstimateDebug", "New estimate created and session started with ID = $newId")
-		} else {
-			Log.e("EstimateDebug", "Failed to create new estimate")
+			Log.d("EstimateDebug", "New estimate created with ID = $newId and default title = INFIELDER")
 		}
-
 		return newId
 	}
+
 
 
 	fun getEstimateById(id: Int): Estimateinfo? {
@@ -581,7 +593,7 @@ ON e.$CUSTOMER_ID= c.$CUSTOMER_ID """.trimIndent()
 				android.util.Log.e("DatabaseHandler", "Available columns: $colNames")
 
 				estimate = Estimateinfo(
-					id = cursor.getInt(cursor.getColumnIndexOrThrow(ESTIMATE_ID)),
+					estimateId = cursor.getInt(cursor.getColumnIndexOrThrow(ESTIMATE_ID)),
 					titleINV = cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_TITLE) ?: -1)
 						?: "Untitled", // Fallback in case of null
 					creationDate = cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_DATE) ?: -1)
@@ -619,6 +631,65 @@ ON e.$CUSTOMER_ID= c.$CUSTOMER_ID """.trimIndent()
 		db.update(ESTIMATE_TABLE, values, "$ESTIMATE_ID=?", arrayOf(id.toString()))
 		db.close()
 	}
+
+	fun deleteItem(itemId: Int): Int {
+		val db = this.writableDatabase
+		val result = db.delete("$INVOICE_TABLE", "id = ?", arrayOf(itemId.toString()))
+		db.close()
+		return result
+	}
+
+
+	// temporary code debug testers from this point downwards
+
+//	/////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////
+	fun doesCustomerExist(id: Int): Boolean {
+		val db = readableDatabase
+		val cursor = db.rawQuery("SELECT 1 FROM $CUSTOMER_TABLE WHERE $CUSTOMER_ID = ?", arrayOf(id.toString()))
+		val exists = cursor.moveToFirst()
+		cursor.close()
+		db.close()
+		return exists
+	}
+
+fun estimated (context: Context){
+		val db = DatabaseHandler(context).readableDatabase
+		val c = db.rawQuery(
+			"SELECT $KEY_ID, $KEY_NAME, $KEY_QUANTITY, $KEY_PRICE, $KEY_ITEM_TOTAL, $KEY_TAX, $CUSTOMER_ID, $ESTIMATE_ID FROM $INVOICE_TABLE",
+			null
+		)
+		if (c.moveToFirst()) {
+			do {
+				val id = c.getInt(0)
+				val name = c.getString(1)
+				val qty = c.getInt(2)
+				val price = c.getDouble(3)
+				val total = c.getFloat(4)
+				val tax = c.getFloat(5)
+				val cust = c.getInt(6)
+				val est = c.getInt(7)
+				android.util.Log.d(
+					"DB_DUMP",
+					"row id=$id name=$name qty=$qty price=$price total=$total tax=$tax cust=$cust est=$est"
+				)
+			} while (c.moveToNext())
+		} else {
+			android.util.Log.d("DB_DUMP", "TableInvoice is empty")
+		}
+		c.close()
+		db.close()
+	}
+
+	fun doesEstimateExist(id: Int): Boolean {
+		val db = readableDatabase
+		val cursor = db.rawQuery("SELECT 1 FROM $ESTIMATE_TABLE WHERE $ESTIMATE_ID = ?", arrayOf(id.toString()))
+		val exists = cursor.moveToFirst()
+		cursor.close()
+		db.close()
+		return exists
+	}
+
 
 
 

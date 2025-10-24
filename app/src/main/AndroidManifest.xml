@@ -46,6 +46,24 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".Save_previewActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CustomerItems"
+            android:exported="true"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ClientActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".MainLandingPage"
             android:exported="true"
             android:label="@string/title_activity_archives"

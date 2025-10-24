@@ -49,4 +49,7 @@
     <color name="mint">#99edc3</color>
     <color name="pistachio">#b2d3c2</color>
 
+<!--    red-->
+    <color name="red">#ff0000</color>
+
 </resources>

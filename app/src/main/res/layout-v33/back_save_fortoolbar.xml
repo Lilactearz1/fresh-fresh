@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+
+    android:orientation="horizontal"
+    android:layout_height="60dp">
+
+    <LinearLayout
+        app:layout_constraintTop_toTopOf="parent"
+        android:id="@+id/backfold"
+        android:layout_width="150dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:layout_height="50dp"
+        android:layout_marginStart="25dp"
+        android:focusableInTouchMode="true"
+        android:contextClickable="true"
+
+        android:gravity="start|center"
+        android:orientation="vertical"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <RelativeLayout
+            android:focusableInTouchMode="true"
+            android:contextClickable="true"
+            android:clipChildren="true"
+            android:id="@+id/back"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:enableOnBackInvokedCallback="true"
+            android:background="@drawable/baseline_arrow_back_24"
+            >
+
+        </RelativeLayout>
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/Download"
+        android:layout_width="150dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="4dp"
+        android:clickable="true"
+        android:clipChildren="true"
+        android:focusable="true"
+        android:gravity="center|end"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.813"
+        app:layout_constraintStart_toEndOf="@+id/backfold"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <RelativeLayout
+            android:id="@+id/Save"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@drawable/baseline_add_task_24"
+            >
+
+        </RelativeLayout>
+
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

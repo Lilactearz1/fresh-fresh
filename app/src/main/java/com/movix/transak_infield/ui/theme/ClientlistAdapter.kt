@@ -50,7 +50,7 @@ class ClientlistAdapter(
 	override fun onBindViewHolder(holder: ClientsViewHolder, position: Int) {
 		val client = clientList[position]
 
-		holder.clientName.text = GlobalFunck().customerName(context)
+		holder.clientName.text = client.name
 		holder.entryDate.text = GlobalFunck().creationDate(context)
 
 		holder.editPen.setOnClickListener {
@@ -76,9 +76,9 @@ class ClientlistAdapter(
 
 //		fill the views from dialog
 		val globalFunck=GlobalFunck()
-		clientName?.setText(globalFunck.customerName(context))
-		clientPhoneNo?.setText(globalFunck.phoneNo(context))
-
+		clientName?.setText(client.name)
+		clientPhoneNo?.setText(client.phone)
+//		clientEmail?.setText(client.email)
 //		set the cancel button and save button
 
 		backBtn?.setOnClickListener{

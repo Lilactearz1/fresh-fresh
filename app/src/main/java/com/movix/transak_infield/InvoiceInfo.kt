@@ -26,11 +26,13 @@ private lateinit var invoiceNumber: EditText
 private lateinit var creationDate: TextView
 private lateinit var spinnerTerms: Spinner
 private lateinit var invoiceTitle: EditText
-private lateinit var imageCalendar:TextView
+private lateinit var imageCalendar: TextView
+private lateinit var db: DatabaseHandler
+
 private var estimateId: Int = 0
 
 
-  var dueTerms: Int = 14
+var dueTerms: Int = 14
 
 class InvoiceInfo : Fragment() {
 	// ViewBinding to access layout views
@@ -54,6 +56,8 @@ class InvoiceInfo : Fragment() {
 
 		estimateId = arguments?.getInt("estimate_id") ?: 0
 
+		db = DatabaseHandler(requireContext())
+
 		if (estimateId == 0) {
 			Toast.makeText(requireContext(), "⚠️ Missing estimate ID", Toast.LENGTH_SHORT).show()
 		}
@@ -64,59 +68,66 @@ class InvoiceInfo : Fragment() {
 		creationDate = binding.pickcreationDate
 		spinnerTerms = view.findViewById(add_spinnerterms)
 		invoiceTitle = binding.addEdtInvoiceTitle
-		imageCalendar=binding.imageCalendar
+		imageCalendar = binding.imageCalendar
 
 
-//		if (estimateId != 0){ updateEstimateDisplay(requireContext())}
+		if (estimateId != 0){ updateEstimateDisplay(requireContext())}
 
 		//handle the key enter and back issue for crush behavior on enter or back pressed
 		GlobalFunck().setUpEnterKeyNavigation(invoiceNumber, invoiceTitle)
 
 		// Handle DatePicker click to show a date picker dialog
-	 	creationDate.setOnClickListener {
-			invoiceNumber.imeOptions=EditorInfo.IME_ACTION_DONE
-			invoiceTitle.imeOptions=EditorInfo.IME_ACTION_DONE
+		creationDate.setOnClickListener {
+			invoiceNumber.imeOptions = EditorInfo.IME_ACTION_DONE
+			invoiceTitle.imeOptions = EditorInfo.IME_ACTION_DONE
 			invoiceNumber.clearFocus()
-		try {
+			// set text for invoicenumber
 
-			GlobalFunck().showDatePickerDialog(requireContext()) { pickedDate ->
-				selectedCreationDate= pickedDate
-
-				println("printlnDate received: $selectedCreationDate")
-
-				creationDate.text = "$selectedCreationDate"
-				// You can store or display dateUp as needed
+			db.viewEstimateInfo().forEach { it ->
+				invoiceNumber.setText("${it.estimateId}")
 			}
-		}catch (e:IOException){
-			e.printStackTrace()
-		}
+
+			try {
+
+				GlobalFunck().showDatePickerDialog(requireContext()) { pickedDate ->
+					selectedCreationDate = pickedDate
+
+					println("printlnDate received: $selectedCreationDate")
+
+					creationDate.text = "$selectedCreationDate"
+					// You can store or display dateUp as needed
+				}
+			} catch (e: IOException) {
+				e.printStackTrace()
+			}
 		}
 
-		imageCalendar .setOnClickListener{view->
-		  creationDate.performClick()
+		imageCalendar.setOnClickListener { view ->
+			creationDate.performClick()
 		}
 		// Setup spinner to select payment/due terms
-		val creationSpinner = GlobalFunck().spinner(requireContext(), spinnerTerms) { selectedItems ->
+		val creationSpinner =
+			GlobalFunck().spinner(requireContext(), spinnerTerms) { selectedItems ->
 
-			if (selectedItems.isNotEmpty()){
-				for (item in selectedItems) {
+				if (selectedItems.isNotEmpty()) {
+					for (item in selectedItems) {
 
-				dueTerms = GlobalFunck().selectionterms(item.code)
+						dueTerms = GlobalFunck().selectionterms(item.code)
 
-					// You can now use dueTerms when saving to DB
-				}
-			}else{
-				for (item in selectedItems){
+						// You can now use dueTerms when saving to DB
+					}
+				} else {
+					for (item in selectedItems) {
 
-					dueTerms=GlobalFunck().selectionterms(item.code)
+						dueTerms = GlobalFunck().selectionterms(item.code)
+
+					}
+
 
 				}
 
 
 			}
-
-
-		}
 
 		// Handle Back button functionality to pop the fragment
 		val backBtn = view.findViewById<RelativeLayout>(back)
@@ -132,77 +143,74 @@ class InvoiceInfo : Fragment() {
 
 			try {
 
-			var title = invoiceTitle.text
+				val title = invoiceTitle.text.toString().trim()
 				invoiceNumber.inputType = InputType.TYPE_NULL // Disable keyboard
-				invoiceTitle.inputType=InputType.TYPE_NULL
+//				invoiceTitle.inputType=InputType.TYPE_NULL
 
-			// If title and terms were filled, use selected values
-			if (title.isNotEmpty() && creationSpinner.toString().isNotBlank()) {
+				// If title and terms were filled, use selected values
+				if (title.isNotEmpty() && creationSpinner.toString().isNotBlank()) {
 
-				val pickedDate = selectedCreationDate ?: LocalDate.now()
-				val dueDate = GlobalFunck().calculateDueDate(pickedDate, dueTerms)
+					val pickedDate = selectedCreationDate ?: LocalDate.now()
+					val dueDate = GlobalFunck().calculateDueDate(pickedDate, dueTerms)
 
-				// Save to DB here
-				val db = DatabaseHandler(requireContext())
-				val customerId=GlobalFunck().customerId(requireContext())
+					// Save to DB here
+					val db = DatabaseHandler(requireContext())
+//				val customerId=GlobalFunck().customerId(requireContext())
 
-				val estimateInfo = Estimateinfo(titleINV = invoiceTitle.text.toString(),
-					creationDate = pickedDate.toString(), dueDate = dueDate.toString()
-				)
-
-				if (estimateId != 0) {
-					db.updateEstimateInfo(
-					estimateinfo = estimateInfo
+					val estimateInfo = Estimateinfo(
+						titleINV = title,
+						creationDate = pickedDate.toString(), dueDate = dueDate.toString()
 					)
 
-					Toast.makeText(requireContext(), "Estimate updated successfully", Toast.LENGTH_SHORT).show()
+					if (estimateId != 0) {
+						val updatedEstimate = estimateInfo.copy(estimateId = estimateId)
+						val rows = db.updateEstimateInfo(updatedEstimate)
+
+						if (rows > 0) {
+							Toast.makeText(requireContext(), "Estimate updated successfully", Toast.LENGTH_SHORT).show()
+						} else {
+							Toast.makeText(requireContext(), "No changes detected or update failed", Toast.LENGTH_SHORT).show()
+						}
+					}
+
+
 				} else {
-					val newId = db.addEstimateInfo(estimateInfo)
-					EstimateSession.saveSession(requireContext(), newId.toInt())
-					Toast.makeText(requireContext(), "New estimate created", Toast.LENGTH_SHORT).show()
+					invoiceNumber.inputType = InputType.TYPE_NULL // Disable keyboard
+//				invoiceTitle.inputType=InputType.TYPE_NULL
+					// Use default values if title or terms are missing
+					val now = LocalDate.now()
+					val dueDate = LocalDate.of(
+						now.year, now.month, now.dayOfMonth
+					).plusDays(14)
+
+					val defaultNumbering = "INFIELDER CLIENT"
+
+
+					val db = DatabaseHandler(requireContext())
+					val customerId = GlobalFunck().customerId(requireContext())
+
+					// Insert estimate info into database
+					db.updateEstimateInfo(
+						estimateinfo = Estimateinfo(
+							0, defaultNumbering, "$now", dueDate.toString(), customerId
+						)
+					)
 				}
 
-
-				Toast.makeText(context,"Activity is done",Toast.LENGTH_LONG).show()
-				invoiceTitle.text.clear()
-
-
-			} else {
-				invoiceNumber.inputType = InputType.TYPE_NULL // Disable keyboard
-				invoiceTitle.inputType=InputType.TYPE_NULL
-				// Use default values if title or terms are missing
-				val now = LocalDate.now()
-				val dueDate = LocalDate.of(
-					now.year, now.month, now.dayOfMonth).plusDays(14)
-
-				val defaultNumbering = "INFIELDER CLIENT OF DATE $now"
-
-				val db = DatabaseHandler(requireContext())
-				val customerId = GlobalFunck().customerId(requireContext())
-
-				// Insert estimate info into database
-				db.addEstimateInfo(
-					estimateinfo = Estimateinfo(
-						0, defaultNumbering, "$now", dueDate.toString(), customerId
-					)
-				)
-			}
-
-			requireActivity().supportFragmentManager.popBackStack()
-			}catch (e:IOException){
+				requireActivity().supportFragmentManager.popBackStack()
+			} catch (e: IOException) {
 				e.printStackTrace()
 			}
 		}
 	}
+
 	fun updateEstimateDisplay(context: Context) {
 
-		val db: ArrayList<Estimateinfo> =DatabaseHandler(context).viewEstimateInfo()
+		val db: ArrayList<Estimateinfo> = DatabaseHandler(context).viewEstimateInfo()
 
-		for (it in db){
+		for (it in db) {
 			creationDate.setText(it.creationDate)
-			invoiceTitle.setText(it.titleINV)
 
-			it.status.name
 		}
 	}
 

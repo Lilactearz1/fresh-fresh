@@ -16,9 +16,9 @@ import java.io.File
 
 object PdfUtils {
 
-	fun generateEstimatePdf(context: Context): File? {
+	fun generateEstimatePdf(context: Context,estimateId:Int,customerId:Int): File? {
 		return try {
-			MainActivity.estimatePdf(context)
+			MainActivity.estimatePdf(context,estimateId,customerId)
 		} catch (e: Exception) {
 			e.printStackTrace()
 			null
