@@ -1,16 +1,38 @@
 package com.movix.transak_infield
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.movix.transak_infield.MainActivity.Companion.EXTRA_CUSTOMER_ID
+import com.movix.transak_infield.MainActivity.Companion.EXTRA_ESTIMATE_ID
+import com.movix.transak_infield.MainActivity.Companion.estimatePdf
 import com.movix.transak_infield.MainActivity.Companion.handleBusinessImage
 import com.movix.transak_infield.MainActivity.Companion.handleClientInfoClick
 import com.movix.transak_infield.MainActivity.Companion.handleInvoiceButtonClick
@@ -33,12 +55,26 @@ class CustomerItems : AppCompatActivity() {
 	private var estimateId = -1
 	private var customerId = -1
 	private lateinit var items:ArrayList<ModelClass>
+	private lateinit var refreshLauncher: ActivityResultLauncher<Intent>
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		enableEdgeToEdge()
 		_binding = ActivityMainBinding.inflate(layoutInflater)
 		setContentView(binding.root)
+
+		refreshLauncher = registerForActivityResult(
+			ActivityResultContracts.StartActivityForResult()
+		) { result ->
+			if (result.resultCode == Activity.RESULT_OK) {
+				// ✅ Refresh RecyclerView
+				setupRecyclerView()
+			}
+		}
+
+
+		val rvl_bussinessInfo = binding.relativelayoutBussinessInfo
+		val rvl_clientInfo = binding.relativeLayoutClentInfo
 
 		val db = DatabaseHandler(applicationContext)
 
@@ -75,6 +111,129 @@ class CustomerItems : AppCompatActivity() {
 		binding.additemscardView.setOnClickListener {
 			handleItemsCardView(this,intent)
 		}
+
+		binding.addbuttonImage.setOnClickListener {
+			handleItemsCardView(this,intent)
+		}
+
+		rvl_bussinessInfo?.setOnClickListener {
+			binding.businessimage?.performClick()
+		}
+
+		rvl_clientInfo?.setOnClickListener {
+			binding.btnclientInfo.performClick()
+		}
+
+
+		val bottomNav = binding.bottomnav
+		bottomNav?.setContent {
+			MaterialTheme {
+				BottomBar()
+			}
+		}
+
+	}
+
+
+// the jetpack bottom appBar
+
+	@Composable
+	private fun BottomBar() {
+		BottomAppBar(
+			containerColor = Color(0, 142, 204), tonalElevation = 4.dp
+		) {
+			Row(
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(horizontal = 12.dp),
+				horizontalArrangement = Arrangement.SpaceEvenly,
+				verticalAlignment = Alignment.CenterVertically
+			) {
+				// PREVIEW BUTTON
+				TextButton(
+					onClick = {
+						lifecycleScope.launch {
+							try {
+								withContext(Dispatchers.IO) {
+									val estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
+									val customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
+									val pdfFile = estimatePdf(this@CustomerItems, estimateId, customerId)
+
+									withContext(Dispatchers.Main) {
+										PdfUtils.previewPdfFormat(this@CustomerItems, pdfFile)
+									}
+								}
+							} catch (e: Exception) {
+								e.printStackTrace()
+								withContext(Dispatchers.Main) {
+									Toast.makeText(
+										this@CustomerItems,
+										"Failed to open PDF: ${e.message}",
+										Toast.LENGTH_SHORT
+									).show()
+								}
+							}
+						}
+					},
+					shape = RoundedCornerShape(50),
+					colors = ButtonDefaults.textButtonColors(
+						containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
+						contentColor = MaterialTheme.colorScheme.onPrimary
+					)
+				) {
+					Text(text = "Preview", modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+				}
+
+
+				// Save BUTTON
+				TextButton(
+					onClick = {
+						lifecycleScope.launch(Dispatchers.IO) {
+							try {
+								val estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
+								val customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
+
+								val newIntent = Intent(this@CustomerItems, Save_previewActivity::class.java).apply {
+									putExtra(EXTRA_ESTIMATE_ID, estimateId)
+									putExtra(EXTRA_CUSTOMER_ID, customerId)
+								}
+
+								withContext(Dispatchers.Main) {
+									startActivity(newIntent)
+									Toast.makeText(
+										this@CustomerItems,
+										"Opening save preview...",
+										Toast.LENGTH_LONG
+									).show()
+								}
+							} catch (e: Exception) {
+								e.printStackTrace()
+								withContext(Dispatchers.Main) {
+									Toast.makeText(
+										this@CustomerItems,
+										"Failed to open Save Preview: ${e.message}",
+										Toast.LENGTH_SHORT
+									).show()
+								}
+							}
+						}
+					},
+					shape = RoundedCornerShape(50),
+					colors = ButtonDefaults.textButtonColors(
+						containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
+						contentColor = MaterialTheme.colorScheme.onPrimary
+					)
+				) {
+					Text(text = "Save", modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+				}
+
+			}
+		}
+	}
+	override fun onResume() {
+		super.onResume()
+
+		loadItems()
 
 	}
 
@@ -144,4 +303,24 @@ class CustomerItems : AppCompatActivity() {
 	//	binding.taxText.text = "Tax: ${String.format("%.2f", tax)}"
 		binding.esumTotal.text = "${String.format("%.2f", grandTotal)}"
 	}
+
+	fun refreshItems() {
+		val db = DatabaseHandler(this)
+		val updatedItems = db.getItemsForEstimate(estimateId, customerId)
+
+		items.clear()
+		items.addAll(updatedItems)
+		itemAdapter.notifyDataSetChanged()
+		refreshTotals()
+
+		if (updatedItems.isNotEmpty()) {
+			binding.recycleItem.visibility = View.VISIBLE
+			binding.tvItems.text = "Items No: [${updatedItems.size}]"
+		} else {
+			binding.recycleItem.visibility = View.GONE
+			binding.tvItems.text = "No items found"
+		}
+
+	}
+
 }

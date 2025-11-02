@@ -86,7 +86,7 @@
 			val sumTax = summationOfTax(context,estimateId).toFloat()
 			var summedTotal = 0.00f
 			var subtotalAmount = getSubTotal(context,estimateId)
-			println("this is subtotal $subtotalAmount")
+
 			subtotalAmount += sumTax
 	//            add the collected tax total to the initial total
 			summedTotal += subtotalAmount
@@ -132,11 +132,11 @@
 			val dbEstimateinfo = DatabaseHandler(context).viewEstimateInfo()
 			var int: Int = 0
 
-			dbEstimateinfo.forEachIndexed { index, title ->
+			dbEstimateinfo.forEachIndexed { index, _ ->
 
-				int = title.estimateId
+			int=index
 			}
-			return int.plus(1)
+			return int
 
 		}
 
@@ -198,7 +198,9 @@
 
 			datePickerDialog.setOnDateSetListener { view, year, month, dayOfMonth ->
 				dateReturn = LocalDate.of(year, month + 1, dayOfMonth)
+
 				println("may be this $dateReturn")
+
 				val capturedDate: LocalDate = LocalDate.from(dateReturn)
 	// You can push them direct to where you want to use it or
 	//			to use them elsewhere in the app like this way
@@ -298,40 +300,7 @@
 
 		}
 
-//		object EstimateSession {
-//			private const val PREF_NAME = "EstimateSessionPrefs"
-//			private const val KEY_CURRENT_ESTIMATE_ID = "current_estimate_id"
 //
-//			var currentEstimate: Int? = null
-//
-//			fun saveSession(context: Context, estimateId: Int) {
-//				val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-//				prefs.edit().putInt(KEY_CURRENT_ESTIMATE_ID, estimateId).apply()
-//				currentEstimate = estimateId
-//			}
-//
-//			fun loadSession(context: Context) {
-//				val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-//				val id = prefs.getInt(KEY_CURRENT_ESTIMATE_ID, -1)
-//				currentEstimate = if (id != -1) id else null
-//			}
-//
-//			fun clearSession(context: Context) {
-//				val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-//				prefs.edit().remove(KEY_CURRENT_ESTIMATE_ID).apply()
-//				currentEstimate = null
-//			}
-//
-//			fun endCurrentEstimate(context: Context) {
-//				EstimateSession.currentEstimate?.let { estimateId ->
-//					val db = DatabaseHandler(context)
-//					db.updateEstimateStatus(estimateId, EstimateStatus.COMPLETED) // Example status
-//					EstimateSession.clearSession(context)
-//				}
-//			}
-//
-//		}
-
 
 	}
 

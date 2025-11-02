@@ -60,21 +60,21 @@ object EstimateSession {
 		val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 		prefs.edit().putInt(KEY_ESTIMATE_ID, estimateId).apply()
 		currentEstimate = estimateId
-		Log.d("EstimateDebug", "Session saved: ID = $estimateId")
+
 	}
 
 	fun loadSession(context: Context) {
 		val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 		val id = prefs.getInt(KEY_ESTIMATE_ID, 0) // ✅ default is 0, not -1
 		currentEstimate = if (id != 0) id else null
-		Log.d("EstimateDebug", "Session loaded from prefs: ID = $id")
+
 	}
 
 	fun getSession(context: Context): Int {
 		if (currentEstimate == null) {
 			loadSession(context)
 		}
-		Log.d("EstimateDebug", "Session at app start: ${currentEstimate ?: 0}")
+
 		return currentEstimate ?: 0
 	}
 
@@ -82,7 +82,7 @@ object EstimateSession {
 		val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 		prefs.edit().remove(KEY_ESTIMATE_ID).apply()
 		currentEstimate = null
-		Log.d("EstimateDebug", "Session cleared")
+
 	}
 }
 

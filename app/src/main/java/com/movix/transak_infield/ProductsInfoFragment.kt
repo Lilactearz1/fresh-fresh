@@ -1,5 +1,6 @@
 package com.movix.transak_infield
 
+import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -15,6 +16,8 @@ import androidx.savedstate.SavedState
 import com.google.android.material.navigation.NavigationBarItemView
 import com.google.android.material.navigation.NavigationBarMenu
 import com.google.android.material.navigation.NavigationBarView
+import com.movix.transak_infield.MainActivity.Companion.EXTRA_CUSTOMER_ID
+import com.movix.transak_infield.MainActivity.Companion.EXTRA_ESTIMATE_ID
 import com.movix.transak_infield.databinding.FragmentProductsInfoBinding
 import kotlin.properties.Delegates
 
@@ -38,7 +41,6 @@ class ProductsInfoFragment : Fragment() {
 	private var customerId: Int = 0
 
 
-
 //   private lateinit var databaseHandler:DatabaseHandler
 
 	override fun onCreateView(
@@ -51,9 +53,9 @@ class ProductsInfoFragment : Fragment() {
 	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
 
+		estimateId = arguments?.getInt(EXTRA_ESTIMATE_ID, -1) ?: -1
+		customerId = arguments?.getInt(EXTRA_CUSTOMER_ID, 0) ?: 0
 
-		  estimateId = arguments?.getInt("estimate_id", -1) ?: -1
-		  customerId = arguments?.getInt("customerId", 0) ?: 0
 
 
 
@@ -63,7 +65,6 @@ class ProductsInfoFragment : Fragment() {
 
 		Log.d("DebugCheck", "estimateId passed to fragment = $estimateId")
 		Log.d("DebugCheck", "customerId passed to fragment = $customerId")
-
 
 
 		// Initialize database
@@ -89,13 +90,10 @@ class ProductsInfoFragment : Fragment() {
 
 
 
-
-
 		backImagebtn.setOnClickListener {
-			requireActivity().supportFragmentManager.popBackStack()
-
-			Toast.makeText(requireContext(), "clicked", Toast.LENGTH_SHORT).show()
-
+			// Notify parent activity to return RESULT_OK
+			(requireActivity() as? CustomerItems)?.refreshItems()
+			parentFragmentManager.popBackStack()
 		}
 
 
@@ -177,18 +175,15 @@ class ProductsInfoFragment : Fragment() {
 //    create a model instance to use in the database
 		val databaseHandler: DatabaseHandler = DatabaseHandler(requireContext())
 
-		Log.d("DebugCheck", "Trying to save with customerId=$customerId, estimateId=$estimateId")
-		Log.d("DebugCheck", "Customer exists: ${databaseHandler.doesCustomerExist(customerId)}")
-		Log.d("DebugCheck", "Estimate exists: ${databaseHandler.doesEstimateExist(estimateId)}")
-
 
 		val products = ModelClass(
-			0, productQuantity,
+			0,
+			productQuantity,
 			productDescription,
 			productPrice,
 			productAmount,
 			productTax,
-			customerId =customerId,         // ← passed from arguments
+			customerId = customerId,         // ← passed from arguments
 			estimateId = estimateId         // ← passed from arguments
 		)
 

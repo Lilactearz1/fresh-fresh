@@ -122,6 +122,7 @@ open class MainActivity : AppCompatActivity() {
 		binding.businessimage?.setOnClickListener {
 			handleBusinessImage(this)
 		}
+
 		binding.additemscardView.setOnClickListener {
 			handleItemsCardView(this,intent)
 		}
@@ -145,9 +146,7 @@ open class MainActivity : AppCompatActivity() {
 		}
 
 
-		val addBtn_image = binding.addbuttonImage
-
-		addBtn_image.setOnClickListener {
+	binding.addbuttonImage.setOnClickListener {
 			handleItemsCardView(this,intent)
 		}
 

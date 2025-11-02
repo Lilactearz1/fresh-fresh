@@ -17,7 +17,7 @@ class DatabaseHandler(context: Context) :
 
 
 	companion object {
-		private const val DATABASE_VERSION = 39
+		private const val DATABASE_VERSION = 2
 		private const val DATABASE_NAME = "Transak_infield.db"
 
 		private const val INVOICE_TABLE = "TableInvoice"
@@ -574,7 +574,7 @@ ON e.$CUSTOMER_ID= c.$CUSTOMER_ID """.trimIndent()
 
 		if (newId != -1L) {
 			EstimateSession.saveSession(context, newId.toInt())
-			Log.d("EstimateDebug", "New estimate created with ID = $newId and default title = INFIELDER")
+
 		}
 		return newId
 	}

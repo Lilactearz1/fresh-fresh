@@ -39,7 +39,7 @@ class EstimateAdapter(
 		val safeClient =GlobalFunck().safeClientName(context)
 
 		holder.customerName.text = client?.name ?: safeClient
-		holder.estimateTitle.text = estimate.titleINV ?: "INFIELDER ${estimate.creationDate}"
+		holder.estimateTitle.text = estimate.titleINV ?: "INFIELDER ${GlobalFunck().id(context)}"
 		holder.estimateDate.text = "Created: ${estimate.creationDate}"
 		holder.estimateDueDate.text = "Due: ${estimate.dueDate}"
 
