@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Binder
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
@@ -14,11 +13,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.button.MaterialButton
-import com.movix.transak_infield.MainActivity
 import com.movix.transak_infield.MainActivity.Companion.EXTRA_CUSTOMER_ID
 import com.movix.transak_infield.MainActivity.Companion.EXTRA_ESTIMATE_ID
-import com.movix.transak_infield.PdfUtils
-
 
 
 class Save_previewActivity : AppCompatActivity() {

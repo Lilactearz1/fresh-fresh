@@ -11,28 +11,39 @@ import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.view.View
-import android.widget.Button
 import android.widget.EditText
 import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.*
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.itextpdf.io.font.FontProgramFactory
 import com.itextpdf.io.font.PdfEncodings
 import com.itextpdf.io.image.ImageDataFactory
 import com.itextpdf.io.source.ByteArrayOutputStream
 import com.itextpdf.kernel.colors.ColorConstants
 import com.itextpdf.kernel.colors.DeviceRgb
+import com.itextpdf.kernel.events.PdfDocumentEvent
 import com.itextpdf.kernel.font.PdfFont
 import com.itextpdf.kernel.font.PdfFontFactory
 import com.itextpdf.kernel.font.PdfFontFactory.EmbeddingStrategy
@@ -50,30 +61,15 @@ import com.itextpdf.layout.element.Paragraph
 import com.itextpdf.layout.element.Table
 import com.itextpdf.layout.properties.TextAlignment
 import com.itextpdf.layout.properties.UnitValue
-
 import com.movix.transak_infield.databinding.ActivityMainBinding
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
-
-import androidx.compose.material3.*
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.RecyclerView
-import com.itextpdf.kernel.events.PdfDocumentEvent
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import kotlin.properties.Delegates
 
 //import the R .id r. layout ,drawables
 

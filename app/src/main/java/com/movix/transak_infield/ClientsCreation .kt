@@ -1,13 +1,13 @@
 package com.movix.transak_infield
 
 import android.content.Context
-import android.util.Log
 import com.itextpdf.kernel.colors.DeviceRgb
-import com.itextpdf.kernel.events.*
-import com.itextpdf.layout.*
-import com.itextpdf.layout.element.*
+import com.itextpdf.kernel.events.Event
+import com.itextpdf.kernel.events.IEventHandler
+import com.itextpdf.kernel.events.PdfDocumentEvent
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas
-
+import com.itextpdf.layout.Canvas
+import com.itextpdf.layout.element.Paragraph
 import com.itextpdf.layout.properties.TextAlignment
 
 

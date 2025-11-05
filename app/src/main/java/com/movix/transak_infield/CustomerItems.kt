@@ -5,11 +5,14 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.EditText
+import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -40,8 +43,6 @@ import com.movix.transak_infield.MainActivity.Companion.handleItemsCardView
 import com.movix.transak_infield.MainActivity.Companion.handleTemplateButtonClick
 import com.movix.transak_infield.databinding.ActivityMainBinding
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -320,6 +321,143 @@ class CustomerItems : AppCompatActivity() {
 			binding.recycleItem.visibility = View.GONE
 			binding.tvItems.text = "No items found"
 		}
+
+	}
+
+	// method to update the inputs in the dialog
+
+	fun updateDialog(modelClass: ModelClass) {
+		// Create the Dialog
+		val dialog = AlertDialog.Builder(this).setTitle("update items info")
+			.setView(R.layout.edititem_dialog)
+			.setCancelable(false)   //will not allow user to cancel after
+			.create()
+//        now show the dialog
+		dialog.show()
+
+
+		// Find views from dialog layout
+		val nameEditText = dialog.findViewById<EditText>(R.id.edit_item_namedialog)
+		val quantityEditText = dialog.findViewById<EditText>(R.id.edit_item_quantity)
+		val priceEditText = dialog.findViewById<EditText>(R.id.edit_item_pricedialog)
+		val taxRateEditText = dialog.findViewById<EditText>(R.id.edit_item_taxRatedialog)
+		val saveButton = dialog.findViewById<RelativeLayout>(R.id.SaveclientDetails)
+		val cancelButton = dialog.findViewById<RelativeLayout>(R.id.backLayout)
+		val amountScreen = dialog.findViewById<TextView>(R.id.tv_amount_display_value)
+
+		// Fill views with existing data
+		nameEditText?.setText(modelClass.itemName)
+		quantityEditText?.setText(modelClass.quantity.toString())
+		priceEditText?.setText(modelClass.price.toString())
+		taxRateEditText?.setText(modelClass.tax.toString())
+
+		fun updateItems(price: Double, quantity: Int) {
+			val total = price * quantity
+//			display the live amount in the text view
+			amountScreen?.text = "Ksh: $total"
+		}
+
+		// add tecxt watcher functions
+		fun textChangerListener() {
+			val price = priceEditText?.text.toString().toDoubleOrNull()
+			val quantity = quantityEditText?.text.toString().toIntOrNull()
+
+			if (price != null && quantity != null) {
+				updateItems(price, quantity)
+			}
+		}
+		textChangerListener()
+		//cancellation button
+		cancelButton?.setOnClickListener {
+			dialog.dismiss()
+		}
+
+
+		// Save/update action
+		saveButton?.setOnClickListener {
+
+			val updatedName = nameEditText?.text.toString()
+			val updatedQuantity = quantityEditText?.text.toString().toIntOrNull()
+			val updatedPrice = priceEditText?.text.toString().toDoubleOrNull()
+			val updatedTax = taxRateEditText?.text.toString().toFloatOrNull()
+
+			if (updatedName.isBlank() || updatedQuantity == null || updatedPrice == null || updatedTax == null) {
+				Toast.makeText(this, "All fields must be valid", Toast.LENGTH_SHORT).show()
+				return@setOnClickListener
+			}
+
+			val updatedModel = ModelClass(
+				id = modelClass.id,
+				quantity = updatedQuantity,
+				itemName = updatedName,
+				price = updatedPrice,
+				total = (updatedQuantity * updatedPrice).toFloat(),
+				tax = updatedTax,
+				customerId = modelClass.customerId,
+				estimateId = modelClass.estimateId
+			)
+
+
+			val db = DatabaseHandler(this)
+			// define this method in your DB handler (updateRecords)
+			val status = db.updateRecords(updatedModel)
+
+			if (status > -1) {
+				Toast.makeText(this, "success", Toast.LENGTH_SHORT).show()
+				dialog.dismiss()
+				// Optional: refresh RecyclerView
+				setupRecyclerView()
+			} else {
+				Toast.makeText(this, "Failed", Toast.LENGTH_SHORT).show()
+			}
+		}
+
+		dialog.show()
+	}
+
+	fun deleteItems(modellist: ModelClass) {
+
+		val builder = AlertDialog.Builder(this)
+		builder.setTitle(R.string.delete)
+//                set message for the alert dialog box
+		builder.setMessage("Delete ${modellist.itemName}")
+		builder.setIcon(R.drawable.baseline_crisis_alert_24)
+//        perform the positive action
+		builder.setPositiveButton("Yes") { dialogInterface, which ->
+//                creating an instance of the database classs
+			val databaseseHandler: DatabaseHandler = DatabaseHandler(this)
+//                 call the delete method of the database
+			val status = databaseseHandler.deleteRecords(
+				ModelClass(
+					modellist.id,
+					modellist.quantity,
+					"",
+					modellist.price,
+					modellist.total,
+					modellist.tax,
+					modellist.customerId,
+					modellist.estimateId,
+
+					)
+			)
+			if (status > -1) {
+				Toast.makeText(this, "Deleted Successfully", Toast.LENGTH_LONG).show()
+
+//           call the method listing items into the rectcleview so that the list is updated after the delete
+				setupRecyclerView()
+			}
+			dialogInterface.dismiss()// the dialog to be dismissed
+		}
+//        performing the negative action
+		builder.setNegativeButton("No") { dialogInterface, which ->
+			dialogInterface.dismiss()
+		}
+//        create the alert dialog
+		val alertDialog: AlertDialog = builder.create()
+//        set other dialog properties
+		alertDialog.setCancelable(false)// will not allow user to cancel after deletetion
+		alertDialog.show() // show the dialog to the UI
+
 
 	}
 

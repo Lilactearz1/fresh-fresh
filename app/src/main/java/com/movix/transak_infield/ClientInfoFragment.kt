@@ -1,20 +1,14 @@
 package com.movix.transak_infield
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.Toast
-import androidx.lifecycle.lifecycleScope
-
+import androidx.fragment.app.Fragment
 import com.movix.transak_infield.databinding.FragmentClientInfoBinding
-import java.lang.Exception
-import com.movix.transak_infield.R.id
-import kotlinx.coroutines.async
 
 
 /**

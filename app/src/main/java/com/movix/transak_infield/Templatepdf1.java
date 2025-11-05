@@ -1,6 +1,5 @@
 package com.movix.transak_infield;
 
-import android.app.Application;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -8,11 +7,8 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.pdf.PdfDocument;
-import com.itextpdf.layout.element.Image;
-
 import android.os.Build;
 import android.os.Environment;
-import android.os.ParcelFileDescriptor;
 import android.widget.Toast;
 
 import androidx.core.content.res.ResourcesCompat;
@@ -23,6 +19,7 @@ import com.google.zxing.common.BitMatrix;
 import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.io.source.ByteArrayOutputStream;
+import com.itextpdf.layout.element.Image;
 
 import java.io.File;
 import java.nio.file.Files;

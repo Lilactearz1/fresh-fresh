@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.text.InputType
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,11 +14,13 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import com.movix.transak_infield.R.id.*
+import androidx.fragment.app.Fragment
+import com.movix.transak_infield.R.id.Save
+import com.movix.transak_infield.R.id.add_spinnerterms
+import com.movix.transak_infield.R.id.back
 import com.movix.transak_infield.databinding.FragmentInvoiceInfoBinding
 import java.io.IOException
 import java.time.LocalDate
-import kotlin.properties.Delegates
 
 // UI component declarations (some are lateinit, others use Delegates)
 private lateinit var invoiceNumber: EditText

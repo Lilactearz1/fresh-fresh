@@ -1,10 +1,7 @@
 package com.movix.transak_infield
 
-import android.app.Activity
-import android.content.Context
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,9 +9,7 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
-import androidx.savedstate.SavedState
-import com.google.android.material.navigation.NavigationBarItemView
-import com.google.android.material.navigation.NavigationBarMenu
+import androidx.fragment.app.Fragment
 import com.google.android.material.navigation.NavigationBarView
 import com.movix.transak_infield.MainActivity.Companion.EXTRA_CUSTOMER_ID
 import com.movix.transak_infield.MainActivity.Companion.EXTRA_ESTIMATE_ID

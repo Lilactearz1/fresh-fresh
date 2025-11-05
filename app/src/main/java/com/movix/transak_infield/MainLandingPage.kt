@@ -1,23 +1,20 @@
 package com.movix.transak_infield
 
 import android.content.Intent
-import android.graphics.Canvas
-import android.graphics.PorterDuff
 import android.os.Bundle
-import android.util.Log
+import android.view.View
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
-import com.itextpdf.kernel.colors.ColorConstants
 import com.movix.transak_infield.databinding.ActivityArchivesBinding
+import com.movix.transak_infield.invoicing.MainInvoicing
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -27,6 +24,7 @@ class MainLandingPage : AppCompatActivity(), EstimateAdapter.OnEstimateClickList
 	private lateinit var allEstimates: TextView
 	private lateinit var recyclerView: RecyclerView
 	private lateinit var spinner: Spinner
+	private lateinit var nav_InvoiceACtivity:View
 	private lateinit var floatingPlus: FloatingActionButton
 	private lateinit var binding: ActivityArchivesBinding
 	private lateinit var db: DatabaseHandler
@@ -44,13 +42,19 @@ class MainLandingPage : AppCompatActivity(), EstimateAdapter.OnEstimateClickList
 		allEstimates = binding.allestmimate
 		spinner = findViewById(R.id.spinnerMark)
 		floatingPlus = binding.floatingplus
+		nav_InvoiceACtivity = findViewById(R.id.nav_Invoice)
+
 		db = DatabaseHandler(applicationContext)
+		nav_InvoiceACtivity.setOnClickListener{
+
+			val intent = Intent(applicationContext,MainInvoicing::class.java)
+			intent.putExtra("estimated_id",-1)
+			intent.putExtra("customer_id",-1)
+			startActivity(intent)
+		}
 
 		// Load current session
 		EstimateSession.loadSession(this)
-
-
-
 
 		if (checkActiveEstimate()) return
 

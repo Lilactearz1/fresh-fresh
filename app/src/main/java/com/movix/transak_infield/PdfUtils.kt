@@ -4,14 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.ParcelFileDescriptor
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
-import com.movix.transak_infield.MainActivity
 import java.io.File
 
 object PdfUtils {

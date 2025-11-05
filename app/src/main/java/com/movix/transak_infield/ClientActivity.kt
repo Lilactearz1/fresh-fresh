@@ -1,7 +1,6 @@
 package com.movix.transak_infield
 
 import android.os.Bundle
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import androidx.appcompat.app.AppCompatActivity

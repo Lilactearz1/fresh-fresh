@@ -213,7 +213,7 @@ class DatabaseHandler(context: Context) :
 		var result: Long = -1
 		try {
 			result = db.insert(ESTIMATE_TABLE, null, contentValues)
-			Log.d("DatabaseHandler", "Inserted estimate with ID: $result, values=$contentValues")
+
 		} catch (e: Exception) {
 			Log.e("DatabaseHandler", "Error inserting estimate: ${e.message}")
 		} finally {
@@ -272,7 +272,6 @@ class DatabaseHandler(context: Context) :
 //        inserting rows
 		val insertSuccess = db.insert(INVOICE_TABLE, null, contentValues)
 //        second param2 is a string containing nullColumnHack
-			Log.d("EstimateDebug", "Inserting estimate: customerId=${modelClass.customerId}")
 
 		db.close()  //close the database connection
 
