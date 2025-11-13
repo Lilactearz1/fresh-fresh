@@ -18,19 +18,20 @@ import com.movix.transak_infield.MainActivity.Companion.EXTRA_ESTIMATE_ID
 
 
 class Save_previewActivity : AppCompatActivity() {
-	private lateinit var    _binding:Binder
-	private lateinit var    db:DatabaseHandler
-	private lateinit var    downloadbtn:ImageView
-	private lateinit var    endEstimatebtn:ImageView
-	private lateinit var    print:ImageView
-	private lateinit var    more:ImageView
-	private lateinit var     totalKsh:TextView
-	private lateinit var      dueDate:TextView
-	private lateinit var    name:TextView
-	private lateinit var    share:MaterialButton
-	private lateinit var    checkCompleted:CheckBox
+	private lateinit var _binding: Binder
+	private lateinit var db: DatabaseHandler
+	private lateinit var downloadbtn: ImageView
+	private lateinit var endEstimatebtn: ImageView
+	private lateinit var print: ImageView
+	private lateinit var more: ImageView
+	private lateinit var totalKsh: TextView
+	private lateinit var dueDate: TextView
+	private lateinit var name: TextView
+	private lateinit var share: MaterialButton
+	private lateinit var checkCompleted: CheckBox
 	private var estimateId: Int = -1
 	private var customerId: Int = -1
+	private val stringFormat = "%,.2f"
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -44,23 +45,23 @@ class Save_previewActivity : AppCompatActivity() {
 		}
 
 		downloadbtn = findViewById<ImageView>(R.id.Download1)
-		endEstimatebtn =findViewById<ImageView>(R.id.edit1)
-		print =findViewById<ImageView>(R.id.print1)
-		more =findViewById<ImageView>(R.id.more1)
-		totalKsh =findViewById<TextView>(R.id.totalKsh1)
-		dueDate=findViewById<TextView>(R.id.dueDate1)
-		name=findViewById(R.id.name1)
-		share =findViewById(R.id.sharebtn1)
+		endEstimatebtn = findViewById<ImageView>(R.id.edit1)
+		print = findViewById<ImageView>(R.id.print1)
+		more = findViewById<ImageView>(R.id.more1)
+		totalKsh = findViewById<TextView>(R.id.totalKsh1)
+		dueDate = findViewById<TextView>(R.id.dueDate1)
+		name = findViewById(R.id.name1)
+		share = findViewById(R.id.sharebtn1)
 
 		estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
-		 customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
+		customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
 
 
 
-		downloadbtn.setOnClickListener{view->
+		downloadbtn.setOnClickListener { view ->
 			view.isHovered
-			PdfUtils.generateEstimatePdf(applicationContext,estimateId,customerId)
-			Toast.makeText(applicationContext,"Success...",Toast.LENGTH_LONG).show()
+			PdfUtils.generateEstimatePdf(applicationContext, estimateId, customerId)
+			Toast.makeText(applicationContext, "Success...", Toast.LENGTH_LONG).show()
 			closeCurrentEstimate()
 
 		}
@@ -68,7 +69,7 @@ class Save_previewActivity : AppCompatActivity() {
 		endEstimatebtn.setOnClickListener {
 			db = DatabaseHandler(applicationContext)
 			val currentId = EstimateSession.currentEstimate
-			Log.d("EstimateDebug", "Current Estimate ID = $currentId")
+
 
 			if (currentId != null) {
 				// 1️⃣ Close current estimate
@@ -83,37 +84,40 @@ class Save_previewActivity : AppCompatActivity() {
 				startActivity(intent)
 				finish()
 			} else {
-				Toast.makeText(applicationContext, "No active estimate to end.", Toast.LENGTH_SHORT).show()
+				Toast.makeText(applicationContext, "No active estimate to end.", Toast.LENGTH_SHORT)
+					.show()
 			}
 		}
 
 
-		print .setOnClickListener {view->
-			Toast.makeText(applicationContext,"coming soon...",Toast.LENGTH_SHORT).show() }
-
-		more .setOnClickListener { view->
-			Toast.makeText(applicationContext,"coming soon...",Toast.LENGTH_SHORT).show()
+		print.setOnClickListener { view ->
+			Toast.makeText(applicationContext, "coming soon...", Toast.LENGTH_SHORT).show()
 		}
 
-		totalKsh .text= "Ksh: ${GlobalFunck().summationofTotal(applicationContext,estimateId)}"
+		more.setOnClickListener { view ->
+			Toast.makeText(applicationContext, "coming soon...", Toast.LENGTH_SHORT).show()
+		}
+		val cashFormat =
+			stringFormat.format(GlobalFunck().summationofTotal(applicationContext, estimateId))
 
-		dueDate.text= GlobalFunck().dueDate(applicationContext)
+		totalKsh.text = "Ksh: ${cashFormat}"
 
-		name.text =GlobalFunck().safeClientName(applicationContext)
+		dueDate.text = GlobalFunck().dueDate(applicationContext)
 
-		share .setOnClickListener{
-			val pdFile=PdfUtils.generateEstimatePdf(applicationContext,estimateId,customerId)
-			pdFile.let { it
-				if (it != null){	PdfUtils.sharePdf(this,it)}
+		name.text = GlobalFunck().safeClientName(applicationContext)
+
+		share.setOnClickListener {
+			val pdFile = PdfUtils.generateEstimatePdf(applicationContext, estimateId, customerId)
+			pdFile.let {
+				it
+				if (it != null) {
+					PdfUtils.sharePdf(this, it)
+				}
 			}
 		}
-
-
-
 
 
 	}
-
 
 
 	override fun onPostResume() {
@@ -140,7 +144,7 @@ class Save_previewActivity : AppCompatActivity() {
 		val id = EstimateSession.currentEstimate ?: return
 		db.updateEstimateStatus(id, EstimateStatus.COMPLETED)
 		EstimateSession.clearSession(this)
-		Log.d("EstimateDebug", "Estimate $id marked as COMPLETED and session cleared.")
+
 	}
 
 }

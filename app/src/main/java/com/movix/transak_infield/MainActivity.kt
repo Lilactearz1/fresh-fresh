@@ -83,7 +83,7 @@ open class MainActivity : AppCompatActivity() {
 	private  var itemAdapter: ItemAdapter?= null
 	private  var estimateId = -1
 	private  var customerId = -1
-
+	private  val stringFomat = "%,.2f"
 	private var dueTerms = 0
 
 
@@ -158,7 +158,7 @@ open class MainActivity : AppCompatActivity() {
 		countItems()
 		// function to display totals in the textview
 		fun txtViewTotals() {
-			val stringFomat = "%,.2f"
+
 			val itemSubtal = binding.esumSubtotal
 			val itemsTotal = binding.esumTotal
 			Subtotal = GlobalFunck()
@@ -667,7 +667,7 @@ open class MainActivity : AppCompatActivity() {
 
 				document.add(
 					Paragraph(
-						"BILL TO: \n" + "$clientName"
+						"BILL TO: \n" + "$clientName \n"
 					).setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
 						.setFontSize(12.5f)
 
@@ -1026,8 +1026,10 @@ open class MainActivity : AppCompatActivity() {
 
 		fun updateItems(price: Double, quantity: Int) {
 			val total = price * quantity
+			val totalFormatText =stringFomat.format(total)
+
 //			display the live amount in the text view
-			amountScreen?.text = "Ksh: $total"
+			amountScreen?.text = "Ksh: $totalFormatText"
 		}
 
 		// add tecxt watcher functions

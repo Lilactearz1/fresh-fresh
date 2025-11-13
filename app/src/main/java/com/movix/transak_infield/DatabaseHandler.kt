@@ -215,7 +215,7 @@ class DatabaseHandler(context: Context) :
 			result = db.insert(ESTIMATE_TABLE, null, contentValues)
 
 		} catch (e: Exception) {
-			Log.e("DatabaseHandler", "Error inserting estimate: ${e.message}")
+
 		} finally {
 			db.close()
 		}
@@ -336,7 +336,7 @@ class DatabaseHandler(context: Context) :
 
 			} while (cursor.moveToNext())
 		}
-		Log.d("DatabaseHandler", "Fetched ${productList.size} items from DB")
+
 		cursor.close()
 		db.close()
 		return productList
@@ -589,7 +589,6 @@ ON e.$CUSTOMER_ID= c.$CUSTOMER_ID """.trimIndent()
 			if (cursor != null && cursor.moveToFirst()) {
 				// Verify all expected columns exist
 				val colNames = cursor.columnNames.toList()
-				android.util.Log.e("DatabaseHandler", "Available columns: $colNames")
 
 				estimate = Estimateinfo(
 					estimateId = cursor.getInt(cursor.getColumnIndexOrThrow(ESTIMATE_ID)),
@@ -609,10 +608,10 @@ ON e.$CUSTOMER_ID= c.$CUSTOMER_ID """.trimIndent()
 					}
 				)
 			} else {
-				android.util.Log.e("DatabaseHandler", "No estimate found for ID: $id")
+
 			}
 		} catch (e: Exception) {
-			android.util.Log.e("DatabaseHandler", "Error fetching estimate: ${e.message}", e)
+
 		} finally {
 			cursor?.close()
 			db.close()
@@ -674,7 +673,7 @@ fun estimated (context: Context){
 				)
 			} while (c.moveToNext())
 		} else {
-			android.util.Log.d("DB_DUMP", "TableInvoice is empty")
+
 		}
 		c.close()
 		db.close()
