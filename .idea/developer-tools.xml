@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="DeveloperToolsToolWindowSettingsV1" lastSelectedContentNodeId="notes">
+  <component name="DeveloperToolsToolWindowSettingsV1" lastSelectedContentNodeId="color-picker">
     <developerToolsConfigurations>
       <developerToolConfiguration developerToolId="notes" id="cccf89ea-7d78-4310-a78c-b675c676b3ab" name="Workbench">
         <properties>
-          <property key="test" type="INPUT" value="kotlin.String|make the sharebtn work   /&#10;mke the preview btn to work /&#10;make the print btn to work&#10;the end of   estimate to work and start of a new estimate&#10;" />
+          <property key="test" type="INPUT" value="kotlin.String|make the sharebtn work   /&#10;mke the preview btn to work /&#10;make the print btn to work /&#10;the end of   estimate to work and start of a new estimate /&#10;ability to usee different formats of pdf previews&#10;" />
           <property key="notes-content-showSpecialCharacters" type="CONFIGURATION" value="kotlin.Boolean|true" />
           <property key="notes-content-showWhitespaces" type="CONFIGURATION" value="kotlin.Boolean|true" />
         </properties>
@@ -29,7 +29,7 @@
       </developerToolConfiguration>
       <developerToolConfiguration developerToolId="color-picker" id="f2615137-bffb-428d-ad8e-0e6b67daf5c9" name="Workbench">
         <properties>
-          <property key="selectedColor" type="INPUT" value="com.intellij.ui.JBColor|-16740660" />
+          <property key="selectedColor" type="INPUT" value="com.intellij.ui.JBColor|-1184275" />
         </properties>
       </developerToolConfiguration>
     </developerToolsConfigurations>

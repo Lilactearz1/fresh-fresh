@@ -1,14 +1,12 @@
 package com.movix.transak_infield
 
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.os.Environment
 import android.util.Log
 import android.view.View
 import android.widget.EditText
@@ -39,37 +37,20 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.itextpdf.io.font.FontProgramFactory
 import com.itextpdf.io.font.PdfEncodings
-import com.itextpdf.io.image.ImageDataFactory
-import com.itextpdf.io.source.ByteArrayOutputStream
-import com.itextpdf.kernel.colors.ColorConstants
-import com.itextpdf.kernel.colors.DeviceRgb
-import com.itextpdf.kernel.events.PdfDocumentEvent
 import com.itextpdf.kernel.font.PdfFont
 import com.itextpdf.kernel.font.PdfFontFactory
 import com.itextpdf.kernel.font.PdfFontFactory.EmbeddingStrategy
-import com.itextpdf.kernel.geom.PageSize
-import com.itextpdf.kernel.geom.Rectangle
-import com.itextpdf.kernel.pdf.PdfDocument
-import com.itextpdf.kernel.pdf.PdfWriter
-import com.itextpdf.kernel.pdf.canvas.PdfCanvas
-import com.itextpdf.layout.Document
-import com.itextpdf.layout.borders.Border
-import com.itextpdf.layout.borders.SolidBorder
-import com.itextpdf.layout.element.Cell
-import com.itextpdf.layout.element.Image
-import com.itextpdf.layout.element.Paragraph
-import com.itextpdf.layout.element.Table
-import com.itextpdf.layout.properties.TextAlignment
-import com.itextpdf.layout.properties.UnitValue
 import com.movix.transak_infield.databinding.ActivityMainBinding
+
+import com.movix.transak_infield.pdfStyles.Modern1
+import com.movix.transak_infield.pdfStyles.Modern1.Classic1
+import com.movix.transak_infield.pdfStyles.Modern1.Minimal
+import com.movix.transak_infield.ui.theme.TemplateInterface
+import com.movix.transak_infield.ui.theme.TemplateSelectorActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
 
 //import the R .id r. layout ,drawables
 
@@ -79,14 +60,13 @@ open class MainActivity : AppCompatActivity() {
 	private lateinit var itemsCount: TextView
 	private lateinit var Subtotal: GlobalFunck
 	private lateinit var Total: GlobalFunck
-	private lateinit var db:DatabaseHandler
-	private  var itemAdapter: ItemAdapter?= null
-	private  var estimateId = -1
-	private  var customerId = -1
-	private  val stringFomat = "%,.2f"
+	private lateinit var db: DatabaseHandler
+	private var itemAdapter: ItemAdapter? = null
+	private var estimateId = -1
+	private var customerId = -1
+	private val stringFomat = "%,.2f"
 	private var dueTerms = 0
-
-
+	private var currentTemplate: PdfTemplateDRW? = null
 
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -100,7 +80,7 @@ open class MainActivity : AppCompatActivity() {
 		val rvl_clientInfo = binding.relativeLayoutClentInfo
 
 		estimateId = intent.getIntExtra("estimate_id", -1)
-		customerId = intent.getIntExtra("customer_id",-1)
+		customerId = intent.getIntExtra("customer_id", -1)
 
 
 		binding.btnInv001.setOnClickListener {
@@ -120,7 +100,7 @@ open class MainActivity : AppCompatActivity() {
 		}
 
 		binding.additemscardView.setOnClickListener {
-			handleItemsCardView(this,intent)
+			handleItemsCardView(this, intent)
 		}
 
 
@@ -142,11 +122,9 @@ open class MainActivity : AppCompatActivity() {
 		}
 
 
-	binding.addbuttonImage.setOnClickListener {
-			handleItemsCardView(this,intent)
+		binding.addbuttonImage.setOnClickListener {
+			handleItemsCardView(this, intent)
 		}
-
-		val db = DatabaseHandler(applicationContext)
 
 
 //set the text view to
@@ -162,14 +140,17 @@ open class MainActivity : AppCompatActivity() {
 			val itemSubtal = binding.esumSubtotal
 			val itemsTotal = binding.esumTotal
 			Subtotal = GlobalFunck()
-			val stringSubtotal =
-				stringFomat.format(Math.floor(Subtotal.getSubTotal(applicationContext,estimateId).toDouble()))
+			val stringSubtotal = stringFomat.format(
+				Math.floor(
+					Subtotal.getSubTotal(applicationContext, estimateId).toDouble()
+				)
+			)
 			itemSubtal.text = stringSubtotal
 
 			Total = GlobalFunck()
 			val stringTotal = stringFomat.format(
 				Math.floor(
-					Total.summationofTotal(applicationContext,estimateId).toDouble()
+					Total.summationofTotal(applicationContext, estimateId).toDouble()
 				)
 			)
 			itemsTotal.text = stringTotal
@@ -197,7 +178,27 @@ open class MainActivity : AppCompatActivity() {
 
 	}
 
-	private fun setupListintoRecycleview():Int {
+	override fun onResume() {
+		super.onResume()
+		setupListintoRecycleview()
+	}
+
+	override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+
+		super.onActivityResult(requestCode, resultCode, data)
+
+		if (requestCode == 1001 && resultCode == Activity.RESULT_OK) {
+			val templateName = data?.getStringExtra(SELECTED_TEMPLATE)
+			if (templateName != null) {
+				val selectedTemplate = PdfTemplateDRW.valueOf(templateName)
+				Toast.makeText(this, "Template selected: $templateName", Toast.LENGTH_SHORT).show()
+				// Save the selected template for later use
+				currentTemplate = selectedTemplate
+			}
+		}
+	}
+
+	private fun setupListintoRecycleview(): Int {
 		val itemList = getItemlist()
 
 		if (itemList.isNotEmpty()) {
@@ -223,13 +224,6 @@ open class MainActivity : AppCompatActivity() {
 	}
 
 
-	override fun onResume() {
-		super.onResume()
-		setupListintoRecycleview()
-	}
-
-
-
 // the jetpack bottom appBar
 
 	@Composable
@@ -248,25 +242,30 @@ open class MainActivity : AppCompatActivity() {
 				TextButton(
 					onClick = {
 						lifecycleScope.launch {
-							try {
-								withContext(Dispatchers.IO) {
-									val estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
-									val customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
-									val pdfFile = estimatePdf(this@MainActivity, estimateId, customerId)
 
-									withContext(Dispatchers.Main) {
-										PdfUtils.previewPdfFormat(this@MainActivity, pdfFile)
-									}
+							val estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
+							val customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
+							val template = currentTemplate ?: PdfTemplateDRW.CLASSIC
+
+							Log.d("TEMPLATE", "currentTemplate = $currentTemplate")
+
+							try {
+								// Generate PDF in background
+								val pdfFile = withContext(Dispatchers.IO) {
+									estimatePdf(this@MainActivity, estimateId, customerId, template)
 								}
+
+								// UI updates on main thread
+								Toast.makeText(this@MainActivity, "Success...", Toast.LENGTH_SHORT).show()
+								PdfUtils.previewPdfFormat(this@MainActivity, pdfFile)
+
 							} catch (e: Exception) {
 								e.printStackTrace()
-								withContext(Dispatchers.Main) {
-									Toast.makeText(
-										this@MainActivity,
-										"Failed to open PDF: ${e.message}",
-										Toast.LENGTH_SHORT
-									).show()
-								}
+								Toast.makeText(
+									this@MainActivity,
+									"Failed to open PDF: ${e.message}",
+									Toast.LENGTH_SHORT
+								).show()
 							}
 						}
 					},
@@ -276,8 +275,12 @@ open class MainActivity : AppCompatActivity() {
 						contentColor = MaterialTheme.colorScheme.onPrimary
 					)
 				) {
-					Text(text = "Preview", modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+					Text(
+						text = "Preview",
+						modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+					)
 				}
+
 
 
 				// Save BUTTON
@@ -288,7 +291,9 @@ open class MainActivity : AppCompatActivity() {
 								val estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
 								val customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
 
-								val newIntent = Intent(this@MainActivity, Save_previewActivity::class.java).apply {
+								val newIntent = Intent(
+									this@MainActivity, Save_previewActivity::class.java
+								).apply {
 									putExtra(EXTRA_ESTIMATE_ID, estimateId)
 									putExtra(EXTRA_CUSTOMER_ID, customerId)
 								}
@@ -312,31 +317,32 @@ open class MainActivity : AppCompatActivity() {
 								}
 							}
 						}
-					},
-					shape = RoundedCornerShape(50),
-					colors = ButtonDefaults.textButtonColors(
+					}, shape = RoundedCornerShape(50), colors = ButtonDefaults.textButtonColors(
 						containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
 						contentColor = MaterialTheme.colorScheme.onPrimary
 					)
 				) {
-					Text(text = "Save", modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+					Text(
+						text = "Save",
+						modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+					)
 				}
 
 			}
 		}
 	}
 
+
 	companion object {
 
 		const val EXTRA_ESTIMATE_ID = "estimate_id"
 		const val EXTRA_CUSTOMER_ID = "customer_id"
+		const val SELECTED_TEMPLATE= "selected_template"
 
 		private lateinit var file: File
 
 		fun handleInvoiceButtonClick(
-			activity: AppCompatActivity,
-			estimateId: Int,
-			customerId: Int
+			activity: AppCompatActivity, estimateId: Int, customerId: Int
 		) {
 			val bundle = Bundle().apply {
 				putInt(EXTRA_ESTIMATE_ID, estimateId)
@@ -346,18 +352,22 @@ open class MainActivity : AppCompatActivity() {
 			val fragment = InvoiceInfo().apply { arguments = bundle }
 
 			activity.supportFragmentManager.beginTransaction()
-				.replace(R.id.newEstimateLayout, fragment)
-				.addToBackStack(null)
-				.commit()
+				.replace(R.id.newEstimateLayout, fragment).addToBackStack(null).commit()
 		}
 
-		fun handleTemplateButtonClick(context: Context) {
-			Toast.makeText(context, "Coming soon ...", Toast.LENGTH_LONG).show()
+		fun handleTemplateButtonClick(activity: Activity) {
+
+			val intent = Intent(activity, TemplateSelectorActivity::class.java)
+			activity.startActivityForResult(intent, 1001)
+
+
 		}
+
 
 		fun handleClientInfoClick(context: Context) {
 			val intent = Intent(context, ClientActivity::class.java)
-			// ✅ Important: add FLAG_ACTIVITY_NEW_TASK if context is not an Activity
+
+			// Important: add FLAG_ACTIVITY_NEW_TASK if context is not an Activity
 			if (context !is AppCompatActivity) {
 				intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 			}
@@ -372,7 +382,10 @@ open class MainActivity : AppCompatActivity() {
 			val estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
 			val customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
 
-			Log.d("InvoiceDebug", "Passing estimateId=$estimateId, customerId=$customerId to ProductsInfoFragment")
+			Log.d(
+				"InvoiceDebug",
+				"Passing estimateId=$estimateId, customerId=$customerId to ProductsInfoFragment"
+			)
 
 			val productFrag = ProductsInfoFragment().apply {
 				arguments = Bundle().apply {
@@ -382,13 +395,11 @@ open class MainActivity : AppCompatActivity() {
 			}
 
 			activity.supportFragmentManager.beginTransaction()
-				.replace(R.id.newEstimateLayout, productFrag)
-				.addToBackStack(null)
-				.commit()
+				.replace(R.id.newEstimateLayout, productFrag).addToBackStack(null).commit()
 		}
 
 		//set the fonts for the pdf sections
-		fun getPdfFontFromAssets(context: Context): PdfFont {
+		fun getFontGerhana(context: Context): PdfFont {
 			val inputStream = context.assets.open("fonts/gerhana.ttf")
 			val fontBytes = inputStream.readBytes()
 			inputStream.close()
@@ -436,429 +447,28 @@ open class MainActivity : AppCompatActivity() {
 		}
 
 
-		fun estimatePdf(context: Context,estimateId:Int,customerId:Int): File {
+		fun estimatePdf(
+			context: Context,
+			estimateId: Int,
+			customerId: Int,
+			templateDRW: PdfTemplateDRW,
+		): File {
+			val data = PdfUtils.load(context, estimateId, customerId)
+			val layout = PdfUtils.loadTemplateFromJson(context, templateDRW.jsonResId)
 
-			val clientId = GlobalFunck().safeClientId(context)
-			val clientNumber = GlobalFunck()
+			Log.d("PDFDebug", "Selected template : $templateDRW, background: ${layout.background}")
 
-			val estimateTitle = GlobalFunck().titleINV(context)
-			// for the invoice to be counted from number index 0+1 to avoid the zero client
-			val invoiceNumber = GlobalFunck().id(context)
-			var creationDate = GlobalFunck().creationDate(context)
+			val pdfTemplate: TemplateInterface = when (templateDRW) {
+				PdfTemplateDRW.CLASSIC -> Classic1(context)
+				PdfTemplateDRW.MODERN -> Modern1(context)
+				PdfTemplateDRW.MINIMAL -> Minimal(context)
 
-			if (creationDate.isEmpty()) {
-				creationDate = LocalDate.now().toString()
 			}
 
-			val toLocalDate = try {
-				if (creationDate.matches(Regex("\\d+"))) {
-					// If it's a numeric timestamp, convert from milliseconds
-					Instant.ofEpochMilli(creationDate.toLong()).atZone(ZoneId.systemDefault())
-						.toLocalDate()
-				} else {
-					// Otherwise, parse as a normal ISO date string
-					LocalDate.parse(creationDate)
-				}
-			} catch (e: Exception) {
-				// Fallback to current date if parsing fails
-				LocalDate.now()
-			}
+			return PdfUtils.generate(context, pdfTemplate, layout, data)
 
-
-			val duedate = GlobalFunck().calculateDueDate(toLocalDate, dueTerms)
-			val clientName = GlobalFunck().safeClientName(context)
-
-			if (clientName.isNotEmpty()) {
-				clientName.plus("$invoiceNumber")
-			}
-			try {
-
-				// File path in Downloads folder
-				val path =
-					Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-						.toString()
-				file = File(path, "$invoiceNumber-$clientId $clientName.pdf")
-
-				// iText 7 writing
-				val writer = PdfWriter(file)
-				val pdfDocument = PdfDocument(writer)
-				pdfDocument.defaultPageSize = PageSize.A4
-				val document = Document(pdfDocument)
-				val pdfCanvas = PdfCanvas(pdfDocument.addNewPage())
-
-
-//            create the image path
-
-				val width = PageSize.A4.width
-				val height = PageSize.A4.height
-				// 1. Load image from drawable
-				val drawablepic = ContextCompat.getDrawable(context, R.drawable.backpdf)
-				val bitmap1 = (drawablepic as BitmapDrawable).bitmap
-
-				// 2. Convert Bitmap to ByteArray
-				val stream = ByteArrayOutputStream()
-				bitmap1.compress(Bitmap.CompressFormat.PNG, 100, stream)
-				val imageBytes = stream.toByteArray()
-
-				// 3. Create ImageData from ByteArray   // Load image
-				val imageDatafromArr = ImageDataFactory.create(imageBytes)
-
-				// 4. Draw background image on canvas
-				pdfCanvas.addImageFittedIntoRectangle(
-					imageDatafromArr, Rectangle(0f, 0f, width, height), false
-				)
-				// draw horizontal line on the top section of header
-
-				pdfCanvas.setLineWidth(0.06f)
-
-				pdfCanvas.moveTo(50.00, 689.00)
-				pdfCanvas.lineTo(544.00, 689.00)
-				pdfCanvas.stroke().setStrokeColor(DeviceRgb(47, 59, 81))
-
-//       1. Define Table Headers: and its properties the font color background colour and border
-
-				val latoRegular = latoRegularFont(context)
-				val queensFont = queensFont(context)
-				val gerhanaFont = getPdfFontFromAssets(context)
-				val latobold = latoBold(context)
-				val textColor = DeviceRgb(44, 45, 47)
-
-//            the solid border color resource custom defined
-				val border = SolidBorder(DeviceRgb(224, 224, 244), 0.9f)
-//            where to start the table at
-				val tablemargintop = 202f
-				//            create columnwidth dimension
-				val columnWidth = floatArrayOf(221.5f, 62.75f, 73.5f, 47f, 100f)
-
-				val table = Table(columnWidth)  //table having column widths
-					.setWidth(UnitValue.createPointValue(columnWidth.sum()))  // full width
-
-					.setBorderLeft(border).setBorderRight(border).setBorderBottom(border)
-					.setBorderTop(Border.NO_BORDER).setFontSize(11f).setFont(gerhanaFont)
-					.setFontColor(textColor).setMarginTop(tablemargintop)
-
-				// Add header cells
-				val headers = listOf("DESCRIPTION", "QUANTITY", "PRICE", "TAX", "AMOUNT")
-
-
-				headers.forEach { head ->
-
-					table.addCell(
-						Cell().setBorder(Border.NO_BORDER).add(
-							Paragraph(head).setFont(latobold).setBold()
-								.setFontColor(ColorConstants.WHITE)
-						).setBackgroundColor(DeviceRgb(62, 140, 202)) // blue header background
-
-					)
-				}
-
-				headers.first()
-
-
-// Images to the page
-
-				val drawable =
-					ContextCompat.getDrawable(context, R.drawable.infieldlogo) as BitmapDrawable
-				val bitmap = drawable.bitmap
-
-//     // Save bitmap to a temporary file
-				val imagefile = File(context.cacheDir, "infieldlogo.png")
-				val outputStream = FileOutputStream(imagefile)
-				bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-				outputStream.flush()
-				outputStream.close()
-
-				// Use the file path in iText
-				val imageData = ImageDataFactory.create(imagefile.absolutePath)
-				val image =
-					Image(imageData).scaleToFit(100f, 100f).setFixedPosition(15f, 767.8f, 350f)
-				document.add(image)
-
-//            3. Populate the Table with Rows
-				val items = DatabaseHandler(context).getItemsForEstimate(estimateId, customerId)
-				items.forEach { item ->
-					//Loop through and calculate amount = price × quantity:
-					val amount = item.price * item.quantity
-					// create a border with a custom colour lighter grey-blue and width weight 0.9
-
-					val cell1 = Cell().add(
-						Paragraph(item.itemName.uppercase()).setBorder(Border.NO_BORDER)
-							.setTextAlignment(TextAlignment.LEFT)
-					).setBorder(border)
-
-
-					val cell2 = Cell().add(
-						Paragraph(item.quantity.toString()).setBorder(Border.NO_BORDER)
-							.setBorder(Border.NO_BORDER).setFontColor(textColor)
-							.setTextAlignment(TextAlignment.CENTER)
-					).setBorder(border)
-
-
-					val cell3 = Cell().add(
-						Paragraph("${"%,.2f".format(item.price)}").setBorder(Border.NO_BORDER)
-							.setBorder(Border.NO_BORDER).setFontColor(textColor)
-							.setTextAlignment(TextAlignment.RIGHT)
-					).setBorder(border)
-
-
-					val cell4 = Cell().add(
-						Paragraph(item.tax.toString()).setBorder(Border.NO_BORDER)
-							.setFontColor(textColor).setTextAlignment(TextAlignment.CENTER)
-					).setBorder(border)
-
-					val cell5 = Cell().add(
-						Paragraph("${"%,.2f".format(amount)}").setBorder(Border.NO_BORDER)
-							.setFontColor(textColor).setTextAlignment(TextAlignment.RIGHT)
-					).setBorder(border)
-
-					table.addCell(cell1)
-					table.addCell(cell2)
-					table.addCell(cell3)
-					table.addCell(cell4)
-					table.addCell(cell5)
-				}
-// the header sections
-
-
-//			call the image of qr function to be used in the itext pdf
-				val docName = "CLIENT_iNFIELDER $estimateTitle"
-
-				val qrImage = Templatepdf1().qrcodeGenerator(docName)
-				document.add(qrImage.setFixedPosition(1, 431.21f, 685f))
-
-				document.add(
-					Paragraph("INFIELD").setBold()
-						.setFontColor(DeviceRgb(62, 140, 202)) // infiellt tee blue
-						.setFontSize(18f).setFixedPosition(146f, 784.8f, 84f)
-				)
-				document.add(
-					Paragraph("ENGINEERING").setBold()
-						.setFontColor(DeviceRgb(67, 105, 45)) // engineering jungle green
-						.setFontSize(18f).setFixedPosition(223.1f, 784.8f, 134f)
-				)
-				document.add(
-					Paragraph("SERVICES LTD").setBold()
-						.setFontColor(DeviceRgb(62, 140, 202)) // infield tee blue
-						.setFontSize(19f).setFixedPosition(146f, 756.8f, 144f)
-				)
-				document.add(
-					Paragraph("P.O BOX 62700-19052").setFontColor(
-						DeviceRgb(
-							47, 59, 81
-						)
-					) // address dark blue
-						.setFontSize(16f).setFixedPosition(146f, 737.3f, 184f).setFont(latoRegular)
-
-				)
-				document.add(
-					Paragraph("Meru Township").setFontColor(
-						DeviceRgb(
-							47, 59, 81
-						)
-					) // address dark blue
-						.setFontSize(16f).setFixedPosition(146f, 718.3f, 184f).setFont(latoRegular)
-				)
-
-				document.add(
-					Paragraph("0701243548").setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
-						.setFontSize(16f).setFixedPosition(146f, 696.1f, 164f).setFont(latoRegular)
-
-				)
-
-				document.add(
-					Paragraph(
-						"BILL TO: \n" + "$clientName \n"
-					).setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
-						.setFontSize(12.5f)
-
-						.setFont(latobold).setFixedPosition(35.7f, 650f, 164f)
-
-				)
-
-				document.add(
-					Paragraph("QUOTE NUMBER: ").setFontColor(
-						DeviceRgb(
-							47, 59, 81
-						)
-					) // address dark blue
-						.setFontSize(13f)
-
-						.setFont(latobold).setFixedPosition(370.2F, 669f, 164f)
-
-
-				)
-				document.add(
-					//Set] the Quote number
-					Paragraph("QTE-INF-#$invoiceNumber").setFontColor(
-						DeviceRgb(
-							47, 59, 81
-						)
-					) // address dark blue
-						.setFontSize(13f).setFont(queensFont).setFixedPosition(500.2F, 669f, 164f)
-
-
-				)
-
-				document.add(
-					Paragraph("CREATION DATE: ").setFontColor(
-						DeviceRgb(
-							47, 59, 81
-						)
-					) // address dark blue
-						.setFontSize(13f)
-
-						.setFont(latobold).setFixedPosition(370.2F, 653.1f, 164f)
-
-
-				)
-				document.add(
-					Paragraph("$creationDate ").setFontColor(
-						DeviceRgb(
-							47, 59, 81
-						)
-					) // address dark blue
-						.setFontSize(13f).setFont(queensFont).setFixedPosition(500.2F, 653.1f, 164f)
-
-
-				)
-
-				document.add(
-					Paragraph("DUE DATE: ").setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
-						.setFontSize(13f).setFont(latobold).setFixedPosition(370.2F, 635.1f, 164f)
-
-
-				)
-
-				document.add(
-					Paragraph("$duedate").setFontColor(DeviceRgb(47, 59, 81)) // address dark blue
-						.setFontSize(13f).setFont(queensFont).setFixedPosition(500.2F, 635.1f, 164f)
-				)
-
-				document.add(
-					Paragraph("ESTIMATE").setFontColor(DeviceRgb(156, 39, 176)) // address dark blue
-						.setFontSize(30.5f).setFont(latobold).setFixedPosition(422.2f, 776.8f, 166f)
-				)
-
-				document.add(table)
-				val amountCell = Table(floatArrayOf(93f, 130f))
-				val amountTotal = mutableListOf("Subtotal", "0.0", "Vat", "0.0", "Total", "0.0")
-
-				amountTotal.forEach {
-//function to sum total of items from the database
-					val subtotal = GlobalFunck().getSubTotal(context,estimateId)
-					val textformat = "%,.2f"
-					val objTax = GlobalFunck().summationOfTax(context,estimateId)
-					var objTotal = GlobalFunck().summationofTotal(context,estimateId)
-
-
-					//we are debugging here FOR THE CALCULATION OF PRICES AND TOTALS
-					amountTotal[1] = "${textformat.format(Math.ceil(subtotal.toDouble()))}"
-					amountTotal[3] = "${textformat.format(Math.ceil(objTax))}"
-					amountTotal[5] = "${textformat.format(Math.ceil(objTotal.toDouble()))}"
-
-
-
-
-					amountCell.addCell(
-						Cell().add(Paragraph(it)).setHeight(18f).setFontSize(12f)
-							.setBorder(Border.NO_BORDER).setFont(latobold)
-					).setFontColor(ColorConstants.BLACK).setBackgroundColor(DeviceRgb(62, 140, 202))
-						.setBorder(Border.NO_BORDER).setMarginLeft(284f).setMarginTop(30f)
-				}
-				document.add(amountCell)
-				val mpesaInfo = Table(floatArrayOf(178.75f, 164.75f, 168f))
-				val mpesa = listOf("529901", "ACCOUNT NO", "5021964795002")
-				mpesa.forEach {
-					mpesaInfo.addCell(
-						Cell().setBorder(Border.NO_BORDER)
-							.setBackgroundColor(DeviceRgb(62, 140, 202)).add(Paragraph(it))
-					).setFontColor(ColorConstants.WHITE).setHeight(35f).setFont(gerhanaFont)
-						.setFontColor(ColorConstants.WHITE)
-
-				}
-
-
-				val bankInfoTable = Table(floatArrayOf(145.75f, 120.75f, 120.75f, 125.75f))
-
-				val aboutDetailing = Table(floatArrayOf(135.15f))
-				val detailHeading = listOf("BANK DETAIL")
-
-				val mpesadetail = Table(floatArrayOf(135.15f))
-				val detailHeading2 = listOf("M-PESA PAYBILL")
-
-
-				val dH2 = detailHeading2.first()
-
-
-				dH2.forEach {
-					mpesadetail.addCell(
-						Cell().setBorder(Border.NO_BORDER).add(Paragraph(dH2))
-							.setBackgroundColor(DeviceRgb(62, 140, 202))
-					).setFontColor(ColorConstants.WHITE).setHeight(35f).setFont(gerhanaFont)
-						.setMarginTop(10f)
-
-				}
-
-				detailHeading.forEach {
-					aboutDetailing.addCell(
-						Cell().add(Paragraph(it).setBorder(Border.NO_BORDER)).setPaddingTop(15f)
-					).setBackgroundColor(DeviceRgb(62, 140, 202)).setFontColor(ColorConstants.WHITE)
-						.setFont(gerhanaFont).setBorder(Border.NO_BORDER).setPaddingTop(20f)
-
-				}
-
-
-				val infosBank = listOf("ACCOUNT NAME", "BANK NAME", "BRANCH", "ACCOUNT NO")
-				val bankdetail =
-					listOf("INFIELD ENGINEERING LTD", "KINGDOM BANK", "NAIROBI", "5021964795002")
-
-				infosBank.forEach {
-					bankInfoTable.addCell(
-						Cell().setFontColor(ColorConstants.WHITE).add(Paragraph(it))
-							.setBackgroundColor(DeviceRgb(62, 140, 202)).setBorder(Border.NO_BORDER)
-							.setFont(gerhanaFont)
-
-					).setMarginTop(20f)
-
-				}
-
-				bankdetail.forEach {
-					bankInfoTable.setBorder(Border.NO_BORDER)
-					bankInfoTable.addCell(
-						Cell().setBorderLeft(SolidBorder(DeviceRgb(224, 224, 224), 0.04f))
-							.setBorderBottom(SolidBorder(DeviceRgb(224, 224, 224), 0.08f))
-							.setFontColor(ColorConstants.BLACK).add(Paragraph(it))
-							.setBorderRight(SolidBorder(DeviceRgb(224, 224, 224), 0.04f))
-							.setFontSize(11f)
-
-					).setMarginTop(0.01f).setFont(latobold)
-				}
-				infosBank.last()
-
-				// Add footer event handler by calling the handler created in the clientsCreation file
-				pdfDocument.addEventHandler(PdfDocumentEvent.END_PAGE, FooterEvent())
-
-				document.add(aboutDetailing)
-				document.add(bankInfoTable)
-				document.add(mpesadetail)
-				document.add(mpesaInfo)
-
-
-				//document metadata
-				pdfDocument.documentInfo.setAuthor("nelvinKelly@gmail.com").setTitle("Estimates")
-					.addCreationDate().setCreator("" + "Megistanas Developers")
-
-				document.close()
-
-				println("PDF generated at: ${file.absolutePath}")
-
-				Toast.makeText(context, "Download Success...", Toast.LENGTH_LONG)
-			} catch (e: Exception) {
-				e.printStackTrace()
-			}
-
-			return file
 		}
+
 	}
 
 	private fun setupListIntoRecyclerView(): Int {
@@ -899,12 +509,11 @@ open class MainActivity : AppCompatActivity() {
 						itemAdapter!!.itemList.removeAt(position)
 						itemAdapter!!.notifyItemRemoved(position)
 						Toast.makeText(
-							this@MainActivity,
-							"${item.itemName} deleted",
-							Toast.LENGTH_SHORT
+							this@MainActivity, "${item.itemName} deleted", Toast.LENGTH_SHORT
 						).show()
 					} else {
-						Toast.makeText(this@MainActivity, "Delete failed", Toast.LENGTH_SHORT).show()
+						Toast.makeText(this@MainActivity, "Delete failed", Toast.LENGTH_SHORT)
+							.show()
 					}
 
 					setupListIntoRecyclerView()
@@ -923,20 +532,20 @@ open class MainActivity : AppCompatActivity() {
 					val itemView = viewHolder.itemView
 					val background = ColorDrawable(R.color.red)
 					val icon = ContextCompat.getDrawable(
-						this@MainActivity,
-						R.drawable.baseline_delete_24// your delete icon
+						this@MainActivity, R.drawable.baseline_delete_24// your delete icon
 					)
 
 					// Draw red background as you swipe
 					if (dX > 0) { // Swiping right
 						background.setBounds(
-							itemView.left, itemView.top,
-							itemView.left + dX.toInt(), itemView.bottom
+							itemView.left, itemView.top, itemView.left + dX.toInt(), itemView.bottom
 						)
 					} else if (dX < 0) { // Swiping left
 						background.setBounds(
-							itemView.right + dX.toInt(), itemView.top,
-							itemView.right, itemView.bottom
+							itemView.right + dX.toInt(),
+							itemView.top,
+							itemView.right,
+							itemView.bottom
 						)
 					} else {
 						background.setBounds(0, 0, 0, 0)
@@ -963,7 +572,9 @@ open class MainActivity : AppCompatActivity() {
 						it.draw(c)
 					}
 
-					super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+					super.onChildDraw(
+						c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive
+					)
 				}
 			})
 
@@ -976,13 +587,13 @@ open class MainActivity : AppCompatActivity() {
 	}
 
 
-
 	//    function to get the items list
 	private fun getItemlist(): ArrayList<ModelClass> {
 //        create instance of the databaseHandler class
 		val databaseHandler: DatabaseHandler = DatabaseHandler(this)
 //          calling the viewProduct  of DatabaseHandler class to read the list
-		return databaseHandler.getItemsForEstimate(estimateId,customerId)
+		return databaseHandler.getItemsForEstimate(estimateId, customerId)
+
 		/**
 		 * a shorter replacement use the inline function "single expression function
 		 *
@@ -1026,7 +637,7 @@ open class MainActivity : AppCompatActivity() {
 
 		fun updateItems(price: Double, quantity: Int) {
 			val total = price * quantity
-			val totalFormatText =stringFomat.format(total)
+			val totalFormatText = stringFomat.format(total)
 
 //			display the live amount in the text view
 			amountScreen?.text = "Ksh: $totalFormatText"
@@ -1113,7 +724,7 @@ open class MainActivity : AppCompatActivity() {
 					modellist.customerId,
 					modellist.estimateId,
 
-				)
+					)
 			)
 			if (status > -1) {
 				Toast.makeText(this, "Deleted Successfully", Toast.LENGTH_LONG).show()

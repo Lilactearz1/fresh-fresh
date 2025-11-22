@@ -32,6 +32,7 @@ class Save_previewActivity : AppCompatActivity() {
 	private var estimateId: Int = -1
 	private var customerId: Int = -1
 	private val stringFormat = "%,.2f"
+	private var currentTemplate: PdfTemplateDRW? = null
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -56,11 +57,13 @@ class Save_previewActivity : AppCompatActivity() {
 		estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
 		customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
 
-
+		val template = currentTemplate
+			?: PdfTemplateDRW.CLASSIC  // fallback to default
 
 		downloadbtn.setOnClickListener { view ->
 			view.isHovered
-			PdfUtils.generateEstimatePdf(applicationContext, estimateId, customerId)
+
+			PdfUtils.generateEstimatePdf(applicationContext, estimateId,customerId, template)
 			Toast.makeText(applicationContext, "Success...", Toast.LENGTH_LONG).show()
 			closeCurrentEstimate()
 
@@ -107,7 +110,7 @@ class Save_previewActivity : AppCompatActivity() {
 		name.text = GlobalFunck().safeClientName(applicationContext)
 
 		share.setOnClickListener {
-			val pdFile = PdfUtils.generateEstimatePdf(applicationContext, estimateId, customerId)
+			val pdFile = PdfUtils.generateEstimatePdf(applicationContext, estimateId, customerId,template)
 			pdFile.let {
 				it
 				if (it != null) {
@@ -127,7 +130,11 @@ class Save_previewActivity : AppCompatActivity() {
 
 	override fun onResume() {
 		super.onResume()
-		val pdfFile = PdfUtils.generateEstimatePdf(applicationContext, estimateId, customerId)
+
+
+		val template = currentTemplate
+			?: PdfTemplateDRW.CLASSIC  // fallback to default
+		val pdfFile = PdfUtils.generateEstimatePdf(applicationContext, estimateId, customerId,template)
 		val pdfPreview = pdfFile?.let { PdfUtils.generatePdfPreview(this, it) }
 		findViewById<ImageView>(R.id.previewDownload1).apply {
 			pdfPreview?.let { setImageBitmap(it) }

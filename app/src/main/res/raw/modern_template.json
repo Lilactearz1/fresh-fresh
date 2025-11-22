@@ -1,0 +1,23 @@
+{
+  "name": "Modern",
+  "background":"modern1",
+  "company": { "x": 155, "y": 776 },
+
+  "customer": { "x": 60, "y": 680},
+
+  "logo": { "x": 43, "y": 767 },
+
+  "title": { "x": 422, "y": 776 },
+
+  "quoteNo": { "x": 370, "y": 676 },
+
+  "created": { "x": 370, "y": 650 },
+
+  "due": { "x": 370, "y": 610 },
+
+  "tableStart": { "x": 60, "y": 400 },
+
+  "amountBox": { "x": 370, "y": 350 },
+
+  "qr": { "x": 360, "y": 710}
+}

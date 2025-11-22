@@ -57,6 +57,7 @@ class CustomerItems : AppCompatActivity() {
 	private var customerId = -1
 	private lateinit var items:ArrayList<ModelClass>
 	private lateinit var refreshLauncher: ActivityResultLauncher<Intent>
+	private var currentTemplate: PdfTemplateDRW? = null
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -158,7 +159,10 @@ class CustomerItems : AppCompatActivity() {
 								withContext(Dispatchers.IO) {
 									val estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
 									val customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
-									val pdfFile = estimatePdf(this@CustomerItems, estimateId, customerId)
+									// Use the template selected by the user
+									val template = currentTemplate
+										?: PdfTemplateDRW.CLASSIC  // fallback to default
+									val pdfFile = estimatePdf(this@CustomerItems, estimateId, customerId,template)
 
 									withContext(Dispatchers.Main) {
 										PdfUtils.previewPdfFormat(this@CustomerItems, pdfFile)

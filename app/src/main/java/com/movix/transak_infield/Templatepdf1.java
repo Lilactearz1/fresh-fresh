@@ -60,6 +60,48 @@ public class Templatepdf1{
         }
     }
 
+    public Image barCodeGenerator(String data) {
+        try {
+            // barcode dimensions
+            int width = 200;
+            int height = 40;
+
+            MultiFormatWriter writer = new MultiFormatWriter();
+            BitMatrix bitMatrix = writer.encode(
+                    data,
+                    BarcodeFormat.PDF_417,
+                    width,
+                    height
+            );
+
+            // ZXing internal quiet zone is applied automatically
+            int matrixWidth = bitMatrix.getWidth();
+            int matrixHeight = bitMatrix.getHeight();
+            Bitmap bitmap = Bitmap.createBitmap(matrixWidth, matrixHeight, Bitmap.Config.ARGB_8888);
+
+            for (int x = 0; x < matrixWidth; x++) {
+                for (int y = 0; y < matrixHeight; y++) {
+                    bitmap.setPixel(
+                            x,
+                            y,
+                            bitMatrix.get(x, y) ? Color.BLACK : Color.WHITE
+                    );
+                }
+            }
+
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            byte[] bytes = stream.toByteArray();
+
+            ImageData imageData = ImageDataFactory.create(bytes);
+            return new Image(imageData);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 
     public void ePdf(Context context) {
         PdfDocument pdfDocument = new PdfDocument();
