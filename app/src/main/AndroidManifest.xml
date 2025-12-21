@@ -90,6 +90,14 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.theme.TemplateSelectorActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.OPEN_DOCUMENT"/>
+            </intent-filter>
+        </activity>
+
 
     </application>
 

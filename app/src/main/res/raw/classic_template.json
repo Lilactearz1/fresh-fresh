@@ -1,0 +1,19 @@
+{
+  "name": "Classic Template",
+  "background":"classic1",
+  "company": { "x": 23, "y": 76 },
+  "customer": { "x": 35, "y": 650 },
+
+  "logo": { "x": 15, "y": 767 },
+  "title": { "x": 422, "y": 776 },
+
+  "quoteNo": { "x": 370, "y": 669 },
+  "created": { "x": 370, "y": 653 },
+  "due": { "x": 370, "y": 635 },
+
+  "tableStart": { "x": 50, "y": 202 },
+  "amountBox": { "x": 284, "y": 30 },
+
+  "qr": { "x": 431, "y": 685 }
+}
+

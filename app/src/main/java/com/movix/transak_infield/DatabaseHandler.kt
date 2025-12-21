@@ -637,21 +637,27 @@ ON e.$CUSTOMER_ID= c.$CUSTOMER_ID """.trimIndent()
 		return result
 	}
 
-
-	// temporary code debug testers from this point downwards
-
-//	/////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////
-	fun doesCustomerExist(id: Int): Boolean {
+	fun getCustomerById(customerId: Int): ClientsCreation? {
 		val db = readableDatabase
-		val cursor = db.rawQuery("SELECT 1 FROM $CUSTOMER_TABLE WHERE $CUSTOMER_ID = ?", arrayOf(id.toString()))
-		val exists = cursor.moveToFirst()
+		var customer: ClientsCreation? = null
+		val query = "SELECT * FROM $CUSTOMER_TABLE WHERE $CUSTOMER_ID = ?"
+		val cursor = db.rawQuery(query, arrayOf(customerId.toString()))
+
+		if (cursor.moveToFirst()) {
+			val id = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID))
+			val name = cursor.getString(cursor.getColumnIndexOrThrow(CUSTOMER_NAME))
+			val phone = cursor.getString(cursor.getColumnIndexOrThrow(CUSTOMER_PHONE))
+
+			customer = ClientsCreation(id, name, phone)
+		}
+
 		cursor.close()
 		db.close()
-		return exists
+		return customer
 	}
 
-fun estimated (context: Context){
+
+	fun estimated (context: Context){
 		val db = DatabaseHandler(context).readableDatabase
 		val c = db.rawQuery(
 			"SELECT $KEY_ID, $KEY_NAME, $KEY_QUANTITY, $KEY_PRICE, $KEY_ITEM_TOTAL, $KEY_TAX, $CUSTOMER_ID, $ESTIMATE_ID FROM $INVOICE_TABLE",
@@ -678,6 +684,26 @@ fun estimated (context: Context){
 		c.close()
 		db.close()
 	}
+
+
+
+
+
+
+	// temporary code debug testers from this point downwards
+
+//	/////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////
+	fun doesCustomerExist(id: Int): Boolean {
+		val db = readableDatabase
+		val cursor = db.rawQuery("SELECT 1 FROM $CUSTOMER_TABLE WHERE $CUSTOMER_ID = ?", arrayOf(id.toString()))
+		val exists = cursor.moveToFirst()
+		cursor.close()
+		db.close()
+		return exists
+	}
+
+
 
 	fun doesEstimateExist(id: Int): Boolean {
 		val db = readableDatabase

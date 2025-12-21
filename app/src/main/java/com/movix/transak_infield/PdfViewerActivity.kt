@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
+import android.util.Log
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import java.io.File
@@ -25,11 +26,14 @@ class PdfViewerActivity : AppCompatActivity() {
 		pdfPath?.let {
 			displayPdf(File(it))
 		}
+		val file = File(pdfPath)
+		Log.i("PDF", "Size: ${file.length()} bytes")
+
 	}
 
 	private fun displayPdf(pdfFile: File) {
 		try {
-			fileDescriptor = ParcelFileDescriptor.open(pdfFile, ParcelFileDescriptor.MODE_READ_ONLY)
+			fileDescriptor = ParcelFileDescriptor.open(pdfFile, ParcelFileDescriptor.MODE_READ_WRITE)
 			pdfRenderer = PdfRenderer(fileDescriptor!!)
 			openPage(0)
 		} catch (e: Exception) {
