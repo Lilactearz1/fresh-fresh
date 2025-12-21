@@ -56,16 +56,16 @@ class Save_previewActivity : AppCompatActivity() {
 
 		estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
 		customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
-
-		val template = currentTemplate
-			?: PdfTemplateDRW.CLASSIC  // fallback to default
+		// Safe to use context here
+		currentTemplate = PdfUtils.loadTemplate(this) ?: PdfTemplateDRW.MODERN
+		val template = getTemplate()
 
 		downloadbtn.setOnClickListener { view ->
 			view.isHovered
 
 			PdfUtils.generateEstimatePdf(applicationContext, estimateId,customerId, template)
 			Toast.makeText(applicationContext, "Success...", Toast.LENGTH_LONG).show()
-			closeCurrentEstimate()
+
 
 		}
 
@@ -131,15 +131,18 @@ class Save_previewActivity : AppCompatActivity() {
 	override fun onResume() {
 		super.onResume()
 
-
-		val template = currentTemplate
-			?: PdfTemplateDRW.CLASSIC  // fallback to default
+		val template = getTemplate()
+//		fallback to default
 		val pdfFile = PdfUtils.generateEstimatePdf(applicationContext, estimateId, customerId,template)
 		val pdfPreview = pdfFile?.let { PdfUtils.generatePdfPreview(this, it) }
 		findViewById<ImageView>(R.id.previewDownload1).apply {
 			pdfPreview?.let { setImageBitmap(it) }
 		}
 	}
+
+	private fun getTemplate(): PdfTemplateDRW = currentTemplate ?: PdfTemplateDRW.MODERN
+
+
 
 
 	override fun onResumeFragments() {

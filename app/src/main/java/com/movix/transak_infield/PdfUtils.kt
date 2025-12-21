@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.google.gson.Gson
 import com.itextpdf.kernel.colors.DeviceRgb
+import com.itextpdf.kernel.events.PdfDocumentEvent
 import com.itextpdf.kernel.pdf.PdfDocument
 import com.itextpdf.layout.Document
 
@@ -21,9 +22,13 @@ import com.itextpdf.kernel.pdf.PdfWriter
 import java.io.File
 import com.movix.transak_infield.MainActivity
 import com.movix.transak_infield.ui.theme.TemplateInterface
+private var estimateId=-1
+private var customerId=-1
+
+
 
 object PdfUtils {
-
+ 
 	fun generateEstimatePdf(context: Context,estimateId:Int,customerId:Int,templateDRW: PdfTemplateDRW): File? {
 		return try {
 			MainActivity.estimatePdf(context, estimateId, customerId, templateDRW)
@@ -165,6 +170,13 @@ object PdfUtils {
 		template.drawHeader(document, layout, data,context)
 		template.drawTable(document, layout, data,context)
 		template.drawFooter(document, layout, data,context)
+
+
+		//document metadata
+		pdfDoc.documentInfo.setAuthor("nelvinKelly@gmail.com").setTitle("Estimates")
+			.addCreationDate().creator = "" + "Megistanas Developers"
+
+		pdfDoc.addEventHandler(PdfDocumentEvent.END_PAGE, FooterEvent())
 
 		document.close()
 		pdfDoc.close()

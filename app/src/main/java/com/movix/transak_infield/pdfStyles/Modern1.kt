@@ -9,7 +9,6 @@ import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.colorspace.Rgb
 import androidx.core.content.ContextCompat
-import androidx.tv.material3.Border
 import com.itextpdf.kernel.colors.DeviceRgb
 import com.itextpdf.kernel.font.PdfFont
 import com.itextpdf.layout.Document
@@ -29,7 +28,13 @@ import com.movix.transak_infield.TemplateLayout
 import com.movix.transak_infield.Templatepdf1
 import com.movix.transak_infield.ui.theme.*
 import com.itextpdf.layout.borders.*
+import com.itextpdf.layout.element.AreaBreak
+import com.itextpdf.layout.element.LineSeparator
+import com.itextpdf.layout.properties.HorizontalAlignment
 import com.itextpdf.layout.properties.TextAlignment
+import com.itextpdf.layout.properties.VerticalAlignment
+import com.movix.transak_infield.GlobalFunck
+import kotlinx.serialization.StringFormat
 
 private val cname1: String = CompanyDetail.COMPANY_NAME_1.text
 private val cname2 = CompanyDetail.COMPANY_NAME_2.text
@@ -39,7 +44,7 @@ private val c1quoteFor = CompanyDetail.QUOTE_FOR.text
 private val c1quoteHeader = CompanyDetail.QUOTE_HEADER.text
 private val c1date = CompanyDetail.DATE.text
 private var pdf = Templatepdf1()
-
+private val sFormat = "%,.2f"
 
 
 class Modern1(context: Context) : TemplateInterface {
@@ -82,16 +87,16 @@ class Modern1(context: Context) : TemplateInterface {
 //				).setFontColor(
 //					ColorHelper.rgb(10, 63, 93))
 //		)
-		val clientName =dataEst.customerName
-		val clientId=dataEst.customerId
+		val clientName = GlobalFunck().customerName(context).last()
+		val clientId = dataEst.customerId
 		val dueDate = dataEst.dueDate
-		 val items =dataEst.items
-		items.forEachIndexed { v,t ->
+		val items = dataEst.items
+		items.forEachIndexed { v, t ->
 			t.total
 		}
 
 		//bar code insertion
-		val barcodeImg = pdf.barCodeGenerator("${dataEst.customerName}_${dataEst.estimateId}")
+		val barcodeImg = pdf.barCodeGenerator("$clientName}_${dataEst.estimateId}")
 
 		document.add(
 			barcodeImg.setFixedPosition(
@@ -110,9 +115,10 @@ class Modern1(context: Context) : TemplateInterface {
 
 		// CUSTOMER NAME
 		document.add(
-			Paragraph("$c1quoteTo ${dataEst.customerName}").setFontSize(13f).setFixedPosition(
-				layout.customer.x, layout.customer.y, layout.customer.width ?: 200f
-			).setFont(latoRegular)
+			Paragraph("$c1quoteTo ${clientName}").setFontSize(12f)
+				.setFixedPosition(
+					layout.customer.x, layout.customer.y, layout.customer.width ?: 250f
+				).setFont(latoRegular)
 		)
 
 		// DATE
@@ -142,26 +148,52 @@ class Modern1(context: Context) : TemplateInterface {
 		document: Document, layout: TemplateLayout, dataEst: EstimatePDFData, context: Context
 	) {
 		val y = layout.amountBox.y
-
-		val subTotal=String.format("%,.2f",dataEst.subtotal)
-		val taxTotal=String.format("%,.2f",dataEst.taxTotal)
-		val grandTotal=String.format("%,.2f",dataEst.grandTotal)
+		val x = layout.amountBox.x
 
 
-		document.add(
-			Paragraph("Subtotal: $subTotal").setFontSize(12f)
-				.setFixedPosition(layout.amountBox.x, y, 200f)
-		)
+		val subTotal = String.format(sFormat, dataEst.subtotal)
+		val taxTotal = String.format(sFormat, dataEst.taxTotal)
+		val grandTotal = String.format(sFormat, dataEst.grandTotal)
 
-		document.add(
-			Paragraph("Tax: $taxTotal").setFontSize(12f)
-				.setFixedPosition(layout.amountBox.x, y - 20f, 200f)
-		)
+		val columnWidths = floatArrayOf(y)
+// used separate map inorder to perform different formating
+// and styles otherwise could have use on map variables
 
-		document.add(
-			Paragraph("Grand Total: $grandTotal").setBold().setFontSize(14f)
-				.setFixedPosition(layout.amountBox.x, y - 40f, 200f).setBackgroundColor(DeviceRgb(237, 237, 237))
-		)
+		val mapSubtotal = hashMapOf("Subtotal" to subTotal)
+		val mapTax = hashMapOf("Tax" to taxTotal)
+		val mapTotals = hashMapOf("Grand Total" to grandTotal)
+
+		val table = Table(columnWidths)
+
+		mapSubtotal.forEach { k, it ->
+			table.addCell(
+				Cell().add(Paragraph("${k}  $it")).setMaxWidth(10f)
+					.setTextAlignment(TextAlignment.RIGHT).setFont(latoRegular)
+					.setBorder(Border.NO_BORDER)
+			).setMarginTop(30f).setHorizontalAlignment(HorizontalAlignment.RIGHT)
+
+
+		}
+		mapTax.forEach { k, it ->
+
+			table.addCell(
+				Cell().add(Paragraph("${k}  $it")).setTextAlignment(TextAlignment.RIGHT)
+					.setFont(latoRegular).setBorder(Border.NO_BORDER)
+			).setMarginTop(30f).setHorizontalAlignment(HorizontalAlignment.RIGHT)
+
+		}
+
+		mapTotals.forEach { k, it ->
+
+			table.addCell(
+				Cell().add(Paragraph("${k}  $it")).setMaxWidth(10f)
+					.setTextAlignment(TextAlignment.RIGHT).setFont(latoBold)
+					.setBackgroundColor(DeviceRgb(252, 252, 252)).setBorder(Border.NO_BORDER)
+			).setMarginTop(30f).setHorizontalAlignment(HorizontalAlignment.RIGHT)
+
+		}
+
+		document.add(table)
 	}
 
 
@@ -169,48 +201,90 @@ class Modern1(context: Context) : TemplateInterface {
 		document: Document, layout: TemplateLayout, dataEst: EstimatePDFData, context: Context
 	) {
 
-		// Define column widths (No, Description, Qty, Unit Price, Total)
 		val columnWidths = floatArrayOf(40f, 200f, 70f, 70f, 80f)
-
-		val table =
-			Table(columnWidths).setWidth(UnitValue.createPercentValue(100f)).setMarginTop(200f)
-
-		// ----- HEADER ROW -----
+		val textColor = DeviceRgb(44, 45, 47)
+		val border = SolidBorder(DeviceRgb(224, 224, 244), 0.9f)
 		val headerColor = DeviceRgb(10, 63, 93)
-		listOf("S/N", "DESCRIPTION", "QUANTITY", "PRICE", "TOTAL").forEach { header ->
-			table.addHeaderCell(
-				Cell().add(Paragraph(header)).setBackgroundColor(headerColor).setFontSize(13f)
-					.setFont(latoBold).setFontColor(DeviceRgb.WHITE)
-			)
+
+		val maxRowsPerPage = 14
+		var rowCounter = 0
+		var isFirstPage = true
+
+		// --- TABLE BUILDER ---
+		fun createTable(isFirst: Boolean): Table {
+			val t = Table(columnWidths).setWidth(UnitValue.createPercentValue(100f))
+				.setFont(gerhanaFont).setFontColor(textColor)
+
+			// only first page gets top margin
+			if (isFirst) {
+				t.setMarginTop(200f)
+			}
+
+			// only first page gets header cells
+			if (isFirst) {
+				listOf("S/N", "DESCRIPTION", "QUANTITY", "PRICE", "TOTAL").forEach { header ->
+					t.addHeaderCell(
+						Cell().add(Paragraph(header)).setBackgroundColor(headerColor)
+							.setFontSize(13f).setFont(latoBold).setFontColor(DeviceRgb.WHITE)
+							.setBorder(Border.NO_BORDER)
+					)
+				}
+			}
+
+			return t
 		}
 
-		// ----- TABLE DATA -----
+		var table = createTable(true)
+
+		// --- ADD ROWS ---
 		dataEst.items.forEachIndexed { index, item ->
 
-			table.addCell(Cell().add(Paragraph("${index + 1}").setFont(gerhanaFont)))
-			table.addCell(Cell().add(Paragraph(item.itemName ?: "").setFont(gerhanaFont)))
-			table.addCell(Cell().add(Paragraph(item.quantity.toString()).setFont(gerhanaFont).setTextAlignment(
-				TextAlignment.CENTER)))
+			if (rowCounter >= maxRowsPerPage) {
+
+				// add current table to page
+				document.add(table.setBorder(border))
+
+				// new page
+				document.add(AreaBreak())
+
+				// create a table WITHOUT margin and WITHOUT header
+				isFirstPage = false
+				table = createTable(false)
+
+				rowCounter = 0
+			}
+
+			// TABLE DATA ROWS
+			table.addCell(Cell().add(Paragraph("${index + 1}")).setBorder(Border.NO_BORDER))
+			table.addCell(Cell().add(Paragraph(item.itemName.uppercase())).setBorder(border))
 			table.addCell(
 				Cell().add(
-					Paragraph(String.format("%,.2f", item.price)).setFont(
-						gerhanaFont
-					).setTextAlignment(
-						TextAlignment.CENTER)
-				)
+					Paragraph(item.quantity.toString()).setTextAlignment(TextAlignment.CENTER)
+				).setBorder(border)
 			)
 			table.addCell(
 				Cell().add(
-					Paragraph(
-					 "${item.quantity * item.price}"
-					).setFont(gerhanaFont).setTextAlignment(
-						TextAlignment.RIGHT)
-				)
-			).setFixedLayout().setBorder (SolidBorder.NO_BORDER)
+					Paragraph(String.format(sFormat, item.price)).setFont(gerhanaFont)
+						.setTextAlignment(TextAlignment.CENTER)
+				).setBorder(border)
+			)
+
+			val amount = item.quantity * item.price
+			val formattedTotal = String.format(sFormat, amount)
+
+			table.addCell(
+				Cell().add(
+					Paragraph(formattedTotal).setFont(gerhanaFont)
+						.setTextAlignment(TextAlignment.RIGHT)
+				).setBorder(border)
+			).setFixedLayout()
+
+			rowCounter++
 		}
 
-		// ----- ADD TABLE TO DOCUMENT -----
-		document.add(table)
+		// add final table
+		document.add(table.setBorder(border))
+
 	}
 
 
@@ -221,18 +295,16 @@ class Modern1(context: Context) : TemplateInterface {
 			// COMPANY NAME
 			val companyText = "$cname1 $cname2"
 			document.add(
-				com.itextpdf.layout.element.Paragraph(companyText).setFontSize(18f).setBold()
-					.setFixedPosition(
-						layout.company.x, layout.company.y, layout.company.width ?: 200f
-					)
+				Paragraph(companyText).setFontSize(18f).setBold().setFixedPosition(
+					layout.company.x, layout.company.y, layout.company.width ?: 200f
+				)
 			)
 
 			// QUOTATION TITLE
 			document.add(
-				com.itextpdf.layout.element.Paragraph(c1quoteHeader).setFontSize(16f).setBold()
-					.setFixedPosition(
-						layout.title.x, layout.title.y, layout.title.width ?: 200f
-					)
+				Paragraph(c1quoteHeader).setFontSize(16f).setBold().setFixedPosition(
+					layout.title.x, layout.title.y, layout.title.width ?: 200f
+				)
 			)
 
 			// QUOTE NUMBER
@@ -272,21 +344,20 @@ class Modern1(context: Context) : TemplateInterface {
 		override fun drawFooter(
 			document: Document, layout: TemplateLayout, dataEst: EstimatePDFData, context: Context
 		) {
-			val y = layout.amountBox.y
+
 
 			document.add(
-			 Paragraph("Subtotal: ${dataEst.subtotal}")
-					.setFontSize(12f).setFixedPosition(layout.amountBox.x, y, 200f).setFont(latoRegularFont(context))
+				Paragraph("Subtotal: ${dataEst.subtotal}").setFontSize(12f)
+					.setFont(latoRegularFont(context))
 			)
 
 			document.add(
-				com.itextpdf.layout.element.Paragraph("Tax: ${dataEst.taxTotal}").setFontSize(12f)
-					.setFixedPosition(layout.amountBox.x, y - 20f, 200f)
+				Paragraph("Tax: ${dataEst.taxTotal}").setFontSize(12f)
+
 			)
 
 			document.add(
-				com.itextpdf.layout.element.Paragraph("Grand Total: ${dataEst.grandTotal}")
-					.setBold().setFontSize(14f).setFixedPosition(layout.amountBox.x, y - 40f, 200f)
+				Paragraph("Grand Total: ${dataEst.grandTotal}").setBold().setFontSize(14f)
 			)
 		}
 
@@ -314,10 +385,9 @@ class Modern1(context: Context) : TemplateInterface {
 
 			// QUOTATION TITLE
 			document.add(
-			 Paragraph(c1quoteHeader).setFontSize(16f).setBold()
-					.setFixedPosition(
-						layout.title.x, layout.title.y, layout.title.width ?: 200f
-					)
+				Paragraph(c1quoteHeader).setFontSize(16f).setBold().setFixedPosition(
+					layout.title.x, layout.title.y, layout.title.width ?: 200f
+				)
 			)
 
 			// QUOTE NUMBER
@@ -358,25 +428,25 @@ class Modern1(context: Context) : TemplateInterface {
 			document: Document, layout: TemplateLayout, dataEst: EstimatePDFData, context: Context
 		) {
 			val y = layout.amountBox.y
-			val subTotal=String.format("%,.2f",dataEst.subtotal)
-			val taxTotal=String.format("%,.2f",dataEst.taxTotal)
-			val grandTotal=String.format("%,.2f",dataEst.grandTotal)
+			val subTotal = String.format("%,.2f", dataEst.subtotal)
+			val taxTotal = String.format("%,.2f", dataEst.taxTotal)
+			val grandTotal = String.format("%,.2f", dataEst.grandTotal)
 
 
 			document.add(
-			 Paragraph("Subtotal: $subTotal")
-					.setFontSize(14f).setFixedPosition(layout.amountBox.x, y, 200f).setFont(latoRegularFont(context))
+				Paragraph("Subtotal: $subTotal").setFontSize(14f)
+					.setFixedPosition(layout.amountBox.x, y, 200f).setFont(latoRegularFont(context))
 			)
 			Log.d("tag message", "drawFooter: $taxTotal ,$subTotal ,$grandTotal")
 			document.add(
-			 Paragraph("Tax: $taxTotal").setFontSize(14f)
+				Paragraph("Tax: $taxTotal").setFontSize(14f)
 					.setFixedPosition(layout.amountBox.x, y - 20f, 200f)
 			)
 
 			document.add(
-			 Paragraph("Grand Total: $grandTotal}").setFont(latoBold(context))
-					.setFontSize(14f).setFixedPosition(layout.amountBox.x, y - 40f, 200f)
-				 .setBackgroundColor(DeviceRgb(181, 176, 141))
+				Paragraph("Grand Total: $grandTotal}").setFont(latoBold(context)).setFontSize(14f)
+					.setFixedPosition(layout.amountBox.x, y - 40f, 200f)
+					.setBackgroundColor(DeviceRgb(181, 176, 141))
 			)
 		}
 

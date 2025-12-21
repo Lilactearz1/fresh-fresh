@@ -63,13 +63,13 @@ public class Templatepdf1{
     public Image barCodeGenerator(String data) {
         try {
             // barcode dimensions
-            int width = 200;
-            int height = 40;
+            int width = 180;
+            int height = 30;
 
             MultiFormatWriter writer = new MultiFormatWriter();
             BitMatrix bitMatrix = writer.encode(
                     data,
-                    BarcodeFormat.PDF_417,
+                    BarcodeFormat.CODE_128 ,
                     width,
                     height
             );
