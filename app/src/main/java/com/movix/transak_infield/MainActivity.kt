@@ -55,7 +55,7 @@ import java.io.File
 //import the R .id r. layout ,drawables
 
 
-open class MainActivity : AppCompatActivity() {
+open class   MainActivity : AppCompatActivity() {
 	private lateinit var binding: ActivityMainBinding
 	private lateinit var itemsCount: TextView
 	private lateinit var Subtotal: GlobalFunck
@@ -139,6 +139,7 @@ open class MainActivity : AppCompatActivity() {
 
 			val itemSubtal = binding.esumSubtotal
 			val itemsTotal = binding.esumTotal
+
 			Subtotal = GlobalFunck()
 			val stringSubtotal = stringFomat.format(
 				Math.floor(
@@ -148,6 +149,7 @@ open class MainActivity : AppCompatActivity() {
 			itemSubtal.text = stringSubtotal
 
 			Total = GlobalFunck()
+
 			val stringTotal = stringFomat.format(
 				Math.floor(
 					Total.summationofTotal(applicationContext, estimateId).toDouble()
@@ -182,6 +184,7 @@ open class MainActivity : AppCompatActivity() {
 		super.onResume()
 		setupListintoRecycleview()
 	}
+
 
 	override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 
@@ -246,8 +249,6 @@ open class MainActivity : AppCompatActivity() {
 							val estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
 							val customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
 							val template = currentTemplate ?: PdfTemplateDRW.CLASSIC
-
-							Log.d("TEMPLATE", "currentTemplate = $currentTemplate")
 
 							try {
 								// Generate PDF in background
@@ -382,10 +383,7 @@ open class MainActivity : AppCompatActivity() {
 			val estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
 			val customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
 
-			Log.d(
-				"InvoiceDebug",
-				"Passing estimateId=$estimateId, customerId=$customerId to ProductsInfoFragment"
-			)
+
 
 			val productFrag = ProductsInfoFragment().apply {
 				arguments = Bundle().apply {
@@ -421,7 +419,7 @@ open class MainActivity : AppCompatActivity() {
 			)
 			return fontFact
 		}
-
+ 
 
 		fun latoBold(context: Context): PdfFont {
 			val fontstream = context.assets.open("fonts/latobold.ttf")
@@ -456,8 +454,6 @@ open class MainActivity : AppCompatActivity() {
 			val data = PdfUtils.load(context, estimateId, customerId)
 			val layout = PdfUtils.loadTemplateFromJson(context, templateDRW.jsonResId)
 
-			Log.d("PDFDebug", "Selected template : $templateDRW, background: ${layout.background}")
-
 			val pdfTemplate: TemplateInterface = when (templateDRW) {
 				PdfTemplateDRW.CLASSIC -> Classic1(context)
 				PdfTemplateDRW.MODERN -> Modern1(context)
@@ -466,9 +462,7 @@ open class MainActivity : AppCompatActivity() {
 			}
 
 				return PdfUtils.generate(context, pdfTemplate, layout, data)
-
 		}
-
 	}
 
 	private fun setupListIntoRecyclerView(): Int {

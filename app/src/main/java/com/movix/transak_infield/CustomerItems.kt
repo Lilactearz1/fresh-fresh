@@ -58,6 +58,7 @@ class CustomerItems : AppCompatActivity() {
 	private lateinit var items:ArrayList<ModelClass>
 	private lateinit var refreshLauncher: ActivityResultLauncher<Intent>
 	private var currentTemplate: PdfTemplateDRW? = null
+    internal val stringFormat ="%,.2f"
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -253,7 +254,6 @@ class CustomerItems : AppCompatActivity() {
 		val db = DatabaseHandler(this)
 		 items = db.getItemsForEstimate(estimateId, customerId)
 
-		Log.d("CustomerItems", "Fetched items count: ${items.size}")
 		db.estimated(applicationContext)
 
 		if (items.isNotEmpty()) {
@@ -304,9 +304,9 @@ class CustomerItems : AppCompatActivity() {
 		val tax = GlobalFunck().summationOfTax(applicationContext,estimateId)
 		val grandTotal = subtotal + tax
 
-		binding.esumSubtotal.text = "${String.format("%.2f", subtotal)}"
-	//	binding.taxText.text = "Tax: ${String.format("%.2f", tax)}"
-		binding.esumTotal.text = "${String.format("%.2f", grandTotal)}"
+		binding.esumSubtotal.text = "${stringFormat.format( subtotal)}"
+	//	binding.taxText.text = "Tax: ${String.format("%,.2f", tax)}"
+		binding.esumTotal.text = "${stringFormat.format( grandTotal)}"
 	}
 
 	fun refreshItems() {

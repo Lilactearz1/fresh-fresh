@@ -7,6 +7,10 @@
 
     <!-- Optional: for internal app files -->
     <external-files-path
-        name="external_files"
-        path="." />
+        name="backups"
+        path="TransakBackups/" />
+    <cache-path
+        name="cache"
+        path="/" />
+
 </paths>

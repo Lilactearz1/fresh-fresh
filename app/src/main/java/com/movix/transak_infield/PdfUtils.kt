@@ -150,10 +150,14 @@ object PdfUtils {
 		layout: TemplateLayout,
 		data: EstimatePDFData
 	): File {
+		val global_Functions =GlobalFunck()
+		val title =global_Functions.titleINV(context)
+		val clientName= global_Functions.safeClientName(context,estimateId)
+		val safeClientId = global_Functions.safeClientId(context)
 
 		val file = File(
 			context.getExternalFilesDir(null),
-			"estimate_${data.estimateId}.pdf"
+			"$clientName $title${data.estimateId}- $safeClientId.pdf"
 		)
 
 		// Open background template PDF

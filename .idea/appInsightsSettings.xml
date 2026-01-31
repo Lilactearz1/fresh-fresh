@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.movix.transak_infield" />
+                  <option name="mobileSdkAppId" value="1:1034994799603:android:023c755be745689528b886" />
+                  <option name="projectId" value="signage-d825d" />
+                  <option name="projectNumber" value="1034994799603" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

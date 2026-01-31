@@ -72,7 +72,7 @@ enum class CompanyDetail(val text: String) {
 	COMPANY_NAME_1("INFIELD"),
 	COMPANY_NAME_2("ENGINEERING"),
 	QUOTE_NO("QUOTE NO:"),
-	QUOTE_TO("INFIELD-ER:"),
+	QUOTE_TO("INF_:"),
 	DATE("DATE:"),
 	QUOTE_FOR("FOR:"),
 	QUOTE_HEADER("QUOTATION");

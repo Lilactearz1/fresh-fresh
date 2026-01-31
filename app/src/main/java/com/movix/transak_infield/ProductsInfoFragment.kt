@@ -34,6 +34,7 @@ class ProductsInfoFragment : Fragment() {
 	private lateinit var db: DatabaseHandler
 	private var estimateId: Int = -1
 	private var customerId: Int = 0
+    internal var stringFormat= "%,.2f"
 
 
 //   private lateinit var databaseHandler:DatabaseHandler
@@ -50,16 +51,6 @@ class ProductsInfoFragment : Fragment() {
 
 		estimateId = arguments?.getInt(EXTRA_ESTIMATE_ID, -1) ?: -1
 		customerId = arguments?.getInt(EXTRA_CUSTOMER_ID, 0) ?: 0
-
-
-
-
-		if (customerId == 0) {
-			Log.d("InvoiceDebug", "No customer assigned yet — pending assignment.")
-		}
-
-		Log.d("DebugCheck", "estimateId passed to fragment = $estimateId")
-		Log.d("DebugCheck", "customerId passed to fragment = $customerId")
 
 
 		// Initialize database
@@ -117,9 +108,9 @@ class ProductsInfoFragment : Fragment() {
 		val amount = productPrice * productQuantity
 
 		// You can also update a TextView here for live updates:
-		println("this up $amount")
 
-		amountScreen.text = amount.toString()
+
+		amountScreen.text = stringFormat.format(amount)
 	}
 
 //    method for saving records to the database
@@ -161,7 +152,7 @@ class ProductsInfoFragment : Fragment() {
 			(itemPrice.text.toString().toFloat() * itemQuantity.text.toString().toFloat())
 
 		} catch (e: NumberFormatException) {
-			itemQuantity.error = "inputfield"
+			itemQuantity.error = "input field"
 			itemPrice.error = "input field"
 			return
 		}
@@ -191,7 +182,7 @@ class ProductsInfoFragment : Fragment() {
 			val status = databaseHandler.addProductToDatabase(products)
 
 			if (status > -1) {
-				Toast.makeText(requireContext(), "Saved", Toast.LENGTH_SHORT).show()
+				Toast.makeText(requireContext(), "saved", Toast.LENGTH_SHORT).show()
 
 				//
 				//optionally  clear input fields

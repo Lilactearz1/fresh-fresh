@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -69,7 +70,10 @@ dependencies {
 	implementation(libs.androidx.activity)
 	implementation(libs.places)
 	implementation(libs.androidx.media3.common.ktx)
-	testImplementation(libs.junit)
+    implementation(libs.firebase.storage.ktx)
+    implementation(libs.firebase.storage)
+    implementation(libs.firebase.database)
+    testImplementation(libs.junit)
     testImplementation(libs.junit.jupiter)
 	testImplementation(libs.junit.jupiter)
 	androidTestImplementation(libs.androidx.junit)
@@ -84,10 +88,13 @@ dependencies {
 	coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.0.4")
 	implementation ("com.android.volley:volley:1.2.1")
 
+// Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+// OKHttp for custom server uploads
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
 
 
-
-
+        implementation ("com.google.firebase:firebase-storage-ktx")
 
 
 

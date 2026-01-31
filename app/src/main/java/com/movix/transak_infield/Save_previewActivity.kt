@@ -65,8 +65,6 @@ class Save_previewActivity : AppCompatActivity() {
 
 			PdfUtils.generateEstimatePdf(applicationContext, estimateId,customerId, template)
 			Toast.makeText(applicationContext, "Success...", Toast.LENGTH_LONG).show()
-
-
 		}
 
 		endEstimatebtn.setOnClickListener {
@@ -92,13 +90,13 @@ class Save_previewActivity : AppCompatActivity() {
 			}
 		}
 
-
 		print.setOnClickListener { view ->
 			Toast.makeText(applicationContext, "coming soon...", Toast.LENGTH_SHORT).show()
 		}
-
 		more.setOnClickListener { view ->
 			Toast.makeText(applicationContext, "coming soon...", Toast.LENGTH_SHORT).show()
+            // but to upload to drive
+
 		}
 		val cashFormat =
 			stringFormat.format(GlobalFunck().summationofTotal(applicationContext, estimateId))
@@ -107,7 +105,7 @@ class Save_previewActivity : AppCompatActivity() {
 
 		dueDate.text = GlobalFunck().dueDate(applicationContext)
 
-		name.text = GlobalFunck().safeClientName(applicationContext)
+		name.text = GlobalFunck().safeClientName(applicationContext,estimateId)
 
 		share.setOnClickListener {
 			val pdFile = PdfUtils.generateEstimatePdf(applicationContext, estimateId, customerId,template)
@@ -119,9 +117,7 @@ class Save_previewActivity : AppCompatActivity() {
 			}
 		}
 
-
 	}
-
 
 	override fun onPostResume() {
 

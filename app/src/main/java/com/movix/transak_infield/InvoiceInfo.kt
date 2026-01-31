@@ -72,13 +72,15 @@ class InvoiceInfo : Fragment() {
 		imageCalendar = binding.imageCalendar
 
 
-		if (estimateId != 0){ updateEstimateDisplay(requireContext())}
+		if (estimateId != 0) {
+			updateEstimateDisplay(requireContext())
+		}
 
 		//handle the key enter and back issue for crush behavior on enter or back pressed
 		GlobalFunck().setUpEnterKeyNavigation(invoiceNumber, invoiceTitle)
 
 		// Handle DatePicker click to show a date picker dialog
-		creationDate.setOnClickListener {
+			creationDate.setOnClickListener {
 			invoiceNumber.imeOptions = EditorInfo.IME_ACTION_DONE
 			invoiceTitle.imeOptions = EditorInfo.IME_ACTION_DONE
 			invoiceNumber.clearFocus()
@@ -160,7 +162,8 @@ class InvoiceInfo : Fragment() {
 
 					val estimateInfo = Estimateinfo(
 						titleINV = title,
-						creationDate = pickedDate.toString(), dueDate = dueDate.toString()
+						creationDate = pickedDate.toString(),
+						dueDate = dueDate.toString()
 					)
 
 					if (estimateId != 0) {
@@ -168,9 +171,17 @@ class InvoiceInfo : Fragment() {
 						val rows = db.updateEstimateInfo(updatedEstimate)
 
 						if (rows > 0) {
-							Toast.makeText(requireContext(), "Estimate updated successfully", Toast.LENGTH_SHORT).show()
+							Toast.makeText(
+								requireContext(),
+								"Estimate updated successfully",
+								Toast.LENGTH_SHORT
+							).show()
 						} else {
-							Toast.makeText(requireContext(), "No changes detected or update failed", Toast.LENGTH_SHORT).show()
+							Toast.makeText(
+								requireContext(),
+								"No changes detected or update failed",
+								Toast.LENGTH_SHORT
+							).show()
 						}
 					}
 

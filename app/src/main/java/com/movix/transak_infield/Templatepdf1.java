@@ -1,7 +1,9 @@
 package com.movix.transak_infield;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -31,6 +33,9 @@ public class Templatepdf1{
        Typeface typeface=ResourcesCompat.getFont(context,R.font.queen);
         return typeface;
     }
+//creat a bitmap image
+    Paint paint = new Paint();
+
 
 
     // Method to generate QR code and return iText 7 Image
@@ -63,8 +68,8 @@ public class Templatepdf1{
     public Image barCodeGenerator(String data) {
         try {
             // barcode dimensions
-            int width = 180;
-            int height = 30;
+            int width = 120;
+            int height = 35;
 
             MultiFormatWriter writer = new MultiFormatWriter();
             BitMatrix bitMatrix = writer.encode(
@@ -134,6 +139,13 @@ public class Templatepdf1{
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    public Bitmap loadStump(Context context){
+        int x =150;
+        int y= 150;
+        Bitmap bitImage =BitmapFactory.decodeResource(context.getResources(),R.drawable.infield_stamp);
+        Bitmap scaledImage =Bitmap.createScaledBitmap(bitImage,x,y,true);
+    return scaledImage;
     }
 
 

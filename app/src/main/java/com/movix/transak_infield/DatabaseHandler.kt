@@ -6,8 +6,23 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteOpenHelper
-import android.util.Log
+
 import java.time.LocalDate
+
+//firebase importations
+
+import android.os.Environment
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.UploadTask
+import kotlinx.coroutines.*
+import okhttp3.*
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.*
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 
 //creating a database logic that extends the SQLiteOpenHelper base class
@@ -44,6 +59,18 @@ class DatabaseHandler(context: Context) :
 
 
 
+
+        //////////////////////////////
+//    cloud storage functions companion object function
+
+        private const val  BACKUP_DIR ="TransakBackups"
+        private  const val  BACKUP_PREFIX ="transak_backup_"
+        private const val  BACKUP_EXTENSION =".zip"
+        private const val JSON_BACKUP_EXTENSION=".json"
+
+
+
+
 	}
 
 
@@ -62,7 +89,7 @@ class DatabaseHandler(context: Context) :
 					+ ESTIMATE_DATE + " DATETIME DEFAULT CURRENT_TIMESTAMP, "
 					+ DUE_DATE + " DATETIME DEFAULT CURRENT_TIMESTAMP, "
 					+ STATUS + " TEXT, "
-					+ CUSTOMER_ID + " INTEGER NULL, " +
+					+ CUSTOMER_ID + " INTEGER, " +
 					"FOREIGN KEY(" + CUSTOMER_ID + ") REFERENCES " + CUSTOMER_TABLE + "(" + CUSTOMER_ID + ") ON DELETE SET NULL" + ")")
 
 
@@ -133,6 +160,7 @@ class DatabaseHandler(context: Context) :
 		db.close()
 		return updateSuccess
 	}
+    //
 
 	//get latest client
 	fun getLatestCustomerId(): Int {
@@ -490,7 +518,7 @@ class DatabaseHandler(context: Context) :
 					price = cursor.getDouble(cursor.getColumnIndexOrThrow(KEY_PRICE)),
 					total = cursor.getFloat(cursor.getColumnIndexOrThrow(KEY_ITEM_TOTAL)),
 					tax = cursor.getFloat(cursor.getColumnIndexOrThrow(KEY_TAX)),
-					customerId = customerId,
+					customerId = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID)),
 					estimateId = cursor.getInt(cursor.getColumnIndexOrThrow(ESTIMATE_ID)),
 				)
 				itemsList.add(item)
@@ -506,47 +534,7 @@ class DatabaseHandler(context: Context) :
 
 
 	//	 Query with a join to see linked data
-	fun linkedData(): List<Estimateinfo> {
-		val linkedlist = mutableListOf<Estimateinfo>()
-		val db = readableDatabase
-		val query =
-			""" SELECT e.${ESTIMATE_ID}, e.${ESTIMATE_TITLE}, e.${ESTIMATE_DATE}, e.${DUE_DATE},c.${CUSTOMER_NAME} AS $CUSTOMER_NAME, c.${CUSTOMER_PHONE} AS  $CUSTOMER_PHONE
-FROM $ESTIMATE_TABLE e
-JOIN $CUSTOMER_TABLE c
-ON e.$CUSTOMER_ID= c.$CUSTOMER_ID """.trimIndent()
-		val cursor = db.rawQuery(query, null)
-//	 create variables for table columns
-		var estimateId: Int
-		var title: String
-		var createdDate: String
-		var dueDate: String
-		var customerId: Int
 
-
-		if (cursor.moveToFirst()) {
-			do {
-				estimateId = cursor.getInt(cursor.getColumnIndexOrThrow(ESTIMATE_ID))
-				title = cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_TITLE))
-				createdDate = cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_DATE))
-				dueDate = cursor.getString(cursor.getColumnIndexOrThrow(DUE_DATE))
-				customerId = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID))
-
-				val list = Estimateinfo(
-					estimateId = estimateId,
-					titleINV = title,
-					creationDate = createdDate,
-					dueDate = dueDate,
-					customerId = customerId,
-
-					)
-				linkedlist.add(list)
-			} while (cursor.moveToNext())
-
-		}
-		cursor.close()
-		db.close()
-		return linkedlist
-	}
 // function to close the  current estimate database
 	fun closeEstimate(estimateId: Long) {
 		val db = writableDatabase
@@ -623,7 +611,7 @@ ON e.$CUSTOMER_ID= c.$CUSTOMER_ID """.trimIndent()
 
 	fun updateEstimateStatus(id: Int, status: EstimateStatus) {
 		val db = writableDatabase
-		val values = ContentValues().apply {
+		val values =  ContentValues().apply {
 			put(STATUS, status.name)
 		}
 		db.update(ESTIMATE_TABLE, values, "$ESTIMATE_ID=?", arrayOf(id.toString()))
@@ -673,10 +661,7 @@ ON e.$CUSTOMER_ID= c.$CUSTOMER_ID """.trimIndent()
 				val tax = c.getFloat(5)
 				val cust = c.getInt(6)
 				val est = c.getInt(7)
-				android.util.Log.d(
-					"DB_DUMP",
-					"row id=$id name=$name qty=$qty price=$price total=$total tax=$tax cust=$cust est=$est"
-				)
+
 			} while (c.moveToNext())
 		} else {
 
@@ -690,7 +675,7 @@ ON e.$CUSTOMER_ID= c.$CUSTOMER_ID """.trimIndent()
 
 
 
-	// temporary code debug testers from this point downwards
+
 
 //	/////////////////////////////////////////////////////////////////////////
 	//////////////////////////////////
@@ -715,6 +700,179 @@ ON e.$CUSTOMER_ID= c.$CUSTOMER_ID """.trimIndent()
 	}
 
 
+///////////////////////////////
+//    backup functions
+fun getDatabaseFile(context: Context): File{
+    return context.getDatabasePath(DATABASE_NAME)
 
+}
+/*
+* get the entire database and export it to a zip file*/
+fun createBackupFile(context: Context):File{
+//    create a backup directory
+    val backupDir = File(context.getExternalFilesDir(null),BACKUP_DIR)
+    if(!backupDir.exists()){
+        backupDir.mkdirs()
+    }
+    /// create timestamp forname
+    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+    val zipFileName  = "${BACKUP_PREFIX}${timeStamp}${BACKUP_EXTENSION}"
+    val zipFile = File(backupDir,zipFileName)
+    /////create a zip file
+    FileOutputStream(zipFile).use { fos->
+        ZipOutputStream(fos).use { zos->
+            // add sqlire database file
+            val dbFile = getDatabaseFile(context)
+            if (dbFile.exists()){
+                val entry = ZipEntry("database/$DATABASE_NAME")
+                zos.putNextEntry(entry)
+                FileInputStream(dbFile).use { fis->
+                    fis.copyTo(zos)
 
+                }
+                zos.closeEntry()
+
+            }
+            /// add json export data
+            val jsonData= exportAllDataToJson()
+            val jsonEntry= ZipEntry("data/backup_data.json")
+            zos.putNextEntry(jsonEntry)
+            zos.write(jsonData.toByteArray())
+            zos.closeEntry()
+
+            ////add metadata
+            val metaData= JSONObject().apply {
+                put("app_name","Transak Infield")
+                put("backup_timestamp", "timestamp")
+                put("database_version", DATABASE_VERSION)
+                put("total_customers", getCustomerCount())
+                put("total_estimates", getEstimateCount())
+                put("total_invoice_items", getInvoiceItemCount())
+            }
+            val metaEntry = ZipEntry("metadata.json")
+            zos.putNextEntry(metaEntry)
+            zos.write(metaData.toString().toByteArray())
+            zos.closeEntry()
+        }
+    }
+    return zipFile
+}
+
+    /**
+     * Export all data to JSON format
+     */
+    fun exportAllDataToJson(): String {
+        val jsonObject = JSONObject()
+
+        // 1. Export customers
+        val customers = viewClientsInfo()
+        val customersArray = JSONArray()
+        for (customer in customers) {
+            val customerJson = JSONObject().apply {
+                put("customer_id", customer.id)
+                put("name", customer.name)
+                put("phone", customer.phone)
+            }
+            customersArray.put(customerJson)
+        }
+        jsonObject.put("customers", customersArray)
+
+        // 2. Export estimates
+        val estimates = getAllEstimate()
+        val estimatesArray = JSONArray()
+        for (estimate in estimates) {
+            val estimateJson = JSONObject().apply {
+                put("estimate_id", estimate.estimateId)
+                put("title", estimate.titleINV)
+                put("created_date", estimate.creationDate)
+                put("due_date", estimate.dueDate)
+                put("customer_id", estimate.customerId)
+                put("status", estimate.status?.name ?: "OPEN")
+            }
+            estimatesArray.put(estimateJson)
+        }
+        jsonObject.put("estimates", estimatesArray)
+
+        // 3. Export invoice items
+        val invoiceItems = viewProduct()
+        val itemsArray = JSONArray()
+        for (item in invoiceItems) {
+            val itemJson = JSONObject().apply {
+                put("id", item.id)
+                put("item_name", item.itemName)
+                put("quantity", item.quantity)
+                put("price", item.price)
+                put("total", item.total)
+                put("tax", item.tax)
+                put("customer_id", item.customerId)
+                put("estimate_id", item.estimateId)
+            }
+            itemsArray.put(itemJson)
+        }
+        jsonObject.put("invoice_items", itemsArray)
+
+        // 4. Add summary
+        val summary = JSONObject().apply {
+            put("export_date", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+            put("total_records", customers.size + estimates.size + invoiceItems.size)
+        }
+        jsonObject.put("summary", summary)
+
+        return jsonObject.toString(2) // Pretty print with indentation
+    }
+
+    /**
+     * Get counts for metadata
+     */
+    private fun getCustomerCount(): Int {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT COUNT(*) FROM $CUSTOMER_TABLE", null)
+        cursor.moveToFirst()
+        val count = cursor.getInt(0)
+        cursor.close()
+        db.close()
+        return count
+    }
+
+    private fun getEstimateCount(): Int {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT COUNT(*) FROM $ESTIMATE_TABLE", null)
+        cursor.moveToFirst()
+        val count = cursor.getInt(0)
+        cursor.close()
+        db.close()
+        return count
+    }
+
+    private fun getInvoiceItemCount(): Int {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT COUNT(*) FROM $INVOICE_TABLE", null)
+        cursor.moveToFirst()
+        val count = cursor.getInt(0)
+        cursor.close()
+        db.close()
+        return count
+    }
+
+    /**
+     * List all available backup files
+     */
+    fun listBackups(context: Context): List<File> {
+        val backupDir = File(context.getExternalFilesDir(null), BACKUP_DIR)
+        if (!backupDir.exists()) return emptyList()
+
+        return backupDir.listFiles { file ->
+            file.name.startsWith(BACKUP_PREFIX) && file.name.endsWith(BACKUP_EXTENSION)
+        }?.sortedByDescending { it.lastModified() } ?: emptyList()
+    }
+
+    /**
+     * Delete old backups (keep only last N)
+     */
+    fun cleanupOldBackups(keepLast: Int = 5,context: Context) {
+        val backups = listBackups(context)
+        if (backups.size > keepLast) {
+            backups.drop(keepLast).forEach { it.delete() }
+        }
+    }
 }
