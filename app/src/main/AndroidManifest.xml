@@ -1,51 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-   />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        />
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
-
-    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
-
 
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/infieldstar_logo"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="31">
-
-
+        <activity
+            android:name=".docAnalysis.ui.main.Extraction_Activity"
+            android:exported="false" />
         <activity
             android:name=".invoicing.MainInvoicing"
-            android:exported="true" >
-
+            android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" >
-
-                </action>
+                <action android:name="android.intent.action.MAIN"></action>
             </intent-filter>
         </activity>
-        <activity android:name=".cloudB.BackupManagerActivity"
+        <activity
+            android:name=".cloudB.BackupManagerActivity"
             android:enableOnBackInvokedCallback="true"
             android:exported="true">
-
             <intent-filter>
-                <action android:name="android.intent.action.SYNC"/>
-                <action android:name="android.intent.action.SEND"/>
+                <action android:name="android.intent.action.SYNC" />
+                <action android:name="android.intent.action.SEND" />
             </intent-filter>
         </activity>
-
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -60,7 +53,6 @@
         <activity
             android:name=".Save_previewActivity"
             android:exported="false" />
-
         <activity
             android:name=".CustomerItems"
             android:exported="true"
@@ -69,7 +61,6 @@
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".ClientActivity"
             android:exported="true">
@@ -77,7 +68,6 @@
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".MainLandingPage"
             android:exported="true"
@@ -103,19 +93,16 @@
             android:name=".PdfViewerActivity"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.OPEN_DOCUMENT"/>
+                <action android:name="android.intent.action.OPEN_DOCUMENT" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".ui.theme.TemplateSelectorActivity"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.OPEN_DOCUMENT"/>
+                <action android:name="android.intent.action.OPEN_DOCUMENT" />
             </intent-filter>
         </activity>
-
-
     </application>
 
 </manifest>

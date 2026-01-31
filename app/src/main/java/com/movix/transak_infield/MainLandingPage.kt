@@ -2,6 +2,7 @@ package com.movix.transak_infield
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Spinner
 import android.widget.TextView
@@ -48,78 +49,74 @@ class MainLandingPage : AppCompatActivity(), EstimateAdapter.OnEstimateClickList
 		nav_InvoiceACtivity.setOnClickListener{
 
 			val intent = Intent(applicationContext,MainInvoicing::class.java)
-			intent.putExtra("estimated_id",-1)
-			intent.putExtra("customer_id",-1)
+			intent.putExtra(MainActivity.EXTRA_ESTIMATE_ID,-1)
+			intent.putExtra(MainActivity.EXTRA_CUSTOMER_ID,-1)
 			startActivity(intent)
 		}
 
 		// Load current session
 		EstimateSession.loadSession(this)
 
-		if (checkActiveEstimate()) return
+
 
 		// Initialize recycler
 		estimateRecyclerview()
 
 		// Floating + button → start or resume estimate
-		floatingPlus.setOnClickListener {
-			EstimateSession.clearSession(this) // force new start
-			val unfinishedId = EstimateSession.currentEstimate
-			if (unfinishedId != null) {
-				val unfinishedEstimate = db.getEstimateById(unfinishedId)
-				if (unfinishedEstimate != null && unfinishedEstimate.status == EstimateStatus.OPEN) {
-					val intent = Intent(this, MainActivity::class.java)
-					intent.putExtra("estimate_id", unfinishedId)
-					intent.putExtra("customer_id", unfinishedEstimate.customerId)
-					startActivity(intent)
-					return@setOnClickListener
-				} else {
-					EstimateSession.clearSession(this)
-				}
-			}
+        floatingPlus.setOnClickListener {
+            lifecycleScope.launch(Dispatchers.IO) {
 
-			// No unfinished estimate → start a new one
-			// Use the helper function that auto-handles ID & session
-			val newEstimateId = db.createNewEstimate(this, customerId = 1,title) // use Guest ID
+                EstimateSession.clearSession(this@MainLandingPage)
+                Log.d("ANR_TEST", "before query create new")
+                val newEstimateId =
+
+                    db.createNewEstimate(this@MainLandingPage, 1, title)
+                Log.d("ANR_TEST", "after query create new")
+                withContext(Dispatchers.Main) {
+                    if (newEstimateId != -1L) {
+                        startActivity(
+                            Intent(this@MainLandingPage, MainActivity::class.java).apply {
+                                putExtra(MainActivity.EXTRA_ESTIMATE_ID, newEstimateId.toInt())
+                                putExtra(MainActivity.EXTRA_CUSTOMER_ID, 1)
+                            }
+                        )
+                    }
+                }
+            }
+        }
 
 
-			if (newEstimateId != -1L) {
-				val intent = Intent(this, MainActivity::class.java)
-				intent.putExtra("estimate_id", newEstimateId.toInt())
-				intent.putExtra("customer_id", 1)
-				startActivity(intent)
-			} else {
-				Toast.makeText(this, "Failed to create new estimate.", Toast.LENGTH_SHORT).show()
-			}
-		}
+    }
 
-	}
+    private fun checkActiveEstimate() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val currentId = EstimateSession.currentEstimate ?: 0
 
-	private fun checkActiveEstimate(): Boolean {
-		val currentId = EstimateSession.currentEstimate ?: 0
-		if (currentId != 0) {
-			val unfinished = db.getEstimateById(currentId)
-			if (unfinished?.status == EstimateStatus.OPEN) {
+            if (currentId != 0) {
+                val unfinished = db.getEstimateById(currentId)
 
-				val intent = Intent(this, MainActivity::class.java).apply {
-					putExtra("estimate_id", currentId)
-					putExtra("customer_id", unfinished.customerId)
-				}
-				startActivity(intent)
-				finish()
-				return true // ✅ Found active estimate, skip landing
-			} else {
+                withContext(Dispatchers.Main) {
+                    if (unfinished?.status == EstimateStatus.OPEN) {
 
-				EstimateSession.clearSession(this)
-			}
-		}
-		return false // ✅ No active estimate
-	}
+                        val intent = Intent(this@MainLandingPage, MainActivity::class.java).apply {
+                            putExtra(MainActivity.EXTRA_ESTIMATE_ID, currentId)
+                            putExtra(MainActivity.EXTRA_CUSTOMER_ID, unfinished.customerId)
+                        }
+
+                        startActivity(intent)
+                        finish()
+                    } else {
+                        EstimateSession.clearSession(this@MainLandingPage)
+                    }
+                }
+            }
+        }
+    }
 
 
 	override fun onStart() {
 		super.onStart()
-		if (checkActiveEstimate()) return
+
 
 
 	}
@@ -130,14 +127,17 @@ class MainLandingPage : AppCompatActivity(), EstimateAdapter.OnEstimateClickList
 
 		// Launch background coroutine for DB queries
 		lifecycleScope.launch(Dispatchers.IO) {
+            Log.d("ANR_TEST", "before query getAllEstimate")
 			val items = db.getAllEstimate()
 			val clients = db.viewClientsInfo()
+            Log.d("ANR_TEST", "After query getAllEstimate")
+            val clientRepo = ClientRepository(clients)
 
 			withContext(Dispatchers.Main) {
 				adapter = EstimateAdapter(
 					this@MainLandingPage,
 					items,
-					clients,
+					clientRepo,
 					this@MainLandingPage
 				) { deletedItem, pos ->
 					// Persist deletion (delete from DB / remote API)
@@ -171,8 +171,8 @@ class MainLandingPage : AppCompatActivity(), EstimateAdapter.OnEstimateClickList
 
 	override fun onEstimateClick(estimate: Estimateinfo) {
 		val intent = Intent(this, CustomerItems::class.java)
-		intent.putExtra("estimate_id", estimate.estimateId)
-		intent.putExtra("customer_id", estimate.customerId)
+		intent.putExtra(MainActivity.EXTRA_ESTIMATE_ID, estimate.estimateId)
+		intent.putExtra(MainActivity.EXTRA_CUSTOMER_ID, estimate.customerId)
 		startActivity(intent)
 	}
 

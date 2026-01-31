@@ -81,8 +81,8 @@ class CustomerItems : AppCompatActivity() {
 
 		val db = DatabaseHandler(applicationContext)
 
-		estimateId = intent.getIntExtra("estimate_id", -1)
-		customerId = intent.getIntExtra("customer_id", -1)
+		estimateId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
+		customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
 		itemsCount = binding.tvItems
 
 		if (estimateId == -1 || customerId == -1) {
@@ -105,18 +105,18 @@ class CustomerItems : AppCompatActivity() {
 		}
 
 		binding.btnclientInfo.setOnClickListener {
-			handleClientInfoClick(this)
+			handleClientInfoClick(this,estimateId,customerId)
 		}
 
 		binding.businessimage?.setOnClickListener {
 			handleBusinessImage(this)
 		}
 		binding.additemscardView.setOnClickListener {
-			handleItemsCardView(this,intent)
+			handleItemsCardView(this,intent, estimateId, customerId)
 		}
 
 		binding.addbuttonImage.setOnClickListener {
-			handleItemsCardView(this,intent)
+			handleItemsCardView(this,intent, estimateId, customerId)
 		}
 
 		rvl_bussinessInfo?.setOnClickListener {

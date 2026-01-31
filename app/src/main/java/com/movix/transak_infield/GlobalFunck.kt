@@ -118,59 +118,17 @@ class GlobalFunck {
         return string
     }
 
-    fun titleINV(context: Context): String {
-        val dbEstimateinfo = DatabaseHandler(context).getAllEstimate()
-        var string: String = ""
-        dbEstimateinfo.forEachIndexed { index, title ->
-
-            string = title.titleINV.toString()
-
-        }
-        return string
-    }
-
-    fun id(context: Context): Int {
-        val dbEstimateinfo = DatabaseHandler(context).getAllEstimate()
-        var int: Int = 0
-
-        dbEstimateinfo.forEachIndexed { index, _ ->
-
-            int = index
-        }
-        return int
-
-    }
 
 
-    fun customerId(context: Context): Int {
-        val db = DatabaseHandler(context)
-        val estimates = db.getAllEstimate()
 
-        // Return the customerId of the most recent estimate if available
-        return if (estimates.isNotEmpty()) {
-            estimates.last().customerId
-        } else {
-            0 // Default if none exists
-        }
-    }
+
 
     fun customerName(context: Context): List<String> {
         return DatabaseHandler(context).viewClientsInfo().map { it.name }
     }
 
 
-    fun safeClientId(context: Context): Int {
-        var clientId = customerId(context)
-        val safeClientId = if (clientId <= 0) 0 else clientId
-        return safeClientId
-    }
 
-    fun safeClientName(context: Context, estimateId: Int): String {
-        val clientNames = customerName(context)
-        // Return last inserted client name or default
-
-            return clientNames.last() ?: "CLIENT INFIELDER"
-    }
 
 
     //show date picker and utilize the return string
@@ -298,7 +256,6 @@ class GlobalFunck {
 
     }
 
-    fun cloudSaveDb(context: Context){}
 
 //
 

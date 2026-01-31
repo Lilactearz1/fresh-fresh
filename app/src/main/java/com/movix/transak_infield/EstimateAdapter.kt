@@ -1,6 +1,7 @@
 package com.movix.transak_infield
 
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 class EstimateAdapter(
     private val context: Context,
     private val estimateList: MutableList<Estimateinfo>,
-    private val clientInfo: MutableList<ClientsCreation>,
+    private val clientRepo: ClientRepository,
     private val onSelectedEstimate: OnEstimateClickListener,
     internal val onItemDeleted: (deletedItem: Estimateinfo, pos: Int) -> Unit  // callback to persist deletion
 ) : RecyclerView.Adapter<EstimateAdapter.EstimateViewHolder>() {
@@ -34,20 +35,22 @@ class EstimateAdapter(
     }
 
     override fun onBindViewHolder(holder: EstimateViewHolder, position: Int) {
-        val estimateId = -1
-        val customerId = -1
-        val estimate = estimateList[position]
-        val client = if (position < clientInfo.size) clientInfo[position] else null
-        val safeClient = GlobalFunck().safeClientName(context,estimateId)
 
-        holder.customerName.text = client?.name ?: safeClient
-        holder.estimateTitle.text = estimate.titleINV ?: "INFIELDER ${GlobalFunck().id(context)}"
+        val estimate = estimateList[position]
+
+        holder.customerName.text =  clientRepo.getClientName(estimate.customerId)
+        holder.estimateTitle.text = estimate.titleINV ?: "INFIELDER_EST #${estimate.estimateId}"
         holder.estimateDate.text = "Created: ${estimate.creationDate}"
         holder.estimateDueDate.text = "Due: ${estimate.dueDate}"
 
         holder.archives.setOnClickListener {
             onSelectedEstimate.onEstimateClick(estimate)
         }
+        Log.d(
+            "EstimateAdapter",
+            "Estimate ${estimate.estimateId} customerId=${estimate.customerId}"
+        )
+
     }
 
 
@@ -66,4 +69,6 @@ class EstimateAdapter(
         notifyItemInserted(position)
 
     }
+
+
 }

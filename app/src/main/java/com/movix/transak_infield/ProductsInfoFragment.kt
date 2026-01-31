@@ -33,7 +33,7 @@ class ProductsInfoFragment : Fragment() {
 	private var productAmount by Delegates.notNull<Float>()
 	private lateinit var db: DatabaseHandler
 	private var estimateId: Int = -1
-	private var customerId: Int = 0
+	private var customerId: Int = -1
     internal var stringFormat= "%,.2f"
 
 
@@ -50,7 +50,7 @@ class ProductsInfoFragment : Fragment() {
 		super.onViewCreated(view, savedInstanceState)
 
 		estimateId = arguments?.getInt(EXTRA_ESTIMATE_ID, -1) ?: -1
-		customerId = arguments?.getInt(EXTRA_CUSTOMER_ID, 0) ?: 0
+		customerId = arguments?.getInt(EXTRA_CUSTOMER_ID, 0) ?: -1
 
 
 		// Initialize database

@@ -29,6 +29,7 @@ private lateinit var spinnerTerms: Spinner
 private lateinit var invoiceTitle: EditText
 private lateinit var imageCalendar: TextView
 private lateinit var db: DatabaseHandler
+private var selectedCustomerId: Int = -1
 
 private var estimateId: Int = 0
 
@@ -40,6 +41,8 @@ class InvoiceInfo : Fragment() {
 	private var _binding: FragmentInvoiceInfoBinding? = null
 	private val binding get() = _binding!!
 	private var selectedCreationDate: LocalDate? = null
+
+
 
 
 	override fun onCreateView(
@@ -55,14 +58,22 @@ class InvoiceInfo : Fragment() {
 	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
 
-		estimateId = arguments?.getInt("estimate_id") ?: 0
+        estimateId = arguments?.getInt(MainActivity.EXTRA_ESTIMATE_ID) ?: -1
+        selectedCustomerId = arguments?.getInt(MainActivity.EXTRA_CUSTOMER_ID)?:-1
 
 		db = DatabaseHandler(requireContext())
+        if (selectedCustomerId <= 0) {
+            Toast.makeText(requireContext(), "⚠️ Missing customer", Toast.LENGTH_SHORT).show()
+        }
 
 		if (estimateId == 0) {
 			Toast.makeText(requireContext(), "⚠️ Missing estimate ID", Toast.LENGTH_SHORT).show()
 		}
 
+        // If editing existing estimate → load data
+        if (estimateId > 0) {
+            EstimateSession.loadSession(requireContext())
+        }
 
 		// Link UI elements to variables
 		invoiceNumber = binding.addItemInvoicenumber
@@ -154,7 +165,7 @@ class InvoiceInfo : Fragment() {
 				if (title.isNotEmpty() && creationSpinner.toString().isNotBlank()) {
 
 					val pickedDate = selectedCreationDate ?: LocalDate.now()
-					val dueDate = GlobalFunck().calculateDueDate(pickedDate, dueTerms)
+					val dueDate = pickedDate.plusDays(dueTerms.toLong())
 
 					// Save to DB here
 					val db = DatabaseHandler(requireContext())
@@ -163,10 +174,11 @@ class InvoiceInfo : Fragment() {
 					val estimateInfo = Estimateinfo(
 						titleINV = title,
 						creationDate = pickedDate.toString(),
-						dueDate = dueDate.toString()
+						dueDate = dueDate.toString(),
+                        customerId = selectedCustomerId
 					)
 
-					if (estimateId != 0) {
+					if (estimateId > 0) {
 						val updatedEstimate = estimateInfo.copy(estimateId = estimateId)
 						val rows = db.updateEstimateInfo(updatedEstimate)
 
@@ -177,6 +189,7 @@ class InvoiceInfo : Fragment() {
 								Toast.LENGTH_SHORT
 							).show()
 						} else {
+
 							Toast.makeText(
 								requireContext(),
 								"No changes detected or update failed",
@@ -195,17 +208,23 @@ class InvoiceInfo : Fragment() {
 						now.year, now.month, now.dayOfMonth
 					).plusDays(14)
 
-					val defaultNumbering = "INFIELDER CLIENT"
+
 
 
 					val db = DatabaseHandler(requireContext())
-					val customerId = GlobalFunck().customerId(requireContext())
+					val customerId = selectedCustomerId
+
+                    val estimate = Estimateinfo(
+                        estimateId = estimateId,
+                        titleINV = if (title.isNotEmpty()) title else "Untitled",
+                        creationDate = selectedCreationDate.toString(),
+                        dueDate = dueDate.toString(),
+                        customerId = selectedCustomerId
+                    )
 
 					// Insert estimate info into database
 					db.updateEstimateInfo(
-						estimateinfo = Estimateinfo(
-							0, defaultNumbering, "$now", dueDate.toString(), customerId
-						)
+						estimateinfo = estimate
 					)
 				}
 
@@ -216,15 +235,17 @@ class InvoiceInfo : Fragment() {
 		}
 	}
 
-	fun updateEstimateDisplay(context: Context) {
+    fun updateEstimateDisplay(context: Context) {
+        val estimate = DatabaseHandler(context).getEstimateById(estimateId)
 
-		val db: ArrayList<Estimateinfo> = DatabaseHandler(context).viewEstimateInfo()
-
-		for (it in db) {
-			creationDate.setText(it.creationDate)
-
-		}
-	}
+        estimate?.let {
+            invoiceTitle.setText(it.titleINV ?: "")
+            creationDate.text = it.creationDate
+            binding.pickcreationDate.text = it.creationDate
+            selectedCreationDate = LocalDate.parse(it.creationDate)
+            selectedCustomerId = it.customerId?:-1
+        }
+    }
 
 
 }

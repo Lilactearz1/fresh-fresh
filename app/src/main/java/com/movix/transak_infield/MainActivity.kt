@@ -62,8 +62,10 @@ open class   MainActivity : AppCompatActivity() {
 	private lateinit var Total: GlobalFunck
 	private lateinit var db: DatabaseHandler
 	private var itemAdapter: ItemAdapter? = null
-	private var estimateId = -1
-	private var customerId = -1
+
+    private var estimateId: Int = -1
+    private var customerId: Int = -1
+
 	private val stringFomat = "%,.2f"
 	private var dueTerms = 0
 	private var currentTemplate: PdfTemplateDRW? = null
@@ -79,9 +81,13 @@ open class   MainActivity : AppCompatActivity() {
 		val rvl_bussinessInfo = binding.relativelayoutBussinessInfo
 		val rvl_clientInfo = binding.relativeLayoutClentInfo
 
-		estimateId = intent.getIntExtra("estimate_id", -1)
-		customerId = intent.getIntExtra("customer_id", -1)
+        estimateId = intent.requireEstimateId()
+        customerId = intent.requireCustomerId()
 
+        if (estimateId <= 0 || customerId <= 0) {
+            finish()
+            return
+        }
 
 		binding.btnInv001.setOnClickListener {
 			handleInvoiceButtonClick(this, estimateId, customerId)
@@ -92,7 +98,7 @@ open class   MainActivity : AppCompatActivity() {
 		}
 
 		binding.btnclientInfo.setOnClickListener {
-			handleClientInfoClick(this)
+			handleClientInfoClick(this,estimateId,customerId)
 		}
 
 		binding.businessimage?.setOnClickListener {
@@ -100,7 +106,7 @@ open class   MainActivity : AppCompatActivity() {
 		}
 
 		binding.additemscardView.setOnClickListener {
-			handleItemsCardView(this, intent)
+			handleItemsCardView(this, intent,estimateId,customerId)
 		}
 
 
@@ -123,7 +129,7 @@ open class   MainActivity : AppCompatActivity() {
 
 
 		binding.addbuttonImage.setOnClickListener {
-			handleItemsCardView(this, intent)
+			handleItemsCardView(this, intent,estimateId,customerId)
 		}
 
 
@@ -201,30 +207,34 @@ open class   MainActivity : AppCompatActivity() {
 		}
 	}
 
-	private fun setupListintoRecycleview(): Int {
-		val itemList = getItemlist()
+    private fun setupListintoRecycleview() {
 
-		if (itemList.isNotEmpty()) {
-			binding.recycleItem.visibility = View.VISIBLE
-			binding.recycleItem.layoutManager = LinearLayoutManager(this)
+        lifecycleScope.launch(Dispatchers.IO) {
 
-			if (itemAdapter == null) {
-				itemAdapter = ItemAdapter(this, itemList)
-				binding.recycleItem.adapter = itemAdapter
-			} else {
-				itemAdapter!!.apply {
-					this.itemList.clear()
-					this.itemList.addAll(itemList)
-					notifyDataSetChanged()
-				}
-			}
-		} else {
-			binding.recycleItem.visibility = View.GONE
-		}
+            val itemList = getItemlist()
 
-		// ✅ Return number of items currently displayed
-		return itemList.size
-	}
+            withContext(Dispatchers.Main) {
+
+                if (itemList.isNotEmpty()) {
+
+                    binding.recycleItem.visibility = View.VISIBLE
+                    binding.recycleItem.layoutManager = LinearLayoutManager(this@MainActivity)
+
+                    if (itemAdapter == null) {
+                        itemAdapter = ItemAdapter(this@MainActivity, itemList)
+                        binding.recycleItem.adapter = itemAdapter
+                    } else {
+                        itemAdapter!!.itemList.clear()
+                        itemAdapter!!.itemList.addAll(itemList)
+                        itemAdapter!!.notifyDataSetChanged()
+                    }
+
+                } else {
+                    binding.recycleItem.visibility = View.GONE
+                }
+            }
+        }
+    }
 
 
 // the jetpack bottom appBar
@@ -246,8 +256,7 @@ open class   MainActivity : AppCompatActivity() {
 					onClick = {
 						lifecycleScope.launch {
 
-							val estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
-							val customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
+
 							val template = currentTemplate ?: PdfTemplateDRW.CLASSIC
 
 							try {
@@ -289,8 +298,6 @@ open class   MainActivity : AppCompatActivity() {
 					onClick = {
 						lifecycleScope.launch(Dispatchers.IO) {
 							try {
-								val estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
-								val customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
 
 								val newIntent = Intent(
 									this@MainActivity, Save_previewActivity::class.java
@@ -342,6 +349,21 @@ open class   MainActivity : AppCompatActivity() {
 
 		private lateinit var file: File
 
+// to avoid using the -1  when using or inswerting the estimateid and customerid
+
+        fun Intent.requireEstimateId(): Int {
+            return getIntExtra(MainActivity.EXTRA_ESTIMATE_ID, -1)
+                .takeIf { it > 0 }
+                ?: throw IllegalArgumentException("Missing estimate id")
+        }
+        fun Intent.requireCustomerId(): Int {
+            return getIntExtra(EXTRA_CUSTOMER_ID, -1)
+                .takeIf { it > 0 }
+                ?: throw IllegalArgumentException("Missing customer id")
+        }
+
+
+
 		fun handleInvoiceButtonClick(
 			activity: AppCompatActivity, estimateId: Int, customerId: Int
 		) {
@@ -365,10 +387,10 @@ open class   MainActivity : AppCompatActivity() {
 		}
 
 
-		fun handleClientInfoClick(context: Context) {
-			val intent = Intent(context, ClientActivity::class.java)
+		fun handleClientInfoClick(context: Context,estimateId: Int,customerId: Int) {
+            val intent = Intent(context, ClientActivity::class.java)
+            intent.putExtra(MainActivity.EXTRA_ESTIMATE_ID, estimateId) // pass current estimate
 
-			// Important: add FLAG_ACTIVITY_NEW_TASK if context is not an Activity
 			if (context !is AppCompatActivity) {
 				intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 			}
@@ -379,9 +401,9 @@ open class   MainActivity : AppCompatActivity() {
 			Toast.makeText(context, "Coming soon...", Toast.LENGTH_LONG).show()
 		}
 
-		fun handleItemsCardView(activity: AppCompatActivity, intent: Intent) {
-			val estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
-			val customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
+		fun handleItemsCardView(activity: AppCompatActivity, intent: Intent , estimateId: Int,
+                                customerId: Int) {
+
 
 
 
@@ -677,19 +699,21 @@ open class   MainActivity : AppCompatActivity() {
 				estimateId = modelClass.estimateId
 			)
 
+            lifecycleScope.launch(Dispatchers.IO) {
 
-			val db = DatabaseHandler(this)
-			// define this method in your DB handler (updateRecords)
-			val status = db.updateRecords(updatedModel)
+                val status = db.updateRecords(updatedModel)
 
-			if (status > -1) {
-				Toast.makeText(this, "success", Toast.LENGTH_SHORT).show()
-				dialog.dismiss()
-				// Optional: refresh RecyclerView
-				setupListintoRecycleview()
-			} else {
-				Toast.makeText(this, "Failed", Toast.LENGTH_SHORT).show()
-			}
+                withContext(Dispatchers.Main) {
+
+                    if (status > -1) {
+                        Toast.makeText(this@MainActivity, "success", Toast.LENGTH_SHORT).show()
+                        dialog.dismiss()
+                        setupListintoRecycleview()
+                    }else {
+                        Toast.makeText(this@MainActivity, "Failed", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
 		}
 
 		dialog.show()

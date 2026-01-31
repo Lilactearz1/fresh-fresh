@@ -12,9 +12,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
 import com.movix.transak_infield.MainActivity.Companion.EXTRA_CUSTOMER_ID
 import com.movix.transak_infield.MainActivity.Companion.EXTRA_ESTIMATE_ID
+import com.movix.transak_infield.pdfStyles.Modern1
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class Save_previewActivity : AppCompatActivity() {
@@ -29,12 +34,15 @@ class Save_previewActivity : AppCompatActivity() {
 	private lateinit var name: TextView
 	private lateinit var share: MaterialButton
 	private lateinit var checkCompleted: CheckBox
-	private var estimateId: Int = -1
+
+    private var estimateId: Int = -1
 	private var customerId: Int = -1
 	private val stringFormat = "%,.2f"
 	private var currentTemplate: PdfTemplateDRW? = null
 
-	override fun onCreate(savedInstanceState: Bundle?) {
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		enableEdgeToEdge()
 
@@ -45,7 +53,25 @@ class Save_previewActivity : AppCompatActivity() {
 			insets
 		}
 
-		downloadbtn = findViewById<ImageView>(R.id.Download1)
+        // ✅ Get IDs safely
+        estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
+        customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
+
+
+        if (estimateId <= 0) {
+            Toast.makeText(this, "Missing estimate", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+
+        db = DatabaseHandler(this)
+
+        // Load saved template
+        currentTemplate = PdfUtils.loadTemplate(this)
+// Safe to use context here
+        val template = currentTemplate ?: PdfTemplateDRW.CLASSIC
+
+        downloadbtn = findViewById<ImageView>(R.id.Download1)
 		endEstimatebtn = findViewById<ImageView>(R.id.edit1)
 		print = findViewById<ImageView>(R.id.print1)
 		more = findViewById<ImageView>(R.id.more1)
@@ -54,21 +80,30 @@ class Save_previewActivity : AppCompatActivity() {
 		name = findViewById(R.id.name1)
 		share = findViewById(R.id.sharebtn1)
 
-		estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
-		customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
-		// Safe to use context here
-		currentTemplate = PdfUtils.loadTemplate(this) ?: PdfTemplateDRW.MODERN
-		val template = getTemplate()
 
-		downloadbtn.setOnClickListener { view ->
-			view.isHovered
 
-			PdfUtils.generateEstimatePdf(applicationContext, estimateId,customerId, template)
-			Toast.makeText(applicationContext, "Success...", Toast.LENGTH_LONG).show()
-		}
+
+
+// ✅ Download
+        downloadbtn.setOnClickListener {
+
+            lifecycleScope.launch(Dispatchers.IO) {
+
+                val file = PdfUtils.generateEstimatePdf(this@Save_previewActivity, estimateId, customerId, template)
+
+                withContext(Dispatchers.Main) {
+                    if (file != null) {
+                        Toast.makeText(this@Save_previewActivity, "Success...", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+
+        // ✅ End Estimate
 
 		endEstimatebtn.setOnClickListener {
 			db = DatabaseHandler(applicationContext)
+
 			val currentId = EstimateSession.currentEstimate
 
 
@@ -85,7 +120,7 @@ class Save_previewActivity : AppCompatActivity() {
 				startActivity(intent)
 				finish()
 			} else {
-				Toast.makeText(applicationContext, "No active estimate to end.", Toast.LENGTH_SHORT)
+				Toast.makeText(applicationContext, "No active estimate", Toast.LENGTH_SHORT)
 					.show()
 			}
 		}
@@ -104,18 +139,28 @@ class Save_previewActivity : AppCompatActivity() {
 		totalKsh.text = "Ksh: ${cashFormat}"
 
 		dueDate.text = GlobalFunck().dueDate(applicationContext)
+val db= DatabaseHandler(applicationContext)
 
-		name.text = GlobalFunck().safeClientName(applicationContext,estimateId)
 
-		share.setOnClickListener {
-			val pdFile = PdfUtils.generateEstimatePdf(applicationContext, estimateId, customerId,template)
-			pdFile.let {
-				it
-				if (it != null) {
-					PdfUtils.sharePdf(this, it)
-				}
-			}
-		}
+        val clientName = if (customerId > 0) {
+            db.getClientNameById(customerId)
+        } else {
+            null
+        }
+
+        name.text = clientName ?: "Unknown Client"
+
+        share.setOnClickListener {
+
+            lifecycleScope.launch(Dispatchers.IO) {
+
+                val pdfFile = PdfUtils.generateEstimatePdf(applicationContext, estimateId, customerId, template)
+
+                withContext(Dispatchers.Main) {
+                    pdfFile?.let { PdfUtils.sharePdf(this@Save_previewActivity, it) }
+                }
+            }
+        }
 
 	}
 
@@ -124,22 +169,27 @@ class Save_previewActivity : AppCompatActivity() {
 		super.onPostResume()
 	}
 
-	override fun onResume() {
-		super.onResume()
+    override fun onResume() {
+        super.onResume()
 
-		val template = getTemplate()
-//		fallback to default
-		val pdfFile = PdfUtils.generateEstimatePdf(applicationContext, estimateId, customerId,template)
-		val pdfPreview = pdfFile?.let { PdfUtils.generatePdfPreview(this, it) }
-		findViewById<ImageView>(R.id.previewDownload1).apply {
-			pdfPreview?.let { setImageBitmap(it) }
-		}
-	}
+        lifecycleScope.launch(Dispatchers.IO) {
+
+            val template = getTemplate()
+            val pdfFile = PdfUtils.generateEstimatePdf(applicationContext, estimateId, customerId, template)
+            val preview = pdfFile?.let { PdfUtils.generatePdfPreview(this@Save_previewActivity, it) }
+
+            withContext(Dispatchers.Main) {
+                findViewById<ImageView>(R.id.previewDownload1).apply {
+                    preview?.let { setImageBitmap(it) }
+                }
+            }
+        }
+    }
 
 	private fun getTemplate(): PdfTemplateDRW = currentTemplate ?: PdfTemplateDRW.MODERN
 
 
-
+    
 
 	override fun onResumeFragments() {
 		super.onResumeFragments()

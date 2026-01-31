@@ -11,11 +11,7 @@ import java.time.LocalDate
 
 //firebase importations
 
-import android.os.Environment
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.UploadTask
-import kotlinx.coroutines.*
-import okhttp3.*
+import android.util.Log
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.*
@@ -32,7 +28,7 @@ class DatabaseHandler(context: Context) :
 
 
 	companion object {
-		private const val DATABASE_VERSION = 2
+		private const val DATABASE_VERSION = 6
 		private const val DATABASE_NAME = "Transak_infield.db"
 
 		private const val INVOICE_TABLE = "TableInvoice"
@@ -81,16 +77,17 @@ class DatabaseHandler(context: Context) :
 		val CREATE_CUSTOMERS_TABLE =
 			("CREATE TABLE " + CUSTOMER_TABLE + " (" + CUSTOMER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " + CUSTOMER_NAME + " VARCHAR(50), " + CUSTOMER_PHONE + " TEXT" +
 					")")
-
-		val CREATE_ESTIMATE_TABLE =
-			("CREATE TABLE " + ESTIMATE_TABLE + " ("
-					+ ESTIMATE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-					+ ESTIMATE_TITLE + " VARCHAR(200), "
-					+ ESTIMATE_DATE + " DATETIME DEFAULT CURRENT_TIMESTAMP, "
-					+ DUE_DATE + " DATETIME DEFAULT CURRENT_TIMESTAMP, "
-					+ STATUS + " TEXT, "
-					+ CUSTOMER_ID + " INTEGER, " +
-					"FOREIGN KEY(" + CUSTOMER_ID + ") REFERENCES " + CUSTOMER_TABLE + "(" + CUSTOMER_ID + ") ON DELETE SET NULL" + ")")
+        val CREATE_ESTIMATE_TABLE = """
+CREATE TABLE $ESTIMATE_TABLE (
+    $ESTIMATE_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    $ESTIMATE_TITLE VARCHAR(200),
+    $ESTIMATE_DATE DATETIME DEFAULT CURRENT_TIMESTAMP,
+    $DUE_DATE DATETIME DEFAULT CURRENT_TIMESTAMP,
+    $STATUS TEXT,
+    $CUSTOMER_ID INTEGER NOT NULL DEFAULT 1,
+    FOREIGN KEY($CUSTOMER_ID) REFERENCES $CUSTOMER_TABLE($CUSTOMER_ID) ON DELETE SET DEFAULT
+)
+""".trimIndent()
 
 
 		val CREATE_PRODUCTS_TABLE = """
@@ -121,16 +118,57 @@ class DatabaseHandler(context: Context) :
 
 	}
 
-	override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-//		you can omit !! since the db is not null at this pointThe system always calls it with a valid db instance, so it’s safe to use db!! once, or just assume it’s non-null and skip !! entirely (which is better).
-		  // Drop child first
-		db!!.execSQL("DROP TABLE IF EXISTS $INVOICE_TABLE")
-		db.execSQL("DROP TABLE IF EXISTS $ESTIMATE_TABLE")
-		db.execSQL("DROP TABLE IF EXISTS $CUSTOMER_TABLE")
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        // 1️⃣ Turn off foreign key constraints temporarily
+        db.execSQL("PRAGMA foreign_keys=OFF")
 
+        // 2️⃣ Rename existing tables to temporary tables
+        db.execSQL("ALTER TABLE $CUSTOMER_TABLE RENAME TO temp_$CUSTOMER_TABLE")
+        db.execSQL("ALTER TABLE $ESTIMATE_TABLE RENAME TO temp_$ESTIMATE_TABLE")
+        db.execSQL("ALTER TABLE $INVOICE_TABLE RENAME TO temp_$INVOICE_TABLE")
 
-		onCreate(db)
-	}
+        // 3️⃣ Recreate tables with the latest schema (your hardened schema)
+        onCreate(db)
+
+        // 4️⃣ Copy data from old tables into new tables
+        // Customers
+        db.execSQL("""
+        INSERT OR IGNORE INTO $CUSTOMER_TABLE($CUSTOMER_ID, $CUSTOMER_NAME, $CUSTOMER_PHONE)
+        SELECT $CUSTOMER_ID, $CUSTOMER_NAME, $CUSTOMER_PHONE FROM temp_$CUSTOMER_TABLE
+    """.trimIndent())
+
+        // Estimates
+        db.execSQL("""
+        INSERT OR IGNORE INTO $ESTIMATE_TABLE($ESTIMATE_ID, $ESTIMATE_TITLE, $ESTIMATE_DATE, $DUE_DATE, $STATUS, $CUSTOMER_ID)
+        SELECT $ESTIMATE_ID, $ESTIMATE_TITLE, $ESTIMATE_DATE, $DUE_DATE, $STATUS,
+               CASE 
+                   WHEN $CUSTOMER_ID IS NULL OR $CUSTOMER_ID = 0 THEN 1
+                   ELSE $CUSTOMER_ID
+               END
+        FROM temp_$ESTIMATE_TABLE
+    """.trimIndent())
+
+        // Invoice Items
+        db.execSQL("""
+        INSERT OR IGNORE INTO $INVOICE_TABLE($KEY_ID, $KEY_NAME, $KEY_QUANTITY, $KEY_PRICE, $KEY_ITEM_TOTAL, $KEY_TAX, $CUSTOMER_ID, $ESTIMATE_ID)
+        SELECT $KEY_ID, $KEY_NAME, $KEY_QUANTITY, $KEY_PRICE, $KEY_ITEM_TOTAL, $KEY_TAX,
+               CASE 
+                   WHEN $CUSTOMER_ID IS NULL OR $CUSTOMER_ID = 0 THEN 1
+                   ELSE $CUSTOMER_ID
+               END,
+               $ESTIMATE_ID
+        FROM temp_$INVOICE_TABLE
+    """.trimIndent())
+
+        // 5️⃣ Drop the temporary tables
+        db.execSQL("DROP TABLE IF EXISTS temp_$INVOICE_TABLE")
+        db.execSQL("DROP TABLE IF EXISTS temp_$ESTIMATE_TABLE")
+        db.execSQL("DROP TABLE IF EXISTS temp_$CUSTOMER_TABLE")
+
+        // 6️⃣ Re-enable foreign key constraints
+        db.execSQL("PRAGMA foreign_keys=ON")
+    }
+
 
 //	method to add customers info into the database
 
@@ -161,23 +199,6 @@ class DatabaseHandler(context: Context) :
 		return updateSuccess
 	}
     //
-
-	//get latest client
-	fun getLatestCustomerId(): Int {
-		val db = this.readableDatabase
-		val query = "SELECT $CUSTOMER_ID FROM $CUSTOMER_TABLE ORDER BY $CUSTOMER_ID DESC LIMIT 1"
-		val cursor = db.rawQuery(query, null)
-
-		val id = if (cursor.moveToFirst()) {
-			cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID))
-		} else {
-			0
-		}
-
-		cursor.close()
-		db.close()
-		return id
-	}
 
 	//view clients information's
 	fun viewClientsInfo(): ArrayList<ClientsCreation> {
@@ -451,30 +472,52 @@ class DatabaseHandler(context: Context) :
 	override fun onConfigure(db: SQLiteDatabase?) {
 		super.onConfigure(db)
 		db?.setForeignKeyConstraintsEnabled(true)
+
+
 	}
 
-	fun getAllEstimate(): MutableList<Estimateinfo> {
-		val estimates = mutableListOf<Estimateinfo>()
-		val db = this.readableDatabase
-		val cursor = db.rawQuery("SELECT * FROM $ESTIMATE_TABLE", null)
+    override fun onOpen(db: SQLiteDatabase) {
+        super.onOpen(db)
+        fixOrphanEstimates(db)
+    }
 
-		if (cursor.moveToFirst()) {
-			do {
-				val id = cursor.getInt(cursor.getColumnIndexOrThrow(ESTIMATE_ID))
-				val title = cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_TITLE))
-				val createdDate = cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_DATE))
-				val estimateDue = cursor.getString(cursor.getColumnIndexOrThrow(DUE_DATE))
-				val customerId = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID))
-				estimates.add(Estimateinfo(id, title, createdDate, estimateDue, customerId))
-			} while (cursor.moveToNext())
-		}
+    fun getAllEstimate(): MutableList<Estimateinfo> {
+        val list = mutableListOf<Estimateinfo>()
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM $ESTIMATE_TABLE", null)
 
-		cursor.close()
-		db.close()
-		return estimates
-	}
+        if (cursor.moveToFirst()) {
+            do {
+                val customerCol = cursor.getColumnIndexOrThrow(CUSTOMER_ID)
+                val safeCustomerId =
+                    if (cursor.isNull(customerCol) || cursor.getInt(customerCol) <= 0)
+                        1
+                    else
+                        cursor.getInt(customerCol)
 
-	// this is similar to the vieProducts method
+                val estimate = Estimateinfo(
+                    estimateId = cursor.getInt(cursor.getColumnIndexOrThrow(ESTIMATE_ID)),
+                    titleINV = cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_TITLE)),
+                    creationDate = cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_DATE)),
+                    dueDate = cursor.getString(cursor.getColumnIndexOrThrow(DUE_DATE)),
+                    customerId = safeCustomerId,
+                    status = EstimateStatus.valueOf(
+                        cursor.getString(cursor.getColumnIndexOrThrow(STATUS))
+                    )
+                )
+                list.add(estimate)
+
+                Log.d("DB_CHECK", "Estimate ${estimate.estimateId} customer=${estimate.customerId}")
+
+            } while (cursor.moveToNext())
+        }
+
+        cursor.close()
+        return list
+    }
+
+
+    // this is similar to the vieProducts method
 	fun getItemsForCustomer(customerId: Int): ArrayList<ModelClass> {
 		val items = ArrayList<ModelClass>()
 		val db = this.readableDatabase
@@ -549,8 +592,8 @@ class DatabaseHandler(context: Context) :
 		val values = ContentValues().apply {
 			put(ESTIMATE_TITLE, title)
 
-			if (customerId != 0)
-				put(CUSTOMER_ID, customerId)
+            put(CUSTOMER_ID, if (customerId > 0) customerId else 1)
+
 
 			put(ESTIMATE_DATE, LocalDate.now().toString())
 			put(STATUS, EstimateStatus.OPEN.name)
@@ -620,7 +663,7 @@ class DatabaseHandler(context: Context) :
 
 	fun deleteItem(itemId: Int): Int {
 		val db = this.writableDatabase
-		val result = db.delete("$INVOICE_TABLE", "id = ?", arrayOf(itemId.toString()))
+        val result = db.delete(INVOICE_TABLE, "$KEY_ID = ?", arrayOf(itemId.toString()))
 		db.close()
 		return result
 	}
@@ -643,9 +686,28 @@ class DatabaseHandler(context: Context) :
 		db.close()
 		return customer
 	}
+    fun getClientNameById(customerId: Int): String {
+        val db = readableDatabase
+        var name = "Unknown Client"
+
+        val cursor = db.rawQuery(
+            "SELECT $CUSTOMER_NAME FROM $CUSTOMER_TABLE WHERE $CUSTOMER_ID = ?",
+            arrayOf(customerId.toString())
+        )
+
+        if (cursor.moveToFirst()) {
+            name = cursor.getString(
+                cursor.getColumnIndexOrThrow(CUSTOMER_NAME)
+            )
+        }
+
+        cursor.close()
+        return name
+    }
 
 
-	fun estimated (context: Context){
+
+    fun estimated (context: Context){
 		val db = DatabaseHandler(context).readableDatabase
 		val c = db.rawQuery(
 			"SELECT $KEY_ID, $KEY_NAME, $KEY_QUANTITY, $KEY_PRICE, $KEY_ITEM_TOTAL, $KEY_TAX, $CUSTOMER_ID, $ESTIMATE_ID FROM $INVOICE_TABLE",
@@ -670,9 +732,34 @@ class DatabaseHandler(context: Context) :
 		db.close()
 	}
 
+    fun fixOrphanEstimates(db: SQLiteDatabase) {
+        db.execSQL("""
+        UPDATE $ESTIMATE_TABLE
+        SET $CUSTOMER_ID = 1
+        WHERE $CUSTOMER_ID IS NULL
+           OR $CUSTOMER_ID = 0
+           OR $CUSTOMER_ID NOT IN (
+               SELECT $CUSTOMER_ID FROM $CUSTOMER_TABLE
+           )
+    """.trimIndent())
+    }
 
 
 
+    fun updateEstimateCustomer(estimateId: Int, customerId: Int): Boolean {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("$CUSTOMER_ID", customerId)
+        }
+        val rowsUpdated = db.update(
+            "$ESTIMATE_TABLE",  // <-- your estimates table name
+            values,
+            "$ESTIMATE_ID = ?",
+            arrayOf(estimateId.toString())
+        )
+        db.close()
+        return rowsUpdated > 0
+    }
 
 
 

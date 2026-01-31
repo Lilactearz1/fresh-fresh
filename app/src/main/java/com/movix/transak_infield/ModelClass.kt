@@ -76,6 +76,34 @@ enum class CompanyDetail(val text: String) {
 	DATE("DATE:"),
 	QUOTE_FOR("FOR:"),
 	QUOTE_HEADER("QUOTATION");
+
 }
 
+
+
+
+    // global class for capturing clients creations
+    class ClientRepository(
+        clients: ArrayList<ClientsCreation>
+    ) {
+        private val clientMap = clients.associateBy { it.id }
+
+        fun getClientName(customerId: Int?): String {
+            return customerId?.let {
+                clientMap[it]?.name
+            } ?: "No Client"
+        }
+
+        fun getClient(customerId: Int): ClientsCreation? {
+            return clientMap[customerId]
+        }
+    }
+
+    class EstimateProcessor(
+        public val clientRepo: ClientRepository
+    ) {
+
+        fun getClientNameForEstimate(estimate: Estimateinfo): String =
+            estimate.customerId?.let(clientRepo::getClientName) ?: "No Client"
+    }
 

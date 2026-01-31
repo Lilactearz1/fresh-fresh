@@ -46,6 +46,24 @@ android {
         viewBinding =true
 
     }
+    packaging {
+
+
+
+        resources {
+            excludes += setOf(
+                "META-INF/io.netty.versions.properties",
+                "META-INF/INDEX.LIST",
+                "META-INF/AL2.0",
+                "META-INF/LGPL2.1",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt",
+                "META-INF/DEPENDENCIES"
+            )
+        }
+    }
 }
 
 dependencies {
@@ -73,6 +91,7 @@ dependencies {
     implementation(libs.firebase.storage.ktx)
     implementation(libs.firebase.storage)
     implementation(libs.firebase.database)
+    implementation(libs.firebase.appdistribution.gradle)
     testImplementation(libs.junit)
     testImplementation(libs.junit.jupiter)
 	testImplementation(libs.junit.jupiter)
@@ -97,7 +116,18 @@ dependencies {
         implementation ("com.google.firebase:firebase-storage-ktx")
 
 
+    // Retrofit 3.0 core library
+    implementation("com.squareup.retrofit2:retrofit:3.0.0")
+
+    // Gson converter for JSON serialization/deserialization
+    implementation("com.squareup.retrofit2:converter-gson:3.0.0")
+
+    // OkHttp logging interceptor (optional, but highly recommended for debugging)
+    implementation("com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.12")
 
 //     for debug to view your database outside the code  (database debug)
 //    debugImplementation("im.dino:dbinspector:3.4.1@aar")
+}
+configurations.all {
+    exclude(group = "com.google.protobuf", module = "protobuf-java")
 }

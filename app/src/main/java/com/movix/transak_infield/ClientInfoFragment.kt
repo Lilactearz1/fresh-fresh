@@ -10,82 +10,85 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.movix.transak_infield.databinding.FragmentClientInfoBinding
 
-
-/**
- * A simple [Fragment] subclass.
- * Use the [clientinfoFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class clientinfoFragment : Fragment() {
-	//todo collect the editext field and save them to the database where they are accessed for creation of the estimates
-	private lateinit var name: EditText
-	private lateinit var phoneNumber: EditText
-	private lateinit var emailAddress: EditText
-	private var _binding: FragmentClientInfoBinding? = null
-	private val binding get() = _binding!!
 
+    private lateinit var name: EditText
+    private lateinit var phoneNumber: EditText
+    private lateinit var emailAddress: EditText
+    private var _binding: FragmentClientInfoBinding? = null
+    private val binding get() = _binding!!
+    private lateinit var db: DatabaseHandler
 
-	override fun onCreateView(
-		inflater: LayoutInflater, container: ViewGroup?,
-		savedInstanceState: Bundle?
-	): View {
-		// Inflate the layout for this fragment
-		_binding = FragmentClientInfoBinding.inflate(inflater, container, false)
-		return binding.root
-	}
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentClientInfoBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
-	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-		super.onViewCreated(view, savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-		name = binding.editClientName
-		phoneNumber = binding.editPhone
-		emailAddress = binding.editEmail
+        db = DatabaseHandler(requireContext())
 
-		val savebtn=view.findViewById<RelativeLayout>(R.id.SaveclientDetails)
+        name = binding.editClientName
+        phoneNumber = binding.editPhone
+        emailAddress = binding.editEmail
 
-		val backButton = view.findViewById<RelativeLayout>(R.id.backLayout)
-/// Set click listener for the back button
-		backButton.setOnClickListener { view ->
-			// When the back button is pressed, go back to the previous fragment in the back stack
-			requireActivity().supportFragmentManager.popBackStack()
-		}
+        val savebtn = view.findViewById<RelativeLayout>(R.id.SaveclientDetails)
+        val backButton = view.findViewById<RelativeLayout>(R.id.backLayout)
 
-		fun clientInput(view: View) {
-			// Get and trim text input from fields
-			val clientName = name.text.toString().trim()
-			val clientPhone = phoneNumber.text.toString().trim()
-			val clientMail = emailAddress.text.toString().trim()
+        // Back button
+        backButton.setOnClickListener {
+            requireActivity().supportFragmentManager.popBackStack()
+        }
 
-			// Validate that the name field is not empty (required)
-			if (clientName.isEmpty()) {
-				name.error = "Name is required"
-				return
-			}
+        // Save button
+        savebtn.setOnClickListener {
+            clientInput()
+        }
+    }
 
-			// Create the client object (modify constructor if email should be included)
-			val addDetail = ClientsCreation(name= clientName, phone =  clientPhone )
+    private fun clientInput() {
+        val clientName = name.text.toString().trim()
+        val clientPhone = phoneNumber.text.toString().trim()
+        val clientMail = emailAddress.text.toString().trim()
 
-			// Save the client details to the database
-			val dbStatus = DatabaseHandler(requireContext()).addClientsInformations(addDetail)
+        if (clientName.isEmpty()) {
+            name.error = "Name is required"
+            return
+        }
 
-			// If insert was successful, show confirmation and clear fields
-			if (dbStatus > -1) {
-				Toast.makeText(requireContext(), "Saved", Toast.LENGTH_SHORT).show()
-				name.text.clear()
-				phoneNumber.text.clear()
-				emailAddress.text.clear()
-			} else {
-				// If insert failed, notify the user
-				Toast.makeText(requireContext(), "Failed to save", Toast.LENGTH_SHORT).show()
-			}
-		}
+        // Create client object
+        val addDetail = ClientsCreation(name = clientName, phone = clientPhone)
 
+        // Insert into DB
+        val newCustomerId = db.addClientsInformations(addDetail).toInt()
 
-//		button to save the inputs
-		savebtn.setOnClickListener{view ->
+        if (newCustomerId > -1) {
+            Toast.makeText(requireContext(), "Saved", Toast.LENGTH_SHORT).show()
 
-		  clientInput(view)
-		}
-	}
+            // Clear inputs
+            name.text.clear()
+            phoneNumber.text.clear()
+            emailAddress.text.clear()
 
+            // -  Update estimate with this customer ---
+            val estimateId =
+                activity?.intent?.getIntExtra(MainActivity.EXTRA_ESTIMATE_ID, -1) ?: -1
+
+            if (estimateId != -1) {
+                val updated = db.updateEstimateCustomer(estimateId, newCustomerId)
+                if (updated) {
+                    Toast.makeText(requireContext(), "Estimate updated with new customer", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            // Close fragment
+            requireActivity().supportFragmentManager.popBackStack()
+        } else {
+            Toast.makeText(requireContext(), "Failed to save", Toast.LENGTH_SHORT).show()
+        }
+    }
 }

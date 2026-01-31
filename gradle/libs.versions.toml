@@ -23,6 +23,7 @@ firebaseStorageKtx = "22.0.1"
 googleGmsGoogleServices = "4.4.4"
 firebaseStorage = "22.0.1"
 firebaseDatabase = "22.0.1"
+firebaseAppdistributionGradle = "5.2.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -53,6 +54,7 @@ androidx-media3-common-ktx = { group = "androidx.media3", name = "media3-common-
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx", version = "21.0.2" }
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
+firebase-appdistribution-gradle = { group = "com.google.firebase", name = "firebase-appdistribution-gradle", version.ref = "firebaseAppdistributionGradle" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

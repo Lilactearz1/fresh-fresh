@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Grant access to files in Download directory -->
+
+    <!-- Grant access to files in Download directory (optional) -->
     <external-path
         name="download"
         path="Download/" />
 
-    <!-- Optional: for internal app files -->
+    <!-- Internal app external files (covers PDFs, backups, etc.) -->
     <external-files-path
-        name="backups"
-        path="TransakBackups/" />
+        name="external_files"
+        path="." />
+
+    <!-- Cache directory (optional) -->
     <cache-path
         name="cache"
-        path="/" />
+        path="." />
 
 </paths>

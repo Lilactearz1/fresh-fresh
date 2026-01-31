@@ -95,9 +95,10 @@ class Modern1(context: Context) : TemplateInterface {
 //					ColorHelper.rgb(10, 63, 93))
 //		)
         val global_Functions = GlobalFunck()
-        val title = global_Functions.titleINV(context)
-        val clientName = global_Functions.safeClientName(context, estimateId = -1)
-        val safeClientId = global_Functions.safeClientId(context)
+
+        val title = dataEst.estimateTitle
+        val clientName = dataEst.customerName
+        val safeClientId = dataEst.customerId
 
 
         val dueDate = dataEst.dueDate
@@ -205,8 +206,9 @@ class Modern1(context: Context) : TemplateInterface {
         }
 
         document.add(table)
+        // insert the infield stamp
         // load bitmap
-        val image = Templatepdf1().loadStump(context)
+        val image = Templatepdf1().loadStamp(context)
         // convert bitmap to byte array
         val stream = ByteArrayOutputStream()
         image.compress(Bitmap.CompressFormat.PNG, 100, stream)
@@ -215,7 +217,7 @@ class Modern1(context: Context) : TemplateInterface {
         val imageData = ImageDataFactory.create(byteArray)
         val imagdt = Image(imageData)
 //        image sizing and position
-        imagdt.setMarginLeft(160f)
+        imagdt.setMarginLeft(250f).setMarginTop(5f)
         document.add(imagdt)
     }
 

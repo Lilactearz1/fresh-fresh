@@ -140,7 +140,7 @@ public class Templatepdf1{
             e.printStackTrace();
         }
     }
-    public Bitmap loadStump(Context context){
+    public Bitmap loadStamp(Context context){
         int x =150;
         int y= 150;
         Bitmap bitImage =BitmapFactory.decodeResource(context.getResources(),R.drawable.infield_stamp);

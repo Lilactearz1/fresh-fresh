@@ -51,7 +51,7 @@ class ClientActivity : AppCompatActivity() {
 		recyclerView.layoutManager = LinearLayoutManager(this)
 		db = DatabaseHandler(this)
 
-		val customerId = intent.getIntExtra("customer_id", -1)
+		val customerId = intent.getIntExtra(MainActivity.EXTRA_CUSTOMER_ID, -1)
 		val clientlist = db.viewClientsInfo()
 		adapterClientList = ClientlistAdapter(this, clientlist,this)
 		recyclerView.adapter=adapterClientList
