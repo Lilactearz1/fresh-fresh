@@ -262,7 +262,7 @@ open class   MainActivity : AppCompatActivity() {
 							try {
 								// Generate PDF in background
 								val pdfFile = withContext(Dispatchers.IO) {
-									estimatePdf(this@MainActivity, estimateId, customerId, template)
+									PdfUtils.estimatePdf(this@MainActivity, estimateId, customerId, template)
 								}
 
 								// UI updates on main thread
@@ -467,24 +467,6 @@ open class   MainActivity : AppCompatActivity() {
 		}
 
 
-		fun estimatePdf(
-			context: Context,
-			estimateId: Int,
-			customerId: Int,
-			templateDRW: PdfTemplateDRW,
-		): File {
-			val data = PdfUtils.load(context, estimateId, customerId)
-			val layout = PdfUtils.loadTemplateFromJson(context, templateDRW.jsonResId)
-
-			val pdfTemplate: TemplateInterface = when (templateDRW) {
-				PdfTemplateDRW.CLASSIC -> Classic1(context)
-				PdfTemplateDRW.MODERN -> Modern1(context)
-				PdfTemplateDRW.MINIMAL -> Minimal(context)
-
-			}
-
-				return PdfUtils.generate(context, pdfTemplate, layout, data)
-		}
 	}
 
 	private fun setupListIntoRecyclerView(): Int {
@@ -546,7 +528,9 @@ open class   MainActivity : AppCompatActivity() {
 					isCurrentlyActive: Boolean
 				) {
 					val itemView = viewHolder.itemView
-					val background = ColorDrawable(R.color.red)
+                    val background = ColorDrawable(
+                        ContextCompat.getColor(this@MainActivity, R.color.red)
+                    )
 					val icon = ContextCompat.getDrawable(
 						this@MainActivity, R.drawable.baseline_delete_24// your delete icon
 					)
@@ -700,7 +684,7 @@ open class   MainActivity : AppCompatActivity() {
 			)
 
             lifecycleScope.launch(Dispatchers.IO) {
-
+                db = DatabaseHandler(applicationContext)
                 val status = db.updateRecords(updatedModel)
 
                 withContext(Dispatchers.Main) {

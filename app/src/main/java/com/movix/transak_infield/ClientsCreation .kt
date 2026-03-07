@@ -54,9 +54,8 @@ object EstimateSession {
 	private const val KEY_ESTIMATE_ID = "current_estimate"
 
 	var currentEstimate: Int? = null
-		private set
 
-	fun saveSession(context: Context, estimateId: Int) {
+    fun saveSession(context: Context, estimateId: Int) {
 		val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 		prefs.edit().putInt(KEY_ESTIMATE_ID, estimateId).apply()
 		currentEstimate = estimateId

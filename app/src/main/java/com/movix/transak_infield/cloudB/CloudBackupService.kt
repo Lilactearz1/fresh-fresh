@@ -3,8 +3,10 @@ package com.movix.transak_infield.cloudB
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import com.google.firebase.storage.FirebaseStorage
 import com.movix.transak_infield.*
+import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.*
 import kotlinx.coroutines.tasks.await
 import okhttp3.*
@@ -18,31 +20,67 @@ class CloudBackupService(private val context: Context) {
 
     private val dbHandler: DatabaseHandler by lazy { DatabaseHandler(context) }
     private val scope = CoroutineScope(Dispatchers.IO + Job())
+    //-------------SUPABASE STORAGE ------------------------//
 
-    // ================== FIREBASE STORAGE ==================
-
-    suspend fun backupToFirebase(): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun backupToSupabase(): Result<String> = withContext(Dispatchers.IO) {
         return@withContext try {
-            // 1. Create backup file
+
+            // Create local backup
             val backupFile = dbHandler.createBackupFile(context)
 
-            // 2. Upload to Firebase
-            val storage = FirebaseStorage.getInstance()
-            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val fileName = "backups/transak_backup_$timestamp.zip"
-            val storageRef = storage.reference.child(fileName)
+            val timestamp = SimpleDateFormat(
+                "yyyyMMdd_HHmmss",
+                Locale.getDefault()
+            ).format(Date())
 
-            val uploadTask = storageRef.putFile(Uri.fromFile(backupFile)).await()
-            val downloadUrl = storageRef.downloadUrl.await()
+            val fileName = "transak_backup_$timestamp.zip"
 
-            // 3. Clean up local file
+            val bucket = SupabaseClient.client.storage.from("Infield_Backups")
+
+            bucket.upload(
+                path = fileName,
+                data = backupFile.readBytes(),
+                upsert = false,
+
+            )
+
             backupFile.delete()
 
-            Result.success("Backup uploaded successfully. URL: $downloadUrl")
+            Result.success("Backup uploaded successfully to Supabase")
+
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
+
+
+
+
+//    // ================== FIREBASE STORAGE ==================
+//
+//    suspend fun backupToFirebase(): Result<String> = withContext(Dispatchers.IO) {
+//        return@withContext try {
+//            // 1. Create backup file
+//            val backupFile = dbHandler.createBackupFile(context)
+//
+//            // 2. Upload to Firebase
+//            val storage = FirebaseStorage.getInstance()
+//            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+//            val fileName = "backups/transak_backup_$timestamp.zip"
+//            val storageRef = storage.reference.child(fileName)
+//
+//            val uploadTask = storageRef.putFile(Uri.fromFile(backupFile)).await()
+//            val downloadUrl = storageRef.downloadUrl.await()
+//
+//            // 3. Clean up local file
+//            backupFile.delete()
+//
+//            Result.success("Backup uploaded successfully. URL: $downloadUrl")
+//        } catch (e: Exception) {
+//            Result.failure(e)
+//        }
+//    }
 
     // ================== GOOGLE DRIVE ==================
 
@@ -170,7 +208,7 @@ class CloudBackupService(private val context: Context) {
                 delay(delay)
 
                 // Perform backup
-                val result = backupToFirebase()
+                val result =  backupToSupabase()
                 result.onSuccess {
                     println("Scheduled backup completed: $it")
                 }.onFailure {

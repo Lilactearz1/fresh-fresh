@@ -21,6 +21,9 @@ import com.itextpdf.kernel.pdf.PdfWriter
 
 import java.io.File
 import com.movix.transak_infield.MainActivity
+import com.movix.transak_infield.pdfStyles.Modern1
+import com.movix.transak_infield.pdfStyles.Modern1.Classic1
+import com.movix.transak_infield.pdfStyles.Modern1.Minimal
 import com.movix.transak_infield.ui.theme.TemplateInterface
 private var estimateId=-1
 private var customerId=-1
@@ -28,10 +31,30 @@ private var customerId=-1
 
 
 object PdfUtils {
+
+
+    fun estimatePdf(
+        context: Context,
+        estimateId: Int,
+        customerId: Int,
+        templateDRW: PdfTemplateDRW,
+    ): File {
+        val data = PdfUtils.load(context.applicationContext, estimateId, customerId)
+        val layout = PdfUtils.loadTemplateFromJson(context.applicationContext, templateDRW.jsonResId)
+
+        val pdfTemplate: TemplateInterface = when (templateDRW) {
+            PdfTemplateDRW.CLASSIC -> Classic1(context)
+            PdfTemplateDRW.MODERN -> Modern1(context)
+            PdfTemplateDRW.MINIMAL -> Minimal(context)
+
+        }
+
+        return PdfUtils.generate(context.applicationContext, pdfTemplate, layout, data)
+    }
  
 	fun generateEstimatePdf(context: Context,estimateId:Int,customerId:Int,templateDRW: PdfTemplateDRW): File? {
 		return try {
-			MainActivity.estimatePdf(context, estimateId, customerId, templateDRW)
+            PdfUtils.estimatePdf(context, estimateId, customerId, templateDRW)
 
 		} catch (e: Exception) {
 			e.printStackTrace()
@@ -60,7 +83,7 @@ object PdfUtils {
 	}
 	fun sharePdf(context: Context, file: File) {
 		val uri = FileProvider.getUriForFile(
-			context,
+			context.applicationContext,
 			"${context.packageName}.provider",
 			file
 		)
@@ -104,13 +127,13 @@ object PdfUtils {
 
 	fun loadTemplate(context: Context): PdfTemplateDRW {
 		val name = context.getSharedPreferences("templates", Context.MODE_PRIVATE)
-			.getString("selected", PdfTemplateDRW.CLASSIC.name)
+			.getString("selected", PdfTemplateDRW.MODERN.name)
 
 		return PdfTemplateDRW.valueOf(name!!)
 	}
 
 	fun load(context: Context, estimateId: Int, customerId: Int): EstimatePDFData {
-		val db = DatabaseHandler(context)
+		val db = DatabaseHandler(context.applicationContext)
 
 		// Load customer details safely
 		val customer = db.getCustomerById(customerId)
@@ -172,9 +195,9 @@ object PdfUtils {
 		val document = Document(pdfDoc)
 
 		// Draw the PDF content
-		template.drawHeader(document, layout, data,context)
-		template.drawTable(document, layout, data,context)
-		template.drawFooter(document, layout, data,context)
+		template.drawHeader(document, layout, data,context.applicationContext)
+		template.drawTable(document, layout, data,context.applicationContext)
+		template.drawFooter(document, layout, data,context.applicationContext)
 
 
 		//document metadata

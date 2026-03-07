@@ -35,7 +35,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.movix.transak_infield.MainActivity.Companion.EXTRA_CUSTOMER_ID
 import com.movix.transak_infield.MainActivity.Companion.EXTRA_ESTIMATE_ID
-import com.movix.transak_infield.MainActivity.Companion.estimatePdf
+import com.movix.transak_infield.PdfUtils.estimatePdf
 import com.movix.transak_infield.MainActivity.Companion.handleBusinessImage
 import com.movix.transak_infield.MainActivity.Companion.handleClientInfoClick
 import com.movix.transak_infield.MainActivity.Companion.handleInvoiceButtonClick

@@ -1,10 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:orientation="vertical">
+
+    <!-- HEADER -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:background="@color/header_blue"
+        android:fitsSystemWindows="true">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:fontFamily="@font/roboto_regular"
+            android:text="INFIELDER"
+            android:textColor="#D0DBF0"
+            android:textSize="14sp" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:paddingStart="24dp">
+
+            <ImageView
+                android:id="@+id/m1"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_alignParentStart="true"
+                android:background="@drawable/database_add"
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="#D0DBF0"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="15dp"
+                android:layout_marginTop="10dp"
+                android:layout_toEndOf="@id/m1"
+                android:fontFamily="@font/queen"
+                android:text="Backup Manager"
+                android:textColor="@android:color/white"
+                android:textSize="22sp" />
+
+
+        </RelativeLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -12,13 +62,28 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <TextView
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:text="Database Backup Manager"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_centerVertical="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/queen"
+                android:text="Autobackup"
+                android:textSize="17sp" />
+
+            <Switch
+                android:id="@+id/btnSchedule"
+                android:layout_width="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_height="30dp"
+                android:layout_alignParentEnd="true"
+                android:layout_marginBottom="16dp"
+                android:textStyle="bold"
+                android:tint="@color/berry" />
+        </RelativeLayout>
 
         <ProgressBar
             android:id="@+id/progressBar"
@@ -31,41 +96,138 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
+            android:textSize="17sp"
+            android:fontFamily="@font/queen"
             android:text="Ready for backup" />
 
-        <Button
-            android:id="@+id/btnLocalBackup"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="Create Local Backup" />
 
-        <Button
-            android:id="@+id/btnCloudBackup"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="Upload to Cloud"
-            tools:ignore="DuplicateIds" />
+        <LinearLayout
 
-        <Button
-            android:id="@+id/btnRestore"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="Restore from Backup" />
+            android:orientation="vertical">
 
-        <Button
-            android:id="@+id/btnSchedule"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:text="Enable Scheduled Backup" />
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="10dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/estimate_card"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnLocalBackup"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:text="Create Local Backup"
+                        app:cardBackgroundColor="@color/Alice_blue"
+                        app:cardCornerRadius="12dp">
+
+                        <ImageView
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/server_rack" />
+
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:fontFamily="@font/gerhana"
+                        android:text="Create Local"
+                        android:textSize="16sp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/estimate_card"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnCloudBackup"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:text="Create Local Backup"
+                        app:cardBackgroundColor="@color/Alice_blue"
+                        app:cardCornerRadius="12dp">
+
+                        <ImageView
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/supabase_icon" />
+
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:fontFamily="@font/gerhana"
+                        android:text="Cloud Backup"
+                        android:textSize="16sp" />
+
+                </LinearLayout>
+
+
+            </RelativeLayout>
+
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:id="@+id/btnRestore"
+                android:layout_centerVertical="true"
+                android:background="@drawable/estimate_card"
+                android:orientation="horizontal"
+                android:padding="20dp">
+
+
+                <ImageView
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/baseline_download_for_offline_24"
+                    android:tint="@color/berry" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:fontFamily="@font/gerhana"
+                    android:text="Restore Backup"
+                    android:textSize="16sp" />
+
+            </RelativeLayout>
+
+
+        </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
+            android:fontFamily="@font/queen"
+            android:textSize="17sp"
             android:text="Available Backups:"
             android:textStyle="bold" />
 
@@ -81,6 +243,8 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:padding="16dp"
+            android:alpha="0.7"
+            android:background="@drawable/lavender_border"
             android:text="No backup files found" />
 
 

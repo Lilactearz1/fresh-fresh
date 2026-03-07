@@ -13,8 +13,8 @@ android {
         applicationId = "com.movix.transak_infield"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -92,6 +92,7 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.firebase.database)
     implementation(libs.firebase.appdistribution.gradle)
+    implementation(libs.androidx.work.runtime.ktx)
     testImplementation(libs.junit)
     testImplementation(libs.junit.jupiter)
 	testImplementation(libs.junit.jupiter)
@@ -111,10 +112,17 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
 // OKHttp for custom server uploads
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation ("com.google.firebase:firebase-storage-ktx")
 
+    //supabase to replace the firebase store and clouds
 
-        implementation ("com.google.firebase:firebase-storage-ktx")
+    implementation("io.github.jan-tennert.supabase:storage-kt:2.5.4")
+    implementation("io.github.jan-tennert.supabase:postgrest-kt:2.5.4")
+    implementation("io.github.jan-tennert.supabase:realtime-kt:2.5.4")
+    implementation("io.github.jan-tennert.supabase:gotrue-kt:2.5.4")
+    implementation("io.ktor:ktor-client-android:2.3.7")
 
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     // Retrofit 3.0 core library
     implementation("com.squareup.retrofit2:retrofit:3.0.0")

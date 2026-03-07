@@ -18,6 +18,7 @@ import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 
@@ -960,6 +961,53 @@ fun createBackupFile(context: Context):File{
         val backups = listBackups(context)
         if (backups.size > keepLast) {
             backups.drop(keepLast).forEach { it.delete() }
+        }
+    }
+
+    // updates the current database from the storage in supabase and overwrites it
+
+    fun restoreBackup(context: Context, backupFile: File): Boolean {
+        Log.d("BACKUP", "restoreBackup() called")
+        return try {
+
+            val dbFile = context.getDatabasePath(DATABASE_NAME)
+
+            // Close database connections
+            val db = writableDatabase
+            db.close()
+            close()
+
+            // Ensure directory exists
+            dbFile.parentFile?.mkdirs()
+
+            // Delete old database
+            if (dbFile.exists()) {
+                dbFile.delete()
+            }
+
+            ZipInputStream(FileInputStream(backupFile)).use { zis ->
+
+                var entry: ZipEntry?
+
+                while (zis.nextEntry.also { entry = it } != null) {
+
+                    if (entry!!.name.endsWith(DATABASE_NAME)) {
+                        Log.d("BACKUP", "ZIP ENTRY: ${entry!!.name}")
+                        FileOutputStream(dbFile).use { fos ->
+                            zis.copyTo(fos)
+                        }
+
+                    }
+
+                    zis.closeEntry()
+                }
+            }
+
+            true
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
         }
     }
 }

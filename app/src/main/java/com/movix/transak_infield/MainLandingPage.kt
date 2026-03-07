@@ -37,8 +37,8 @@ class MainLandingPage : AppCompatActivity(), EstimateAdapter.OnEstimateClickList
 		binding = ActivityArchivesBinding.inflate(layoutInflater)
 		setContentView(binding.root)
 
-		setSupportActionBar(findViewById(R.id.toolbar))
-		binding.toolbarLayout.title = title
+//		setSupportActionBar(findViewById(R.id.toolbar))
+//		binding.toolbarLayout.title = title
 
 		allEstimates = binding.allestmimate
 		spinner = findViewById(R.id.spinnerMark)
@@ -46,18 +46,46 @@ class MainLandingPage : AppCompatActivity(), EstimateAdapter.OnEstimateClickList
 		nav_InvoiceACtivity = findViewById(R.id.nav_Invoice)
 
 		db = DatabaseHandler(applicationContext)
-		nav_InvoiceACtivity.setOnClickListener{
+        nav_InvoiceACtivity.setOnClickListener {
 
-			val intent = Intent(applicationContext,MainInvoicing::class.java)
-			intent.putExtra(MainActivity.EXTRA_ESTIMATE_ID,-1)
-			intent.putExtra(MainActivity.EXTRA_CUSTOMER_ID,-1)
-			startActivity(intent)
-		}
+            lifecycleScope.launch(Dispatchers.IO) {
+
+                val existingId = EstimateSession.currentEstimate
+                val estimate = existingId?.let { db.getEstimateById(it) }
+
+                val estimateId = if (estimate?.status == EstimateStatus.OPEN) {
+                    estimate.estimateId
+                } else {
+                    db.createNewEstimate(this@MainLandingPage, 1, "INVOICE").toInt()
+                }
+
+                if (estimateId > 0) {
+                    EstimateSession.currentEstimate = estimateId
+
+                    withContext(Dispatchers.Main) {
+                        startActivity(
+                            Intent(this@MainLandingPage, MainInvoicing::class.java).apply {
+                                putExtra(MainActivity.EXTRA_ESTIMATE_ID, estimateId)
+                                putExtra(MainActivity.EXTRA_CUSTOMER_ID, estimate?.customerId ?: 1)
+                            }
+                        )
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            this@MainLandingPage,
+                            "Failed to create invoice",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+        }
 
 		// Load current session
 		EstimateSession.loadSession(this)
 
-
+        checkActiveEstimate()
 
 		// Initialize recycler
 		estimateRecyclerview()

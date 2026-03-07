@@ -1,19 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="DeveloperToolsToolWindowSettingsV1" lastSelectedContentNodeId="color-picker" pluginVersion="7.1.0">
+  <component name="DeveloperToolsToolWindowSettingsV1" lastSelectedContentNodeId="units-converter" pluginVersion="7.1.0">
     <developerToolsConfigurations>
       <developerToolConfiguration developerToolId="notes" id="cccf89ea-7d78-4310-a78c-b675c676b3ab" name="Workbench">
         <properties>
           <property key="test" type="INPUT" value="kotlin.String|make the sharebtn work   /&#10;mke the preview btn to work /&#10;make the print btn to work /&#10;the end of   estimate to work and start of a new estimate /&#10;ability to usee different formats of pdf previews&#10;" />
-          <property key="content-editor-showSpecialCharacters" type="CONFIGURATION" value="kotlin.Boolean|true" />
           <property key="content-editor-showWhitespaces" type="CONFIGURATION" value="kotlin.Boolean|true" />
+          <property key="content-editor-showSpecialCharacters" type="CONFIGURATION" value="kotlin.Boolean|true" />
         </properties>
       </developerToolConfiguration>
       <developerToolConfiguration developerToolId="text-format-converter" id="60dd99a0-adf5-4bf9-a6b1-b9f52dec6c74" name="Workbench">
         <properties>
-          <property key="sourceText" type="INPUT" value="kotlin.String|22.00" />
           <property key="secondLanguage" type="CONFIGURATION" value="CodeFormattingConverter-Language|JSON" />
-          <property key="targetText" type="INPUT" value="kotlin.String|22.0" />
         </properties>
       </developerToolConfiguration>
       <developerToolConfiguration developerToolId="sql-formatting" id="e81c4b8b-3734-45c0-bc5f-0f0e9ab246c1" name="Workbench">
@@ -29,7 +27,7 @@
       </developerToolConfiguration>
       <developerToolConfiguration developerToolId="color-picker" id="f2615137-bffb-428d-ad8e-0e6b67daf5c9" name="Workbench">
         <properties>
-          <property key="selectedColor" type="INPUT" value="com.intellij.ui.JBColor|-197380" />
+          <property key="selectedColor" type="INPUT" value="com.intellij.ui.JBColor|-15778172" />
         </properties>
       </developerToolConfiguration>
     </developerToolsConfigurations>

@@ -69,7 +69,7 @@ class Save_previewActivity : AppCompatActivity() {
         // Load saved template
         currentTemplate = PdfUtils.loadTemplate(this)
 // Safe to use context here
-        val template = currentTemplate ?: PdfTemplateDRW.CLASSIC
+        val template = currentTemplate ?: PdfTemplateDRW.MODERN
 
         downloadbtn = findViewById<ImageView>(R.id.Download1)
 		endEstimatebtn = findViewById<ImageView>(R.id.edit1)

@@ -4,15 +4,27 @@ package com.movix.transak_infield.cloudB
 
 import android.app.AlertDialog
 import android.os.Bundle
+import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
 import androidx.core.view.isVisible
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import com.google.android.material.card.MaterialCardView
 import com.movix.transak_infield.DatabaseHandler
 import com.movix.transak_infield.R
+
+import io.github.jan.supabase.storage.storage
+import io.ktor.utils.io.printStack
 import kotlinx.coroutines.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
+
 
 class BackupManagerActivity : AppCompatActivity() {
 
@@ -20,10 +32,11 @@ class BackupManagerActivity : AppCompatActivity() {
     private lateinit var cloudService: CloudBackupService
 
     private lateinit var progressBar: ProgressBar
-    private lateinit var btnLocalBackup: Button
-    private lateinit var btnCloudBackup: Button
-    private lateinit var btnRestore: Button
-    private lateinit var btnSchedule: Button
+    private lateinit var btnLocalBackup: MaterialCardView
+    private lateinit var btnCloudBackup: CardView
+    private lateinit var btnRestore: RelativeLayout
+
+    private lateinit var switchScheduledBackup: Switch
     private lateinit var tvStatus: TextView
     private lateinit var listBackups: ListView
 
@@ -39,7 +52,7 @@ class BackupManagerActivity : AppCompatActivity() {
         btnLocalBackup = findViewById(R.id.btnLocalBackup)
         btnCloudBackup = findViewById(R.id.btnCloudBackup)
         btnRestore = findViewById(R.id.btnRestore)
-        btnSchedule = findViewById(R.id.btnSchedule)
+        switchScheduledBackup = findViewById(R.id.btnSchedule)
         tvStatus = findViewById(R.id.tvStatus)
         listBackups = findViewById(R.id.listBackups)
 
@@ -53,16 +66,38 @@ class BackupManagerActivity : AppCompatActivity() {
         }
 
         btnCloudBackup.setOnClickListener {
+
+            CoroutineScope(Dispatchers.IO).launch {
+
+                 try {
+                     val buckets = SupabaseClient.client.storage.retrieveBuckets()
+
+                     buckets.forEach {
+                         println("Bucket: ${it.id}")
+                     }
+                } catch (e: Exception){
+                    e.printStack()
+                }
+
+
+
+            }
+
             showCloudBackupOptions()
+
+
         }
 
         btnRestore.setOnClickListener {
             showRestoreDialog()
         }
 
-        btnSchedule.setOnClickListener {
+        switchScheduledBackup.setOnCheckedChangeListener { _, _ ->
             toggleScheduledBackup()
         }
+
+
+
     }
 
     private fun createLocalBackup() {
@@ -90,13 +125,14 @@ class BackupManagerActivity : AppCompatActivity() {
     }
 
     private fun showCloudBackupOptions() {
-        val options = arrayOf("Firebase Storage", "Google Drive", "Custom Server")
+
+        val options = arrayOf("Supabase Storage", "Google Drive", "Custom Server")
 
         AlertDialog.Builder(this)
             .setTitle("Upload to Cloud")
             .setItems(options) { _, which ->
                 when (which) {
-                    0 -> uploadToFirebase()
+                    0 -> uploadToSupabase()
                     1 -> uploadToGoogleDrive()
                     2 -> uploadToCustomServer()
                 }
@@ -105,13 +141,18 @@ class BackupManagerActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun uploadToFirebase() {
-        showProgress("Uploading to Firebase...")
+    private fun uploadToSupabase() {
+
+
+
+        showProgress("Uploading to Supabase...")
 
         CoroutineScope(Dispatchers.IO).launch {
-            val result = cloudService.backupToFirebase()
+
+            val result = cloudService.backupToSupabase()
 
             withContext(Dispatchers.Main) {
+
                 hideProgress()
 
                 result.onSuccess {
@@ -167,7 +208,7 @@ class BackupManagerActivity : AppCompatActivity() {
         }
     }
 
-    private fun showRestoreDialog() {
+     /*private fun showRestoreDialog_localBackup() {
         val backups = dbHandler.listBackups(applicationContext)
         if (backups.isEmpty()) {
             Toast.makeText(this, "No backup files found", Toast.LENGTH_SHORT).show()
@@ -186,6 +227,105 @@ class BackupManagerActivity : AppCompatActivity() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    } */
+
+
+    private fun showRestoreDialog() {
+
+        showProgress("Loading cloud backups...")
+
+        CoroutineScope(Dispatchers.IO).launch {
+
+            try {
+
+                val files = SupabaseClient.client.storage
+                    .from("Infield_Backups")
+                    .list("")
+                Log.d("SUPABASE", "Files found: ${files.size}")
+
+                withContext(Dispatchers.Main) {
+
+                    hideProgress()
+
+                    if (files.isEmpty()) {
+                        Toast.makeText(
+                            this@BackupManagerActivity,
+                            "No cloud backups found",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@withContext
+                    }
+
+                    val names = files.map { it.name }.toTypedArray()
+
+                    AlertDialog.Builder(this@BackupManagerActivity)
+                        .setTitle("Restore from Cloud Backup")
+                        .setItems(names) { _, which ->
+
+                            val selectedFile = files[which].name
+                            Log.d("BACKUP", "User selected backup: $selectedFile")
+                            downloadAndRestore(selectedFile)
+
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
+                }
+
+            } catch (e: Exception) {
+
+                withContext(Dispatchers.Main) {
+                    hideProgress()
+                    showError("FAILED: ${parseSupabaseError(e)}")
+                }
+
+            }
+        }
+    }
+
+    private fun parseSupabaseError(e: Exception): String {
+
+        val msg = e.message ?: return "UNKNOWN_ERROR"
+
+        return when {
+            msg.contains("Unable to resolve host", true) -> "NO_INTERNET"
+            msg.contains("timeout", true) -> "NETWORK_TIMEOUT"
+            msg.contains("401") -> "AUTH_ERROR"
+            msg.contains("403") -> "PERMISSION_DENIED"
+            msg.contains("404") -> "BUCKET_NOT_FOUND"
+            msg.contains("500") -> "SERVER_ERROR"
+            else -> "UNKNOWN_ERROR"
+        }
+    }
+
+    private fun downloadAndRestore(fileName: String) {
+        Log.d("BACKUP", "downloadAndRestore called with $fileName")
+        showProgress("Downloading backup...")
+
+        CoroutineScope(Dispatchers.IO).launch {
+
+            try {
+
+                val bytes = SupabaseClient.client.storage
+                    .from("Infield_Backups")
+                    .downloadAuthenticated(path = fileName)
+
+                val localFile = File(filesDir, fileName)
+
+                localFile.writeBytes(bytes)
+
+                withContext(Dispatchers.Main) {
+                    hideProgress()
+                    confirmRestore(localFile)
+                }
+
+            } catch (e: Exception) {
+
+                withContext(Dispatchers.Main) {
+                    hideProgress()
+                    showError("Download failed: ${e.message}")
+                }
+            }
+        }
     }
 
     private fun confirmRestore(backupFile: File) {
@@ -193,25 +333,92 @@ class BackupManagerActivity : AppCompatActivity() {
             .setTitle("Confirm Restore")
             .setMessage("Restore from ${backupFile.name}? This will replace current data.")
             .setPositiveButton("Restore") { _, _ ->
-                // Implement restore logic here
-                Toast.makeText(this, "Restore functionality to be implemented", Toast.LENGTH_SHORT).show()
+
+                Log.d("BACKUP", "Restore button clicked")
+
+                showProgress("Restoring backup...")
+
+                CoroutineScope(Dispatchers.IO).launch {
+
+                    Log.d("BACKUP", "Starting restore coroutine")
+
+                    val success = dbHandler.restoreBackup(applicationContext, backupFile)
+
+                    withContext(Dispatchers.Main) {
+
+                        hideProgress()
+
+                        if (success) {
+                            showSuccess("Restore completed")
+                            recreate()
+                        } else {
+                            showError("Restore failed")
+                        }
+
+                    }
+                }
             }
             .setNegativeButton("Cancel", null)
             .show()
     }
 
+
+
+
+    private fun calculateDelayToFriday(): Long {
+
+        val now = java.util.Calendar.getInstance()
+
+        val nextFriday = java.util.Calendar.getInstance().apply {
+            set(java.util.Calendar.DAY_OF_WEEK, java.util.Calendar.FRIDAY)
+            set(java.util.Calendar.HOUR_OF_DAY, 2)
+            set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0)
+
+            if (before(now)) {
+                add(java.util.Calendar.WEEK_OF_YEAR, 1)
+            }
+        }
+
+        return nextFriday.timeInMillis - now.timeInMillis
+    }
+
+
+
     private fun toggleScheduledBackup() {
-        // Toggle scheduled backups
-        if (btnSchedule.text == "Enable Scheduled Backup") {
-            cloudService.scheduleDailyBackup()
-            btnSchedule.text = "Disable Scheduled Backup"
-            Toast.makeText(this, "Daily backups enabled (2 AM)", Toast.LENGTH_SHORT).show()
+
+        val workManager = androidx.work.WorkManager.getInstance(this)
+
+        if (switchScheduledBackup.isChecked) {
+
+            // enable backup
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build()
+
+            val delay = calculateDelayToFriday()
+
+            val request = PeriodicWorkRequestBuilder<BackupWorker>(
+                7,
+                TimeUnit.DAYS
+            )
+                .setInitialDelay(delay, TimeUnit.MILLISECONDS)
+                .setConstraints(constraints)
+                .build()
+
+            workManager.enqueueUniquePeriodicWork(
+                "weekly_backup",
+                ExistingPeriodicWorkPolicy.UPDATE,
+                request
+            )
+
         } else {
-            cloudService.cancelBackupSchedule()
-            btnSchedule.text = "Enable Scheduled Backup"
-            Toast.makeText(this, "Scheduled backups disabled", Toast.LENGTH_SHORT).show()
+
+            // disable backup
+            workManager.cancelUniqueWork("weekly_backup")
         }
     }
+
 
     private fun loadBackupList() {
         val backups = dbHandler.listBackups(applicationContext)

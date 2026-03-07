@@ -32,8 +32,15 @@
 
     <!--    shades -f blue-->
     <color name="navy">#0A1172</color>
-    <color name="berry">#241571</color>
+    <color name="berry">#0F3E84</color>
     <color name="blue">#3944BC</color>
+
+    <color name="screen_bg">#F3F6FA</color>
+    <color name="header_blue">#173C7A</color>
+    <color name="fab_blue">#1E88E5</color>
+    <color name="filter_text">#344054</color>
+    <color name="nav_color">#667085</color>
+
 
     <!--    shades -f blue green-->
     <color name="blue_ncs">#008ECC</color>
