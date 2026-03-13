@@ -5,20 +5,36 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_transform"
+            android:id="@+id/navDrawer_transform"
             android:icon="@drawable/ic_camera_black_24dp"
             android:title="@string/menu_transform" />
         <item
-            android:id="@+id/nav_reflow"
-            android:icon="@drawable/ic_gallery_black_24dp"
+            android:id="@+id/navDrawer_estimates"
+            android:icon="@drawable/baseline_receipt_24"
             android:title="@string/menu_reflow" />
+
         <item
-            android:id="@+id/nav_slideshow"
-            android:icon="@drawable/ic_slideshow_black_24dp"
+            android:id="@+id/navDrawer_delivery"
+            android:icon="@drawable/outline_airport_shuttle_24"
+            android:title="@string/delivery_note" />
+
+        <item
+            android:id="@+id/navDrawer_add_items"
+            android:icon="@drawable/outline_add_shopping_cart_24"
+            android:title="@string/nav_add_items" />
+        <item
+            android:id="@+id/navDrawer_database_add"
+            android:icon="@drawable/database_add"
             android:title="@string/menu_slideshow" />
+
         <item
-            android:id="@+id/nav_settings"
+            android:id="@+id/navDrawer_settings"
             android:icon="@drawable/ic_settings_black_24dp"
             android:title="@string/menu_settings" />
+
+        <item
+            android:id="@+id/navDrawer_about"
+            android:icon="@drawable/outline_all_inclusive_24"
+            android:title="@string/menu_aboutuz" />
     </group>
 </menu>

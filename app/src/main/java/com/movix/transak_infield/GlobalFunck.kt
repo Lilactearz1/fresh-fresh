@@ -17,6 +17,7 @@ import androidx.annotation.RequiresApi
 
 import java.time.LocalDate
 import java.time.temporal.Temporal
+import kotlin.math.ceil
 
 class GlobalFunck {
     //    method to sum list in items
@@ -82,10 +83,10 @@ class GlobalFunck {
     }
 
 
-    fun summationofTotal(context: Context, estimateId: Int): Float {
+    fun summationofTotal(context: Context, estimateId: Int): Double {
         //get the summation of total plus the taxed =(taxed or non-taxed)
         val sumTax = summationOfTax(context, estimateId).toFloat()
-        var summedTotal = 0.00f
+        var summedTotal = 0.00
         var subtotalAmount = getSubTotal(context, estimateId)
 
         subtotalAmount += sumTax
@@ -93,7 +94,7 @@ class GlobalFunck {
         summedTotal += subtotalAmount
 
         // total plus the taxed amount is returned for use
-        return summedTotal
+        return ceil( summedTotal)
     }
     // function to collect  name title estimate id
 

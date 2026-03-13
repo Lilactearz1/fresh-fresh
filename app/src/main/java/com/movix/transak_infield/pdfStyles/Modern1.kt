@@ -226,7 +226,7 @@ class Modern1(context: Context) : TemplateInterface {
         document: Document, layout: TemplateLayout, dataEst: EstimatePDFData, context: Context
     ) {
 
-        val columnWidths = floatArrayOf(40f, 200f, 70f, 70f, 80f)
+        val columnWidths = floatArrayOf(40f, 200f, 70f, 80f, 80f)
         val textColor = DeviceRgb(44, 45, 47)
         val border = SolidBorder(DeviceRgb(224, 224, 244), 0.9f)
         val headerColor = DeviceRgb(10, 63, 93)

@@ -3,11 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-   
+
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:enableOnBackInvokedCallback= "true"
         android:maxSdkVersion="28" />
 
     <application
@@ -22,7 +23,21 @@
         tools:targetApi="31">
         <activity
             android:name=".docAnalysis.ui.main.Extraction_Activity"
-            android:exported="false" />
+            android:enableOnBackInvokedCallback= "true"
+            android:exported="false" >
+
+
+        <intent-filter>
+            <action android:name="android.intent.action.CREATE_DOCUMENT"/>
+         <action android:name="android.intent.action.ATTACH_DATA"/>
+            <action android:name="android.intent.action.MAIN"/>
+            <action android:name="android.intent.action.SYNC" />
+            <action android:name="android.intent.action.SEND" />
+
+        </intent-filter>
+        </activity>
+
+
         <activity
             android:name=".invoicing.MainInvoicing"
             android:exported="true">
@@ -54,6 +69,7 @@
 
         <activity
             android:name=".Save_previewActivity"
+            android:enableOnBackInvokedCallback= "true"
             android:exported="false" />
         <activity
             android:name=".CustomerItems"

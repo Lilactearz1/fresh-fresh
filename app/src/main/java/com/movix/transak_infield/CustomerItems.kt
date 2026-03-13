@@ -81,8 +81,8 @@ class CustomerItems : AppCompatActivity() {
 
 		val db = DatabaseHandler(applicationContext)
 
-		estimateId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
-		customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
+        estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
+        customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
 		itemsCount = binding.tvItems
 
 		if (estimateId == -1 || customerId == -1) {
@@ -90,7 +90,7 @@ class CustomerItems : AppCompatActivity() {
 			return
 		}
 
-		items = db.getItemsForEstimate(estimateId, customerId)
+		items = db.getItemsForEstimate(estimateId)
 
 		setupRecyclerView()
 		loadItems()
@@ -158,9 +158,10 @@ class CustomerItems : AppCompatActivity() {
 						lifecycleScope.launch {
 							try {
 								withContext(Dispatchers.IO) {
-									val estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
-									val customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
-									// Use the template selected by the user
+//									val estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
+//									val customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
+
+                                    // Use the template selected by the user
 									val template = currentTemplate
 										?: PdfTemplateDRW.CLASSIC  // fallback to default
 									val pdfFile = estimatePdf(this@CustomerItems, estimateId, customerId,template)
@@ -252,7 +253,7 @@ class CustomerItems : AppCompatActivity() {
 
 	private fun loadItems() {
 		val db = DatabaseHandler(this)
-		 items = db.getItemsForEstimate(estimateId, customerId)
+		 items = db.getItemsForEstimate(estimateId)
 
 		db.estimated(applicationContext)
 
@@ -311,7 +312,7 @@ class CustomerItems : AppCompatActivity() {
 
 	fun refreshItems() {
 		val db = DatabaseHandler(this)
-		val updatedItems = db.getItemsForEstimate(estimateId, customerId)
+		val updatedItems = db.getItemsForEstimate(estimateId)
 
 		items.clear()
 		items.addAll(updatedItems)

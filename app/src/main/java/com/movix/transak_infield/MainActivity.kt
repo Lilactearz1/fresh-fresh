@@ -299,12 +299,15 @@ open class   MainActivity : AppCompatActivity() {
 						lifecycleScope.launch(Dispatchers.IO) {
 							try {
 
-								val newIntent = Intent(
-									this@MainActivity, Save_previewActivity::class.java
-								).apply {
-									putExtra(EXTRA_ESTIMATE_ID, estimateId)
-									putExtra(EXTRA_CUSTOMER_ID, customerId)
-								}
+                                val template = currentTemplate ?: PdfTemplateDRW.CLASSIC
+
+                                val newIntent = Intent(
+                                    this@MainActivity, Save_previewActivity::class.java
+                                ).apply {
+                                    putExtra(EXTRA_ESTIMATE_ID, estimateId)
+                                    putExtra(EXTRA_CUSTOMER_ID, customerId)
+                                    putExtra(SELECTED_TEMPLATE, template.name)
+                                }
 
 								withContext(Dispatchers.Main) {
 									startActivity(newIntent)
@@ -387,15 +390,18 @@ open class   MainActivity : AppCompatActivity() {
 		}
 
 
-		fun handleClientInfoClick(context: Context,estimateId: Int,customerId: Int) {
-            val intent = Intent(context, ClientActivity::class.java)
-            intent.putExtra(MainActivity.EXTRA_ESTIMATE_ID, estimateId) // pass current estimate
+        fun handleClientInfoClick(context: Context, estimateId: Int, customerId: Int) {
+            val intent = Intent(context, ClientActivity::class.java).apply {
+                putExtra(EXTRA_ESTIMATE_ID, estimateId)
+                putExtra(EXTRA_CUSTOMER_ID, customerId)
+            }
 
-			if (context !is AppCompatActivity) {
-				intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-			}
-			context.startActivity(intent)
-		}
+            if (context !is AppCompatActivity) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+
+            context.startActivity(intent)
+        }
 
 		fun handleBusinessImage(context: Context) {
 			Toast.makeText(context, "Coming soon...", Toast.LENGTH_LONG).show()
@@ -592,7 +598,7 @@ open class   MainActivity : AppCompatActivity() {
 //        create instance of the databaseHandler class
 		val databaseHandler: DatabaseHandler = DatabaseHandler(this)
 //          calling the viewProduct  of DatabaseHandler class to read the list
-		return databaseHandler.getItemsForEstimate(estimateId, customerId)
+		return databaseHandler.getItemsForEstimate(estimateId)
 
 		/**
 		 * a shorter replacement use the inline function "single expression function

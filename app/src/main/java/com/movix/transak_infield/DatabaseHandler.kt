@@ -181,7 +181,9 @@ CREATE TABLE $ESTIMATE_TABLE (
 		contentValues.put(CUSTOMER_PHONE, clientsCreation.phone)
 		val infosSuccessId = db.insertOrThrow(CUSTOMER_TABLE, null, contentValues)
 
-		db.close()
+
+
+
 		return infosSuccessId // ✅ This is the customerId you want to link the estimates and products
 	}
 
@@ -196,54 +198,37 @@ CREATE TABLE $ESTIMATE_TABLE (
 		val updateSuccess =
 			db.update(CUSTOMER_TABLE, contentValues, "$CUSTOMER_ID=" + clientsCreation.id, null)
 
-		db.close()
+
+
 		return updateSuccess
 	}
     //
 
 	//view clients information's
-	fun viewClientsInfo(): ArrayList<ClientsCreation> {
-		val nameList: ArrayList<ClientsCreation> = ArrayList()
+    fun viewClientsInfo(): ArrayList<ClientsCreation> {
 
-//       the select query gives all the data present in our table
-		val selectQuery = "SELECT * FROM $CUSTOMER_TABLE"
-		val db = this.readableDatabase
-//       the cursor starts at null point
-		var cursor: Cursor? = null
+        val list = ArrayList<ClientsCreation>()
+        val db = readableDatabase
 
-//       we try to fill the cursor with a raw query which will try to
-//       run the selectquery into our database and a null for no specific selection we need
-		try {
-			cursor = db.rawQuery(selectQuery, null)
-		} catch (e: SQLiteException) {
-			db.execSQL(selectQuery)
-			return ArrayList()
-		}
-//		create a variable for different columns
-		var id: Int
-		var customer_name: String
-		var customer_phone: String
-// move through the cursor
-		if (cursor.moveToFirst()) {
-			do {
-				id = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID))
-				customer_name = cursor.getString(cursor.getColumnIndexOrThrow(CUSTOMER_NAME))
-				customer_phone = cursor.getString(cursor.getColumnIndexOrThrow(CUSTOMER_PHONE))
+        db.rawQuery("SELECT * FROM $CUSTOMER_TABLE", null).use { cursor ->
 
-				val clientcreation = ClientsCreation(
-					id = id,
-					name = customer_name,
-					phone = customer_phone
-				)
-				nameList.add(clientcreation)
+            if (cursor.moveToFirst()) {
+                do {
 
-			} while (cursor.moveToNext())
+                    val client = ClientsCreation(
+                        id = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID)),
+                        name = cursor.getString(cursor.getColumnIndexOrThrow(CUSTOMER_NAME)),
+                        phone = cursor.getString(cursor.getColumnIndexOrThrow(CUSTOMER_PHONE))
+                    )
 
-		}
-		cursor.close()
-		db.close()
-		return nameList
-	}
+                    list.add(client)
+
+                } while (cursor.moveToNext())
+            }
+        }
+
+        return list
+    }
 
 	fun addEstimateInfo(estimateinfo: Estimateinfo): Long {
 		val db = this.writableDatabase
@@ -267,7 +252,8 @@ CREATE TABLE $ESTIMATE_TABLE (
 		} catch (e: Exception) {
 
 		} finally {
-			db.close()
+
+
 		}
 
 		return result
@@ -292,7 +278,7 @@ CREATE TABLE $ESTIMATE_TABLE (
 			arrayOf(estimateinfo.estimateId.toString())
 		)
 
-		db.close()
+
 		return rowsUpdated
 	}
 
@@ -323,7 +309,8 @@ CREATE TABLE $ESTIMATE_TABLE (
 		val insertSuccess = db.insert(INVOICE_TABLE, null, contentValues)
 //        second param2 is a string containing nullColumnHack
 
-		db.close()  //close the database connection
+
+		 //close the database connection
 
 		return insertSuccess
 	}
@@ -388,7 +375,8 @@ CREATE TABLE $ESTIMATE_TABLE (
 		}
 
 		cursor.close()
-		db.close()
+
+
 		return productList
 	}
 
@@ -411,7 +399,8 @@ CREATE TABLE $ESTIMATE_TABLE (
 			db.update(INVOICE_TABLE, contentValues, KEY_ID + "=" + modelClass.id, null)
 // the key id is used to update the specific id of the row selected even if there are other similar product
 
-		db.close()
+
+
 		return successUpdate
 	}
 
@@ -422,7 +411,8 @@ CREATE TABLE $ESTIMATE_TABLE (
 		contentValues.put(KEY_ID, modelClass.id) // model class id
 
 		val successDelete = db.delete(INVOICE_TABLE, KEY_ID + "=" + modelClass.id, null)
-		db.close()
+
+
 
 		return successDelete
 	}
@@ -466,7 +456,8 @@ CREATE TABLE $ESTIMATE_TABLE (
 			} while (cursor.moveToNext())
 
 		cursor.close()
-		db.close()
+
+
 		return estimate
 	}
 
@@ -483,37 +474,32 @@ CREATE TABLE $ESTIMATE_TABLE (
     }
 
     fun getAllEstimate(): MutableList<Estimateinfo> {
+
         val list = mutableListOf<Estimateinfo>()
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM $ESTIMATE_TABLE", null)
 
-        if (cursor.moveToFirst()) {
-            do {
-                val customerCol = cursor.getColumnIndexOrThrow(CUSTOMER_ID)
-                val safeCustomerId =
-                    if (cursor.isNull(customerCol) || cursor.getInt(customerCol) <= 0)
-                        1
-                    else
-                        cursor.getInt(customerCol)
+        db.rawQuery("SELECT * FROM $ESTIMATE_TABLE", null).use { cursor ->
 
-                val estimate = Estimateinfo(
-                    estimateId = cursor.getInt(cursor.getColumnIndexOrThrow(ESTIMATE_ID)),
-                    titleINV = cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_TITLE)),
-                    creationDate = cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_DATE)),
-                    dueDate = cursor.getString(cursor.getColumnIndexOrThrow(DUE_DATE)),
-                    customerId = safeCustomerId,
-                    status = EstimateStatus.valueOf(
-                        cursor.getString(cursor.getColumnIndexOrThrow(STATUS))
+            if (cursor.moveToFirst()) {
+                do {
+
+                    val estimate = Estimateinfo(
+                        estimateId = cursor.getInt(cursor.getColumnIndexOrThrow(ESTIMATE_ID)),
+                        titleINV = cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_TITLE)),
+                        creationDate = cursor.getString(cursor.getColumnIndexOrThrow(ESTIMATE_DATE)),
+                        dueDate = cursor.getString(cursor.getColumnIndexOrThrow(DUE_DATE)),
+                        customerId = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID)),
+                        status = EstimateStatus.valueOf(
+                            cursor.getString(cursor.getColumnIndexOrThrow(STATUS))
+                        )
                     )
-                )
-                list.add(estimate)
 
-                Log.d("DB_CHECK", "Estimate ${estimate.estimateId} customer=${estimate.customerId}")
+                    list.add(estimate)
 
-            } while (cursor.moveToNext())
+                } while (cursor.moveToNext())
+            }
         }
 
-        cursor.close()
         return list
     }
 
@@ -542,38 +528,44 @@ CREATE TABLE $ESTIMATE_TABLE (
 		}
 
 		cursor.close()
-		db.close()
+
+
 		return items
 	}
 
 
-	fun getItemsForEstimate(estimateId: Int, customerId: Int): ArrayList<ModelClass> {
-		val itemsList = ArrayList<ModelClass>()
-		val db = this.readableDatabase
-		val query = "SELECT * FROM $INVOICE_TABLE WHERE $ESTIMATE_ID = ? AND $CUSTOMER_ID = ?"
-		val cursor = db.rawQuery(query, arrayOf(estimateId.toString(), customerId.toString()))
+    fun getItemsForEstimate(estimateId: Int): ArrayList<ModelClass> {
 
-		if (cursor.moveToFirst()) {
-			do {
-				val item = ModelClass(
-					id = cursor.getInt(cursor.getColumnIndexOrThrow(KEY_ID)),
-					itemName = cursor.getString(cursor.getColumnIndexOrThrow(KEY_NAME)),
-					quantity = cursor.getInt(cursor.getColumnIndexOrThrow(KEY_QUANTITY)),
-					price = cursor.getDouble(cursor.getColumnIndexOrThrow(KEY_PRICE)),
-					total = cursor.getFloat(cursor.getColumnIndexOrThrow(KEY_ITEM_TOTAL)),
-					tax = cursor.getFloat(cursor.getColumnIndexOrThrow(KEY_TAX)),
-					customerId = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID)),
-					estimateId = cursor.getInt(cursor.getColumnIndexOrThrow(ESTIMATE_ID)),
-				)
-				itemsList.add(item)
-			} while (cursor.moveToNext())
-		}
+        val list = ArrayList<ModelClass>()
+        val db = readableDatabase
 
-		cursor.close()
-		db.close()
-		return itemsList
-	}
+        db.rawQuery(
+            "SELECT * FROM $INVOICE_TABLE WHERE $ESTIMATE_ID=?",
+            arrayOf(estimateId.toString())
+        ).use { cursor ->
 
+            if (cursor.moveToFirst()) {
+                do {
+
+                    val item = ModelClass(
+                        id = cursor.getInt(cursor.getColumnIndexOrThrow(KEY_ID)),
+                        itemName = cursor.getString(cursor.getColumnIndexOrThrow(KEY_NAME)),
+                        quantity = cursor.getInt(cursor.getColumnIndexOrThrow(KEY_QUANTITY)),
+                        price = cursor.getDouble(cursor.getColumnIndexOrThrow(KEY_PRICE)),
+                        total = cursor.getFloat(cursor.getColumnIndexOrThrow(KEY_ITEM_TOTAL)),
+                        tax = cursor.getFloat(cursor.getColumnIndexOrThrow(KEY_TAX)),
+                        customerId = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID)),
+                        estimateId = cursor.getInt(cursor.getColumnIndexOrThrow(ESTIMATE_ID))
+                    )
+
+                    list.add(item)
+
+                } while (cursor.moveToNext())
+            }
+        }
+
+        return list
+    }
 
 
 
@@ -601,7 +593,8 @@ CREATE TABLE $ESTIMATE_TABLE (
 		}
 
 		val newId = db.insert(ESTIMATE_TABLE, null, values)
-		db.close()
+
+
 
 		if (newId != -1L) {
 			EstimateSession.saveSession(context, newId.toInt())
@@ -646,7 +639,8 @@ CREATE TABLE $ESTIMATE_TABLE (
 
 		} finally {
 			cursor?.close()
-			db.close()
+
+
 		}
 
 		return estimate
@@ -659,34 +653,40 @@ CREATE TABLE $ESTIMATE_TABLE (
 			put(STATUS, status.name)
 		}
 		db.update(ESTIMATE_TABLE, values, "$ESTIMATE_ID=?", arrayOf(id.toString()))
-		db.close()
+
+
 	}
 
 	fun deleteItem(itemId: Int): Int {
 		val db = this.writableDatabase
         val result = db.delete(INVOICE_TABLE, "$KEY_ID = ?", arrayOf(itemId.toString()))
-		db.close()
+
+
+
 		return result
 	}
 
-	fun getCustomerById(customerId: Int): ClientsCreation? {
-		val db = readableDatabase
-		var customer: ClientsCreation? = null
-		val query = "SELECT * FROM $CUSTOMER_TABLE WHERE $CUSTOMER_ID = ?"
-		val cursor = db.rawQuery(query, arrayOf(customerId.toString()))
+    fun getCustomerById(customerId: Int): ClientsCreation? {
 
-		if (cursor.moveToFirst()) {
-			val id = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID))
-			val name = cursor.getString(cursor.getColumnIndexOrThrow(CUSTOMER_NAME))
-			val phone = cursor.getString(cursor.getColumnIndexOrThrow(CUSTOMER_PHONE))
+        val db = readableDatabase
 
-			customer = ClientsCreation(id, name, phone)
-		}
+        db.rawQuery(
+            "SELECT * FROM $CUSTOMER_TABLE WHERE $CUSTOMER_ID=?",
+            arrayOf(customerId.toString())
+        ).use { cursor ->
 
-		cursor.close()
-		db.close()
-		return customer
-	}
+            if (cursor.moveToFirst()) {
+
+                return ClientsCreation(
+                    id = cursor.getInt(cursor.getColumnIndexOrThrow(CUSTOMER_ID)),
+                    name = cursor.getString(cursor.getColumnIndexOrThrow(CUSTOMER_NAME)),
+                    phone = cursor.getString(cursor.getColumnIndexOrThrow(CUSTOMER_PHONE))
+                )
+            }
+        }
+
+        return null
+    }
     fun getClientNameById(customerId: Int): String {
         val db = readableDatabase
         var name = "Unknown Client"
@@ -730,7 +730,8 @@ CREATE TABLE $ESTIMATE_TABLE (
 
 		}
 		c.close()
-		db.close()
+
+
 	}
 
     fun fixOrphanEstimates(db: SQLiteDatabase) {
@@ -758,7 +759,8 @@ CREATE TABLE $ESTIMATE_TABLE (
             "$ESTIMATE_ID = ?",
             arrayOf(estimateId.toString())
         )
-        db.close()
+
+
         return rowsUpdated > 0
     }
 
@@ -772,7 +774,8 @@ CREATE TABLE $ESTIMATE_TABLE (
 		val cursor = db.rawQuery("SELECT 1 FROM $CUSTOMER_TABLE WHERE $CUSTOMER_ID = ?", arrayOf(id.toString()))
 		val exists = cursor.moveToFirst()
 		cursor.close()
-		db.close()
+
+
 		return exists
 	}
 
@@ -783,7 +786,8 @@ CREATE TABLE $ESTIMATE_TABLE (
 		val cursor = db.rawQuery("SELECT 1 FROM $ESTIMATE_TABLE WHERE $ESTIMATE_ID = ?", arrayOf(id.toString()))
 		val exists = cursor.moveToFirst()
 		cursor.close()
-		db.close()
+
+
 		return exists
 	}
 
@@ -918,7 +922,8 @@ fun createBackupFile(context: Context):File{
         cursor.moveToFirst()
         val count = cursor.getInt(0)
         cursor.close()
-        db.close()
+
+
         return count
     }
 
@@ -928,7 +933,8 @@ fun createBackupFile(context: Context):File{
         cursor.moveToFirst()
         val count = cursor.getInt(0)
         cursor.close()
-        db.close()
+
+
         return count
     }
 
@@ -938,7 +944,8 @@ fun createBackupFile(context: Context):File{
         cursor.moveToFirst()
         val count = cursor.getInt(0)
         cursor.close()
-        db.close()
+
+
         return count
     }
 

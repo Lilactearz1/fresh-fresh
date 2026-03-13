@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="DeveloperToolsToolWindowSettingsV1" lastSelectedContentNodeId="units-converter" pluginVersion="7.1.0">
+  <component name="DeveloperToolsToolWindowSettingsV1" lastSelectedContentNodeId="notes" pluginVersion="7.1.0">
     <developerToolsConfigurations>
       <developerToolConfiguration developerToolId="notes" id="cccf89ea-7d78-4310-a78c-b675c676b3ab" name="Workbench">
         <properties>
-          <property key="test" type="INPUT" value="kotlin.String|make the sharebtn work   /&#10;mke the preview btn to work /&#10;make the print btn to work /&#10;the end of   estimate to work and start of a new estimate /&#10;ability to usee different formats of pdf previews&#10;" />
+          <property key="test" type="INPUT" value="kotlin.String|make the sharebtn work   /&#10;mke the preview btn to work /&#10;make the print btn to work /&#10;the end of   estimate to work and start of a new estimate /&#10;ability to usee different formats of pdf previews /&#10;make the ai invoice works &#10;make supabase cloudstorage work/&#10;create the button leading to cloud storage in a side navigation bar/&#10;change the end button" />
           <property key="content-editor-showWhitespaces" type="CONFIGURATION" value="kotlin.Boolean|true" />
           <property key="content-editor-showSpecialCharacters" type="CONFIGURATION" value="kotlin.Boolean|true" />
         </properties>

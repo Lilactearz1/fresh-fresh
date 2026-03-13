@@ -88,7 +88,7 @@
                 android:id="@+id/sharebtn1"
                 android:textColor="@color/white"
                 android:textSize="20sp"
-                app:icon="@drawable/share"
+                app:icon="@drawable/outline_component_exchange_24"
                 app:iconGravity="textStart">
 
             </com.google.android.material.button.MaterialButton>
@@ -117,7 +117,8 @@
                 android:layout_gravity="center"
                 android:layout_marginStart="10dp"
                 android:layout_marginEnd="10dp"
-                android:src="@drawable/baseline_arrow_drop_down_24" />
+                android:tint="@color/header_blue"
+                android:src="@drawable/baseline_download_for_offline_24" />
 
             <ImageView
                 android:id="@+id/edit1"
@@ -128,8 +129,9 @@
                 android:layout_gravity="center"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="10dp"
-                android:src="@drawable/baseline_edit_24"
-                app:tint="@color/black" />
+                android:tint="@color/header_blue"
+                android:src="@drawable/outline_collections_bookmark_24"
+                />
 
             <ImageView
                 android:id="@+id/print1"
@@ -140,7 +142,7 @@
                 android:layout_gravity="center"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="10dp"
-
+                android:tint="@color/header_blue"
                 android:src="@drawable/round_airplay_24" />
 
             <ImageView
@@ -152,7 +154,7 @@
                 android:layout_gravity="center"
                 android:layout_marginStart="10dp"
                 android:src="@drawable/baseline_format_list_bulleted_24"
-                app:tint="@color/black"
+                android:tint="@color/header_blue"
 
                 />
 
@@ -173,7 +175,7 @@
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="10dp"
                 android:fontFamily="@font/latobold"
-                android:text="Edit" />
+                android:text="New Estimate" />
 
             <TextView
                 android:layout_row="1"

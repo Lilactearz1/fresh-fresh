@@ -53,10 +53,9 @@ class Save_previewActivity : AppCompatActivity() {
 			insets
 		}
 
-        // ✅ Get IDs safely
+        // Get IDs
         estimateId = intent.getIntExtra(EXTRA_ESTIMATE_ID, -1)
         customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
-
 
         if (estimateId <= 0) {
             Toast.makeText(this, "Missing estimate", Toast.LENGTH_LONG).show()
@@ -64,10 +63,18 @@ class Save_previewActivity : AppCompatActivity() {
             return
         }
 
+// ✅ Get template from MainActivity
+        val templateName = intent.getStringExtra(MainActivity.SELECTED_TEMPLATE)
+        currentTemplate = templateName?.let { PdfTemplateDRW.valueOf(it) }
+
+// fallback template
+        if (currentTemplate == null) {
+            currentTemplate = PdfTemplateDRW.CLASSIC
+        }
+
         db = DatabaseHandler(this)
 
-        // Load saved template
-        currentTemplate = PdfUtils.loadTemplate(this)
+
 // Safe to use context here
         val template = currentTemplate ?: PdfTemplateDRW.MODERN
 
@@ -174,7 +181,7 @@ val db= DatabaseHandler(applicationContext)
 
         lifecycleScope.launch(Dispatchers.IO) {
 
-            val template = getTemplate()
+            val template = currentTemplate ?: PdfTemplateDRW.MODERN
             val pdfFile = PdfUtils.generateEstimatePdf(applicationContext, estimateId, customerId, template)
             val preview = pdfFile?.let { PdfUtils.generatePdfPreview(this@Save_previewActivity, it) }
 

@@ -25,8 +25,8 @@ import com.movix.transak_infield.pdfStyles.Modern1
 import com.movix.transak_infield.pdfStyles.Modern1.Classic1
 import com.movix.transak_infield.pdfStyles.Modern1.Minimal
 import com.movix.transak_infield.ui.theme.TemplateInterface
-private var estimateId=-1
-private var customerId=-1
+import kotlin.math.ceil
+
 
 
 
@@ -39,8 +39,8 @@ object PdfUtils {
         customerId: Int,
         templateDRW: PdfTemplateDRW,
     ): File {
-        val data = PdfUtils.load(context.applicationContext, estimateId, customerId)
-        val layout = PdfUtils.loadTemplateFromJson(context.applicationContext, templateDRW.jsonResId)
+        val data = load(context.applicationContext, estimateId, customerId)
+        val layout = loadTemplateFromJson(context.applicationContext, templateDRW.jsonResId)
 
         val pdfTemplate: TemplateInterface = when (templateDRW) {
             PdfTemplateDRW.CLASSIC -> Classic1(context)
@@ -49,12 +49,12 @@ object PdfUtils {
 
         }
 
-        return PdfUtils.generate(context.applicationContext, pdfTemplate, layout, data)
+        return generate(context.applicationContext, pdfTemplate, layout, data)
     }
  
 	fun generateEstimatePdf(context: Context,estimateId:Int,customerId:Int,templateDRW: PdfTemplateDRW): File? {
 		return try {
-            PdfUtils.estimatePdf(context, estimateId, customerId, templateDRW)
+            estimatePdf(context, estimateId, customerId, templateDRW)
 
 		} catch (e: Exception) {
 			e.printStackTrace()
@@ -132,38 +132,41 @@ object PdfUtils {
 		return PdfTemplateDRW.valueOf(name!!)
 	}
 
-	fun load(context: Context, estimateId: Int, customerId: Int): EstimatePDFData {
-		val db = DatabaseHandler(context.applicationContext)
+    fun load(context: Context, estimateId: Int, customerId: Int): EstimatePDFData {
+        val db = DatabaseHandler(context.applicationContext)
 
-		// Load customer details safely
-		val customer = db.getCustomerById(customerId)
-			?: throw IllegalArgumentException("Customer with ID $customerId not found")
+        // 1 Load estimate first
+        val estimate = db.getEstimateById(estimateId)
+            ?: throw IllegalArgumentException("Estimate with ID $estimateId not found")
 
-		// Load estimate items
-		val items = db.getItemsForEstimate(estimateId, customerId)
+        // 2️Get the correct customer FROM the estimate
+        val customer = db.getCustomerById(estimate.customerId?:-1)
+            ?: throw IllegalArgumentException("Customer with ID ${estimate.customerId} not found")
 
+        // 3️ Load estimate items
+
+        val items = db.getItemsForEstimate(estimateId)
 		// Compute totals
 		val subtotal = items.sumOf { it.price * it.quantity }
+// CORECT THIS VARIABLE taxTotals  BEFORE DEPLOYMENTS
 		val taxTotal = items.sumOf { it.tax.toDouble() }
-		val grandTotal = subtotal + taxTotal
 
-		// Load estimate header safely
-		val estimate = db.getEstimateById(estimateId)
-			?: throw IllegalArgumentException("Estimate with ID $estimateId not found")
+		val grandTotal = GlobalFunck().summationofTotal(context, estimateId)
 
-		return EstimatePDFData(
-			estimateId = estimateId,
-			customerId = customerId,
-			customerName = customer.name,
-			customerPhone = customer.phone,
-			estimateTitle = estimate.titleINV ?: "Untitled",
-			estimateDate = estimate.creationDate ?: "N/A",
-			dueDate = estimate.dueDate,
-			items = items,
-			subtotal = subtotal,
-			taxTotal = taxTotal,
-			grandTotal = grandTotal
-		)
+
+        return EstimatePDFData(
+            estimateId = estimateId,
+            customerId = estimate.customerId ?: -1,
+            customerName = customer.name,
+            customerPhone = customer.phone,
+            estimateTitle = estimate.titleINV ?: "Untitled",
+            estimateDate = estimate.creationDate ?: "N/A",
+            dueDate = estimate.dueDate,
+            items = items,
+            subtotal = subtotal,
+            taxTotal = taxTotal,
+            grandTotal = grandTotal
+        )
 	}
 
 	/** Generate PDF with iText */
@@ -181,7 +184,7 @@ object PdfUtils {
 
         val file = File(
             context.getExternalFilesDir(null),
-            "$clientName ${title.trim()}-${data.estimateId}-$safeClientId.pdf"
+            "${clientName.trim()} ${title.trim()}${data.estimateId}.pdf"
         )
 
 		// Open background template PDF

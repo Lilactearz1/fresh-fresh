@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 class EstimateAdapter(
     private val context: Context,
     private val estimateList: MutableList<Estimateinfo>,
-    private val clientRepo: ClientRepository,
+    private var clientRepo: ClientRepository,
     private val onSelectedEstimate: OnEstimateClickListener,
     internal val onItemDeleted: (deletedItem: Estimateinfo, pos: Int) -> Unit  // callback to persist deletion
 ) : RecyclerView.Adapter<EstimateAdapter.EstimateViewHolder>() {
@@ -69,6 +69,11 @@ class EstimateAdapter(
         notifyItemInserted(position)
 
     }
-
+    fun updateList(newItems: List<Estimateinfo>, clientRepo: ClientRepository) {
+      estimateList.clear()
+        estimateList.addAll(newItems)
+        this.clientRepo = clientRepo
+        notifyDataSetChanged()
+    }
 
 }
