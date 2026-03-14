@@ -12,20 +12,18 @@ import com.movix.transak_infield.TemplateItem
 import android.content.Intent
 import androidx.activity.OnBackPressedCallback
 import com.movix.transak_infield.MainActivity.Companion.SELECTED_TEMPLATE
+import com.movix.transak_infield.PdfUtils
 
 class TemplateSelectorActivity : AppCompatActivity() {
 
 	private lateinit var adapter: TemplateAdapter
 	private lateinit var recyclerView: RecyclerView
-	private var selectedTemplate: PdfTemplateDRW = PdfTemplateDRW.CLASSIC
+    private lateinit var selectedTemplate: PdfTemplateDRW
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 //load saved template
 
-		val savedName = getSharedPreferences("templates", MODE_PRIVATE)
-			.getString("selected", PdfTemplateDRW.CLASSIC.name)
-
-		selectedTemplate = PdfTemplateDRW.valueOf(savedName!!)
+		selectedTemplate = PdfUtils.loadTemplate(applicationContext)
 
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_template_selector)
@@ -68,19 +66,15 @@ class TemplateSelectorActivity : AppCompatActivity() {
 		adapter.updateSelection(template)
 
 		// Save selection for later
-		getSharedPreferences("templates", MODE_PRIVATE)
-			.edit()
-			.putString("selected", template.name)
-			.apply()
-
+        PdfUtils.saveTemplate(this, template.name)
 		// Return to calling activity
 		returnResultAndFinish()
 	}
 
 	private fun returnResultAndFinish() {
 		val resultIntent = Intent()
-		resultIntent.putExtra(SELECTED_TEMPLATE, selectedTemplate.name)
-		setResult(Activity.RESULT_OK, resultIntent)
+		resultIntent.putExtra(SELECTED_TEMPLATE, selectedTemplate?.name)
+		setResult(RESULT_OK, resultIntent)
 		finish()
 	}
 

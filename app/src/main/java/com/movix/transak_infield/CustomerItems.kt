@@ -46,6 +46,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+// TODO:  this section same as the main activity but its used for editing the previous
+//  inputs that were made in the main activity so its  the editing page special page
+
 class CustomerItems : AppCompatActivity() {
 
 	private lateinit var _binding: ActivityMainBinding
@@ -57,7 +60,6 @@ class CustomerItems : AppCompatActivity() {
 	private var customerId = -1
 	private lateinit var items:ArrayList<ModelClass>
 	private lateinit var refreshLauncher: ActivityResultLauncher<Intent>
-	private var currentTemplate: PdfTemplateDRW? = null
     internal val stringFormat ="%,.2f"
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,7 +71,7 @@ class CustomerItems : AppCompatActivity() {
 		refreshLauncher = registerForActivityResult(
 			ActivityResultContracts.StartActivityForResult()
 		) { result ->
-			if (result.resultCode == Activity.RESULT_OK) {
+			if (result.resultCode == RESULT_OK) {
 				// ✅ Refresh RecyclerView
 				setupRecyclerView()
 			}
@@ -143,12 +145,12 @@ class CustomerItems : AppCompatActivity() {
 	@Composable
 	private fun BottomBar() {
 		BottomAppBar(
-			containerColor = Color(0, 142, 204), tonalElevation = 4.dp
+			containerColor = Color(23, 60, 122, 255), tonalElevation = 4.dp
 		) {
 			Row(
 				modifier = Modifier
-					.fillMaxWidth()
-					.padding(horizontal = 12.dp),
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp),
 				horizontalArrangement = Arrangement.SpaceEvenly,
 				verticalAlignment = Alignment.CenterVertically
 			) {
@@ -162,8 +164,7 @@ class CustomerItems : AppCompatActivity() {
 //									val customerId = intent.getIntExtra(EXTRA_CUSTOMER_ID, -1)
 
                                     // Use the template selected by the user
-									val template = currentTemplate
-										?: PdfTemplateDRW.CLASSIC  // fallback to default
+									val template = PdfUtils.loadTemplate(applicationContext)
 									val pdfFile = estimatePdf(this@CustomerItems, estimateId, customerId,template)
 
 									withContext(Dispatchers.Main) {

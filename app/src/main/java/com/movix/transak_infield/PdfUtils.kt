@@ -46,12 +46,13 @@ object PdfUtils {
             PdfTemplateDRW.CLASSIC -> Classic1(context)
             PdfTemplateDRW.MODERN -> Modern1(context)
             PdfTemplateDRW.MINIMAL -> Minimal(context)
+            PdfTemplateDRW.Dave -> Modern1.Davis(context)
 
         }
 
         return generate(context.applicationContext, pdfTemplate, layout, data)
     }
- 
+
 	fun generateEstimatePdf(context: Context,estimateId:Int,customerId:Int,templateDRW: PdfTemplateDRW): File? {
 		return try {
             estimatePdf(context, estimateId, customerId, templateDRW)

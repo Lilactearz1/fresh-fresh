@@ -94,11 +94,12 @@ class Modern1(context: Context) : TemplateInterface {
 //				).setFontColor(
 //					ColorHelper.rgb(10, 63, 93))
 //		)
-        val global_Functions = GlobalFunck()
 
         val title = dataEst.estimateTitle
         val clientName = dataEst.customerName
         val safeClientId = dataEst.customerId
+        val _estimateId=dataEst.estimateId
+
 
 
         val dueDate = dataEst.dueDate
@@ -108,7 +109,7 @@ class Modern1(context: Context) : TemplateInterface {
         }
 
         //bar code insertion
-        val barcodeImg = pdf.barCodeGenerator("${clientName}_${title.trim()}_${safeClientId}")
+        val barcodeImg = pdf.barCodeGenerator("${clientName}_${_estimateId}_${safeClientId}")
 
         document.add(
             barcodeImg.setFixedPosition(
@@ -164,7 +165,13 @@ class Modern1(context: Context) : TemplateInterface {
 
 
         val subTotal = String.format(sFormat, dataEst.subtotal)
-        val taxTotal = String.format(sFormat, dataEst.taxTotal)
+
+
+        fun tax ():Int{
+            if (dataEst.taxTotal>0){
+                return 16;
+            }else return 0
+        }
         val grandTotal = String.format(sFormat, dataEst.grandTotal)
 
         val columnWidths = floatArrayOf(y)
@@ -172,7 +179,7 @@ class Modern1(context: Context) : TemplateInterface {
 // and styles otherwise could have use on map variables
 
         val mapSubtotal = hashMapOf("Subtotal" to subTotal)
-        val mapTax = hashMapOf("Tax" to taxTotal)
+        val mapTax = hashMapOf("Tax" to tax())
         val mapTotals = hashMapOf("Grand Total" to grandTotal)
 
         val table = Table(columnWidths)
@@ -394,6 +401,86 @@ class Modern1(context: Context) : TemplateInterface {
         }
     }
 
+    class Davis(context: Context) : TemplateInterface {
+        override fun drawHeader(
+            document: Document, layout: TemplateLayout, dataEst: EstimatePDFData, context: Context
+        ) {
+            // COMPANY NAME
+            val companyText = "$cname1 $cname2"
+            document.add(
+                Paragraph(companyText).setFontSize(18f).setBold().setFixedPosition(
+                    layout.company.x, layout.company.y, layout.company.width ?: 200f
+                )
+            )
+
+            // QUOTATION TITLE
+            document.add(
+                Paragraph(c1quoteHeader).setFontSize(16f).setBold().setFixedPosition(
+                    layout.title.x, layout.title.y, layout.title.width ?: 200f
+                )
+            )
+
+            // QUOTE NUMBER
+            document.add(
+                Paragraph("$c1quoteNo ${dataEst.estimateId}")
+                    .setFontSize(12f).setFixedPosition(
+                        layout.quoteNo.x, layout.quoteNo.y, layout.quoteNo.width ?: 150f
+                    )
+            )
+
+            // CUSTOMER NAME
+            document.add(
+                Paragraph("$c1quoteTo ${dataEst.customerName.uppercase()}")
+                    .setFontSize(12f).setFixedPosition(
+                        layout.customer.x, layout.customer.y, layout.customer.width ?: 200f
+                    )
+            )
+
+            // DATE
+            document.add(
+                Paragraph("$c1date ${dataEst.estimateDate}")
+                    .setFontSize(12f).setFixedPosition(
+                        layout.created.x, layout.created.y, layout.created.width ?: 150f
+                    )
+            )
+
+            // DUE DATE
+            document.add(
+                Paragraph("Due: ${dataEst.dueDate}").setFontSize(12f)
+                    .setFixedPosition(
+                        layout.due.x, layout.due.y, layout.due.width ?: 150f
+                    )
+            )
+
+        }
+
+        override fun drawFooter(
+            document: Document, layout: TemplateLayout, dataEst: EstimatePDFData, context: Context
+        ) {
+
+
+            document.add(
+                Paragraph("Subtotal: ${dataEst.subtotal}").setFontSize(12f)
+                    .setFont(latoRegularFont(context))
+            )
+
+            document.add(
+                Paragraph("Tax: ${dataEst.taxTotal}").setFontSize(12f)
+
+            )
+
+            document.add(
+                Paragraph("Grand Total: ${dataEst.grandTotal}").setBold().setFontSize(14f)
+            )
+        }
+
+
+        override fun drawTable(
+            document: Document, layout: TemplateLayout, dataEst: EstimatePDFData, context: Context
+        ) {
+
+        }
+    }
 
     class Classic1(context: Context) : TemplateInterface {
         override fun drawHeader(

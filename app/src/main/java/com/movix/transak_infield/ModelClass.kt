@@ -48,7 +48,7 @@ enum class PdfTemplateDRW(val jsonResId: Int, val previewRes: Int) {
 	MODERN(R.raw.modern_template,R.drawable.pic2),
 	MINIMAL(R.raw.minimal_template,R.drawable.pic4),
 
-//	CLEAN("Ancient", R.drawable.backpdf)
+	Dave( R.raw.davis_form,R.drawable.pic5)
 }
 
 data class TemplateItem(val templateItem: PdfTemplateDRW, val selected: Boolean = false)

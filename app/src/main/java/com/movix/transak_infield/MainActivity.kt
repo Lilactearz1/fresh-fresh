@@ -68,7 +68,7 @@ open class   MainActivity : AppCompatActivity() {
 
 	private val stringFomat = "%,.2f"
 	private var dueTerms = 0
-	private var currentTemplate: PdfTemplateDRW? = null
+
 
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -137,7 +137,7 @@ open class   MainActivity : AppCompatActivity() {
 		itemsCount = binding.tvItems
 		//	    function to count items number inserted
 		fun countItems() {
-			itemsCount.text = "Items No: [${setupListintoRecycleview()}]"
+			itemsCount.text = "Items No: [${getItemlist().size}]"
 		}
 		countItems()
 		// function to display totals in the textview
@@ -199,15 +199,15 @@ open class   MainActivity : AppCompatActivity() {
 		if (requestCode == 1001 && resultCode == Activity.RESULT_OK) {
 			val templateName = data?.getStringExtra(SELECTED_TEMPLATE)
 			if (templateName != null) {
-				val selectedTemplate = PdfTemplateDRW.valueOf(templateName)
-				Toast.makeText(this, "Template selected: $templateName", Toast.LENGTH_SHORT).show()
+
+				Toast.makeText(this, "$templateName", Toast.LENGTH_SHORT).show()
 				// Save the selected template for later use
-				currentTemplate = selectedTemplate
+
 			}
 		}
 	}
 
-    private fun setupListintoRecycleview() {
+    private fun setupListintoRecycleview(){
 
         lifecycleScope.launch(Dispatchers.IO) {
 
@@ -233,6 +233,7 @@ open class   MainActivity : AppCompatActivity() {
                     binding.recycleItem.visibility = View.GONE
                 }
             }
+
         }
     }
 
@@ -242,7 +243,7 @@ open class   MainActivity : AppCompatActivity() {
 	@Composable
 	private fun BottomBar() {
 		BottomAppBar(
-			containerColor = Color(0, 142, 204), tonalElevation = 4.dp
+			containerColor = Color(23, 60, 122, 255), tonalElevation = 4.dp
 		) {
 			Row(
 				modifier = Modifier
@@ -257,7 +258,7 @@ open class   MainActivity : AppCompatActivity() {
 						lifecycleScope.launch {
 
 
-							val template = currentTemplate ?: PdfTemplateDRW.CLASSIC
+                            val template = PdfUtils.loadTemplate(this@MainActivity)
 
 							try {
 								// Generate PDF in background
@@ -299,7 +300,7 @@ open class   MainActivity : AppCompatActivity() {
 						lifecycleScope.launch(Dispatchers.IO) {
 							try {
 
-                                val template = currentTemplate ?: PdfTemplateDRW.CLASSIC
+                                val template = PdfUtils.loadTemplate(this@MainActivity)
 
                                 val newIntent = Intent(
                                     this@MainActivity, Save_previewActivity::class.java

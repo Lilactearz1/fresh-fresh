@@ -10,6 +10,12 @@ import com.itextpdf.layout.Canvas
 import com.itextpdf.layout.element.Paragraph
 import com.itextpdf.layout.properties.TextAlignment
 
+// TODO:  RESPONSIBLE FOR CLASS AND DATA CLASSES FOR USAGE WITHIN THE
+//  APP:  CLIENTS CREATION FOR CAPTURING CLIENTS DEATAIL IN CLIENTS ACTIVITY
+//  ESTIMATE INFO FOR ESTIMATES SECTION UPDATES @Estimateinfo()
+//  Footer events for page footers
+//  ESTIMATE SESSION TO CONTROL THE SESSION HANDLING AND CLOSING OF ESTIMATES
+
 
 open class ClientsCreation (val id:Int=0,  /*Default to 0 so you don’t need to pass it*/
                             val name:String,val phone:String ,vararg mail:String)
